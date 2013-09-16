@@ -1,7 +1,6 @@
 language: haskell
 after_success:
 	- cabal sdist
-	- ./pushToGithub.sh
 notifications:
   email: false
 env:
