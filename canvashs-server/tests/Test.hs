@@ -6,4 +6,4 @@ import Text.Printf
 main  = mapM_ (\(s,a) -> printf "%-25s: " s >> a) tests
  
 -- ("testname", quickCheck function)
-tests  = []
+tests  = [("testname", quickCheck (True == id True))]
