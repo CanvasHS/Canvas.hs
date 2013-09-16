@@ -2,3 +2,6 @@ language: haskell
 after_success: cabal sdist
 notifications:
   email: false
+env:
+  global:
+    secure: Ofw1O5r7dqpaltegba/Zhi+R6t+5V5ezlPuaYs2Gkk6j0lRnL4yXUZaGPtZcEmz9P290+MuPMSmoiVWUbUc3zUeXx81K/40EoI70dVjWOCK10d2aK3SZohFNiEYQTWBZ1E3ykiJkMH5on4yr1U9lJQRmafdApfq384SLekoPCfw=
