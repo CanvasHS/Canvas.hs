@@ -6,9 +6,10 @@ Category:            Testing
 Build-type:          Simple
 Cabal-version:       >=1.2
 
-Executable canvashs-server
-  Main-is:			canvashs-server/Server.hs         
+Library      
   build-depends: 	base >= 4, QuickCheck >= 2.4
+  Exposed-modules:	CanvasHs.Server
+  hs-source-dirs:	canvashs-server
 
 Test-Suite unit-test
   type:       	   exitcode-stdio-1.0
