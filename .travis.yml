@@ -1,10 +1,10 @@
 language: haskell
 after_success:
-    - cabal sdist
-    - cabal haddock
-    - ./pushToGithub.sh
+- cabal sdist
+- cabal haddock
+- ./pushToGithub.sh
 notifications:
   email: false
 env:
   global:
-  - secure: DQZ/2sDx7jDSMUaa5Kptmj5ViR9TArzc059fG/Q2z6BJb84H5rJsUQt5gomgRZAysM/ILEQpt9fx0h609S39VNZmgOCrEeeCARVr/p1V1bLVSciBYkuV9KSiRKmHPDl0k25RqDgRkRwsAvN+N7A3rOdRDTBLa+PRAojxmbHNSb0=
+    secure: PRIFBDxt4xjZi52Ws3iiqwVLG3tRpfapOOqMWGvnoSfBQ9K4r893EFsXQJJ8Yy74cmHNJ1z4O0UY8Syxv3w8hUudJrJhMsnQsCf0iUuoyjJv+FTAsTGn0FobwaOyXpNc5stGs6YpDqKUH2AKnYiISpR7ED4zYwFXA31g6vDbHcc=
