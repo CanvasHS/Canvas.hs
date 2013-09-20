@@ -13,7 +13,7 @@ cd page/dist
 
 #copy build to right direction
 cp $HOME/canvashs.tar.gz canvashs-${TRAVIS_BUILD_NUMBER}.tar.gz
-echo "<tr><td> #$TRAVIS_BUILD_NUMBER </td><td> 0.1 </td> <td> `date` </td><td> <a href=\"dist/canvashs-$TRAVIS_BUILD_NUMBER.tar.gz\" $TRAVIS_BUILD_NUMBER.tar.gz </td></tr>" >> ../_includes/list.html
+echo "<tr><td> #$TRAVIS_BUILD_NUMBER </td><td> 0.1 </td> <td> `date` </td><td> <a href=\"dist/canvashs-$TRAVIS_BUILD_NUMBER.tar.gz\"> canvashs-$TRAVIS_BUILD_NUMBER.tar.gz </td></tr>" >> ../_includes/list.html
 cd ..
 git add .
 git commit -m "Travis build $TRAVIS_BUILD_NUMBER pushed to gh-pages"
