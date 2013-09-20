@@ -7,13 +7,13 @@ cd $HOME
 git config --global user.email "travis@travis-ci.org"
 git config --global user.name "Travis"
 # clone the pages repo to gh-pages
-git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/CanvasHS/Canvas.hs.git gh-pages > /dev/null
+git clone --quiet --branch=master https://${GH_TOKEN}@github.com/CanvasHS/Canvas.hs.git page > /dev/null
 #change dir to dist
-ls gh-pages
-cd gh-pages/dist
+cd page/dist
 #copy build to right direction
 cp $HOME/canvashs.tar.gz canvashs-${TRAVIS_BUILD_NUMBER}.tar.gz
 echo "<tr><td> #$TRAVIS_BUILD_NUMBER </td><td> 0.1 </td> <td> `date` </td><td> <a href=\"dist/canvashs-$TRAVIS_BUILD_NUMBER.tar.gz\" $TRAVIS_BUILD_NUMBER.tar.gz </td></tr>" >> ../_includes/list.html
+cd ..
 git add .
 git commit -m "Travis build $TRAVIS_BUILD_NUMBER pushed to gh-pages"
 git push -fq origin gh-pages > /dev/null
