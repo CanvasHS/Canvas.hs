@@ -11,7 +11,7 @@ git config --global user.email "travis@travis-ci.org"
 git config --global user.name "Travis"
 
 # clone the pages repo to page
-git clone --quiet --branch=master https://${GH_TOKEN}@github.com/CanvasHS/canvashs.github.io.git page > /dev/null
+git clone --quiet --branch=master https://${GH_TOKEN}@github.com/CanvasHS/canvashs.github.io.git page > /dev/null 2>&1
 
 # move to the distributions location on github pages
 cd page/dist
@@ -37,6 +37,6 @@ echo "
 # push the changes back to github pages
 git add .
 git commit -m "Travis build $TRAVIS_BUILD_NUMBER pushed to gh-pages"
-git push -fq origin master > /dev/null
+git push -fq origin master > /dev/null 2>&1
 
 echo -e "build pushed to gh-pages"
