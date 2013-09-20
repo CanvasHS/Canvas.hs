@@ -9,6 +9,8 @@ git config --global user.name "Travis"
 # clone the pages repo to gh-pages
 git clone --quiet --branch=master https://${GH_TOKEN}@github.com/CanvasHS/Canvas.hs.git page > /dev/null
 #change dir to dist
+ls $HOME
+ls page
 cd page/dist
 #copy build to right direction
 cp $HOME/canvashs.tar.gz canvashs-${TRAVIS_BUILD_NUMBER}.tar.gz
