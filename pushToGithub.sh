@@ -38,5 +38,8 @@ echo "
 git add .
 git commit -m "Travis build $TRAVIS_BUILD_NUMBER pushed to gh-pages"
 git push -fq origin master > /dev/null 2>&1
+if [ $? != 0 ]; then
+    echo "Push to github failed"
+fi
 
-echo -e "build pushed to gh-pages"
+echo -e "pushToGithub: done"
