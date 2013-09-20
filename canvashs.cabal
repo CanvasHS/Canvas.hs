@@ -16,9 +16,9 @@ Test-Suite server-test
   main-is:         canvashs-server/tests/Test.hs
   build-depends:   
                    base >= 4 && < 5,
-                   Hspec >= 1.7,
+                   hspec >= 1.7,
                    QuickCheck >= 2.4
-                   
+
 source-repository head
   type:     git
   location: https://github.com/CanvasHS/Canvas.hs
