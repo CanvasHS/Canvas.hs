@@ -1,6 +1,7 @@
 language: haskell
+script: phantomjs canvashs-client/tests/testrunner.js
 after_success:
-	- cabal sdist
+    - cabal sdist
 notifications:
   email: false
 env:
