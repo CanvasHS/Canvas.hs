@@ -2,6 +2,7 @@ language: haskell
 # script: phantomjs canvashs-client/tests/testrunner.js
 after_success:
     - cabal sdist
+    - cabal haddock
     - ./pushToGithub.sh
 notifications:
   email: false

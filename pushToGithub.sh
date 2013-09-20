@@ -1,6 +1,7 @@
 echo -e "Pushing build to github-pages"
 # move the distributed source to home
 cp dist/canvashs*.tar.gz $HOME/canvashs.tar.gz
+cp -R dist/doc/html/canvashs/ $HOME/docs
 # move to home
 cd $HOME
 # lets config git a little
@@ -13,7 +14,8 @@ cd page/dist
 
 #copy build to right direction
 cp $HOME/canvashs.tar.gz canvashs-${TRAVIS_BUILD_NUMBER}.tar.gz
-echo "<tr><td> #$TRAVIS_BUILD_NUMBER </td><td> 0.1 </td> <td> `date` </td><td> <a href=\"dist/canvashs-$TRAVIS_BUILD_NUMBER.tar.gz\"> canvashs-$TRAVIS_BUILD_NUMBER.tar.gz </td></tr>" >> ../_includes/list.html
+cp -R $HOME/docs docs/$TRAVIS_BUILD_NUMBER
+echo "<tr><td> #$TRAVIS_BUILD_NUMBER </td><td> 0.1 </td> <td> `date` </td><td> <a href=\"dist/canvashs-$TRAVIS_BUILD_NUMBER.tar.gz\"> canvashs-$TRAVIS_BUILD_NUMBER.tar.gz </td> <td> <a href=\"dist/docs/$TRAVIS_BUILD_NUMBER/index.html\"> docs </a> </td></tr>" >> ../_includes/list.html
 cd ..
 git add .
 git commit -m "Travis build $TRAVIS_BUILD_NUMBER pushed to gh-pages"
