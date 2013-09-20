@@ -7,7 +7,7 @@ cd $HOME
 git config --global user.email "travis@travis-ci.org"
 git config --global user.name "Travis"
 # clone the pages repo to gh-pages
-git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com:CanvasHS/Canvas.hs.git gh-pages > /dev/null
+git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/CanvasHS/Canvas.hs.git gh-pages > /dev/null
 #change dir to dist
 cd gh-pages/dist
 #copy build to right direction
