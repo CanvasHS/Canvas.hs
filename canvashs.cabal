@@ -11,6 +11,23 @@ Library
   Exposed-modules:	CanvasHs.Server
   hs-source-dirs:	canvashs-server
 
+
+
+Test-Suite setup-tests
+  type:       	   exitcode-stdio-1.0
+  main-is:         tests/SetupTests.hs
+  build-depends:   
+                   base >= 4 && < 5,
+                   process >= 1.1
+
+Test-Suite javascript-tests
+  type:       	   exitcode-stdio-1.0
+  main-is:         tests/JavascriptTests.hs
+  build-depends:   
+                   base >= 4 && < 5,
+                   process >= 1.1
+
+
 Test-Suite server-test
   type:       	   exitcode-stdio-1.0
   main-is:         canvashs-server/tests/Test.hs
