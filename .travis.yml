@@ -5,6 +5,9 @@ after_success:
 - ./pushToGithub.sh
 notifications:
   email: false
+  hipchat:
+    rooms:
+      secure: UpzraNTV/DTmJq/qtZZLkefDEkAmbMpSaimcz7NtfwV+ks77IUeERccgLIVuXfxWRvrGQq3B7pAQcNWAy7J00cuNcaoIiMSNGZzt/hV7Dqvj6m9gq+UTPj3Za3fS6CDFlG+qJy9sL7C12Bzr+bOXhQP+LNHKm0loQqVUc+5nlmM=
 env:
   global:
   - secure: JUJqStYvRvm9Pjz8aXRXDVsVc3yKwTZMV+cvESEodF4300OB7zjDC281hq3BaNIMFwNOV1i1qtp18jB5uWORHv2so8hkY9I1Bz0QcUrOlsz7KLEfPqQgpX8JA83riK3aUa0YKo0EtLfzMTSbdug+D1UtotnazJvLQFuHWeZCjEE=
