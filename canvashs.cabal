@@ -23,7 +23,7 @@ Test-Suite javascript-tests
 
 Test-Suite server-test
   type:            exitcode-stdio-1.0
-  main-is:         canvashs-server/tests/Test.hs
+  main-is:         canvashs-module/tests/Test.hs
   build-depends:   
                    base >= 4 && < 5,
                    hspec >= 1.7,
