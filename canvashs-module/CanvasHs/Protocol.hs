@@ -11,11 +11,14 @@ module CanvasHs.Protocol
 (	encode
 ) where 
 
-import qualified Data.Text as T
 import CanvasHs
+import CanvasHs.Data
+import qualified Data.Text as T
+import Data.List (intercalate)
+
 -- | encode maakt van een Output een JSON-string (type Data.Text.Text) die voldoet aan het protocol
 --   LET OP: het resultaat voldoet momenteel NIET aan het protocol!
-encode :: Output -> T.Text
+encode :: Shape -> T.Text
 encode (Circle p r)		= T.pack $ unlines 
 							["{Shape : 'Cicle'" 
 							,",origin : " ++ (encodePoint p)
@@ -29,13 +32,12 @@ encode (Rect p w h) 	= T.pack $ unlines
 							,",height : " ++ (show h)
 							,"}"
 							]
-encode (Line p1 p2)		= T.pack $ unlines
+encode (Line ps)		= T.pack $ unlines
 							["{shape : 'line'"
-							,",origin : " ++ (encodePoint p1)
-							,",end : " ++ (encodePoint p2)
+							,",path : [" ++ (intercalate "," $ map encodePoint ps) ++ "]"
 							,"}"
 							]
 						
 
 encodePoint :: Point -> String
-encodePoint (Point (x,y)) = concat ["{x : ", show x, ", y : ", show y, "}"]
+encodePoint (x,y) = concat ["{x : ", show x, ", y : ", show y, "}"]
