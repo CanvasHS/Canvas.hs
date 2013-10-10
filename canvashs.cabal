@@ -21,7 +21,7 @@ Test-Suite javascript-tests
                    process >= 1.1
 
 
-Test-Suite server-test
+Test-Suite module-test
   type:            exitcode-stdio-1.0
   main-is:         canvashs-module/tests/Test.hs
   build-depends:   
