@@ -7,7 +7,7 @@ type Path = [Point]
 type Color = (Int, Int, Int, Int)
 
 class Defaults a where
-    defaults = a
+    defaults :: a
 
 data EventData = EventData {
                     -- | The ID of the event, should be unique.
@@ -29,10 +29,11 @@ data EventData = EventData {
                 } deriving (Eq, Show)
 
 instance Defaults EventData where
-    defaults = Event "" False False False False False False False
+    defaults = EventData "" False False False False False False False
 
 data FontSize = Pt Int | Px Int
-
+		deriving (Eq, Show)
+		
 data Alignment 
     -- | Aligns the start of the text to the specified point.
     = Start 
@@ -40,6 +41,7 @@ data Alignment
     | End 
     -- | Aligns the center of the text to the speciied point.
     | Center
+		deriving (Eq, Show)
 
 data TextData = TextData {
                     -- | The font for this text, no guarantees are made about availability
