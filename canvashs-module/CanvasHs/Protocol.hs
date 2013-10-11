@@ -9,6 +9,7 @@
 -}
 module CanvasHs.Protocol
 (	encode
+	,decode
 ) where 
 
 import CanvasHs
@@ -17,6 +18,7 @@ import qualified Data.Text as T
 import Data.List (intercalate)
 
 -- | encode maakt van een Output een JSON-string (type Data.Text.Text) die voldoet aan het protocol
+--	 @ensure \result is een valide JSON-object
 --   LET OP: het resultaat voldoet momenteel NIET aan het protocol!
 encode :: Shape -> T.Text
 encode (Circle p r)		= T.pack $ unlines 
@@ -37,7 +39,21 @@ encode (Line ps)		= T.pack $ unlines
 							,",path : [" ++ (intercalate "," $ map encodePoint ps) ++ "]"
 							,"}"
 							]
+encode (Fill c s)		= T.pack $ unlines
+							["{effect : 'fill'"
+							,",color : " ++ (encodeColor c)
+							,",shape : " ++ T.unpack (encode s)
+							,"}"
+							]
 						
 
 encodePoint :: Point -> String
 encodePoint (x,y) = concat ["{x : ", show x, ", y : ", show y, "}"]
+
+encodeColor :: Color -> String
+encodeColor (r,g,b,a) = concat ["{red : ", show r, ", green : ", show g, ", blue : ", show b, ", alpha : ", show a, "}"]
+
+-- | Ontsleuteld een inkomend bericht naar een event
+--	 Moet nog daadwerkelijk geïmplementeerd worden. Dat zal uiteindelijk met een eigen parser moeten
+decode :: T.Text -> EventData
+decode _ = defaults
