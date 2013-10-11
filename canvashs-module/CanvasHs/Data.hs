@@ -85,7 +85,7 @@ data Shape
     | Polygon Path
     -- | A text. Has a centerpoint a string containing the text and some extra data.
     | Text Point String TextData
-    -- | Applies fill. Has a color and a shape that needs to be filled.s
+    -- | Applies fill. Has a color and a shape that needs to be filled.
     | Fill Color Shape
     -- | Applies stroke. Has a color, a strokewidth and a shape that needs to be stroked.
     | Stroke Color Int Shape
@@ -103,32 +103,27 @@ data Shape
     -- | A container. Has width and height and a list of shapes in this container.
     | Container Int Int [Shape]
 
--- | Either the first, or both arguments present
-data EitherTwo a b
-    = One a
-    | Both a b
-    deriving (Eq, Show)
 
 -- | Keymodifiers that can be enabled in a keyboard event
 data Modifier 
-    = Shift | Ctrl | Alt | AltGr | Super
+    = Shift | Ctrl | Alt | Super
 
 -- | The events the user can expect to get as input
 data Event
-    -- | A mousedown event consisting of a point and possibly an ID string of the interested object
-    = MouseDown (EitherTwo Point String)
-    -- | A mouseclick event consisting of a point and possibly an ID string of the interested object
-    | MouseClick (EitherTwo Point String)
-    -- | A mouseup event consisting of a point and possibly an ID string of the interested object
-    | MouseUp (EitherTwo Point String)
-    -- | A mousedoubleclick event consisting of a point and possibly an ID string of the interested object
-    | MouseDoubleClick (EitherTwo Point String)
+    -- | A mousedown event consisting of a point and ID string of the interested object
+    = MouseDown Point String
+    -- | A mouseclick event consisting of a point and ID string of the interested object
+    | MouseClick Point String
+    -- | A mouseup event consisting of a point and ID string of the interested object
+    | MouseUp Point String
+    -- | A mousedoubleclick event consisting of a point and ID string of the interested object
+    | MouseDoubleClick Point String
     -- TODO: Kan je ook in het niets draggen?
-    -- | A mousedrag event with start and end, both consisting of a Point and possibly an ID string
-    | MouseDrag (EitherTwo Point String) (EitherTwo Point String)
-    -- | A mouseenter event, can only fire on objects, therefore both Point and an ID string are set.
+    -- | A mousedrag event with start and end, both consisting of a Point an ID string
+    | MouseDrag Point String Point String
+    -- | A mouseenter event, therefore both Point and an ID string are set.
     | MouseEnter Point String
-    -- | A mouseleave event, can only fire on objects, therefore both Point and an ID string are set.
+    -- | A mouseleave event, therefore both Point and an ID string are set.
     | MouseLeave Point String
     -- | A keydown event, consist of a keycharacter that was pressed and a list of modifiers that were active
     | KeyDown Char [Modifier]
