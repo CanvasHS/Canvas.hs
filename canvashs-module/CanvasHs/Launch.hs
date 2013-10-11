@@ -8,11 +8,12 @@ launchBrowser :: String -> IO()
 launchBrowser url = do
                 status <- case os of 
                     "windows" -> launchBrowserWindows url
+                    "mingw32" -> launchBrowserWindows url
                     "osx"     -> launchBrowserOSX url
                     _         -> launchBrowserLinux url
-                    case status of
-                        ExitSuccess   -> return ()
-                        ExitFailure n -> error ("Failed to open browser, exitcode " ++ show n)
+                case status of
+                    ExitSuccess   -> return ()
+                    ExitFailure n -> error ("Failed to open browser, exitcode " ++ show n)
 
 launchBrowserWindows :: String -> IO(ExitCode)
 launchBrowserWindows url = do
