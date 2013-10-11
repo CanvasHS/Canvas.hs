@@ -9,7 +9,7 @@ launchBrowser url = do
                 status <- case os of 
                     "windows" -> launchBrowserWindows url
                     "mingw32" -> launchBrowserWindows url
-                    "osx"     -> launchBrowserOSX url
+                    "darwin"  -> launchBrowserOSX url
                     _         -> launchBrowserLinux url
                 case status of
                     ExitSuccess   -> return ()
