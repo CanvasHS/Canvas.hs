@@ -6,15 +6,23 @@
 -}
 module CanvasHs
 (	
-	installEventHandler
+	installEventHandler, basicTest
 )  where
 
 import CanvasHs.Data
+import CanvasHs.Server
+import CanvasHs.Launch
 
 installEventHandler :: 
 		(userState -> EventData -> (userState, [Shape])) -- ^ event handler on current state and incoming event, that produces a tuple of the new user states and shapes to draw
 	->	userState -- ^ start state
 	-> 	IO ()
-installEventHandler handl startState = return ()
+installEventHandler handl startState = do
+	start
+	return ()
 	
+basicTest :: IO ()
+basicTest = do
+	serverSession <- start
+	return ()
 
