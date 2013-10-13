@@ -1,67 +1,13 @@
 <html>
 <head><title>websocket simpel</title>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" ></script>
-<script type='text/javascript'>
-var connection = new WebSocket('ws://localhost:8080');
-
-var open = false;
-
-// When the connection is open, send some data to the server
-connection.onopen = function () {
-  //connection.send('Ping'); // Send the message 'Ping' to the server
-};
-
-// Log errors
-connection.onerror = function (error) {
-  console.log('WebSocket Error ');
-  console.log(error);
-};
-
-// Log messages from the server
-connection.onmessage = function (e) {
-	//console.log('Server: ' + e.data);
-	jQuery.parseJSON(e.data);
-	if(test == true) { performanceTestV(); }
-};
-
-function v(ans){
-	connection.send("{"
-   + "\"error\": \"Expected a ',' or '}' at 15 [character 16 line 1]\","
-   + "\"object_or_array\": \"object\","
-   + "\"error_info\": \"This error came from the org.json reference parser.\","
-   + "\"validate\": false,"
-   + "\"ans\": " + ans + " }");
-}
-var i = 0;
-var test = false;
-var sendDate = (new Date()).getTime();
-var maxTest = 10000;
-function performanceTestV() {
-	if(i<maxTest) {
-		if(i % 100 == 0) {
-			console.log(i)
-		}
-		i++;
-		v(i)
-	} else {
-		var receiveDate = (new Date()).getTime();
-		var responseTimeMs = receiveDate - sendDate;
-		console.log("Send in "+responseTimeMs);
-		test = false;
-	}
-}
-function performanceTest(maxTestA) {
-	if(maxTestA != undefined) {
-		maxTest = maxTestA;
-	}
-	test = true;
-	i = 0;
-	sendDate = (new Date()).getTime();
-	performanceTestV();
-}
-</script>
+<script src="js/jquery.js"></script>
+<script src="js/kinetic.js"></script>
+<script src="js/canvashs.js"></script>
 </head>
 <body>
-<h1>Check je console!</h1>
+
+        <div id="container">
+            HTML5 canvas
+        </div>
 </body>
 </html>

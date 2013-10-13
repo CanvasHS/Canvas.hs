@@ -20,34 +20,40 @@ import Data.List (intercalate)
 --	 @ensure \result is een valide JSON-object
 --   LET OP: het resultaat voldoet momenteel NIET aan het protocol!
 encode :: Shape -> T.Text
-encode (Circle p r)		= T.pack $ unlines 
-							["{Shape : 'Cicle'" 
-							,",origin : " ++ (encodePoint p)
-							,",radius : " ++ (show r)
-							,"}"
-							]
-encode (Rect p w h) 	= T.pack $ unlines
-							["{shape : 'rect'"
-							,",origin : " ++ (encodePoint p)
-							,",width : " ++ (show w)
-							,",height : " ++ (show h)
-							,"}"
-							]
-encode (Line ps)		= T.pack $ unlines
-							["{shape : 'line'"
-							,",path : [" ++ (intercalate "," $ map encodePoint ps) ++ "]"
-							,"}"
-							]
-encode (Fill c s)		= T.pack $ unlines
-							["{effect : 'fill'"
-							,",color : " ++ (encodeColor c)
-							,",shape : " ++ T.unpack (encode s)
-							,"}"
-							]
+encode (Circle p r)		= T.pack $ unlines [
+							"{"
+							,"    \"type\": \"circle\","
+							,"    \"data\": {"
+							,"        \"id\": \"circle_nr_1\","
+							,"        \"x\": " ++ (encodePointX p) ++ ","
+							,"        \"y\": " ++ (encodePointY p) ++ ","
+							,"        \"radius\": "++(show r)
+							,"    }"
+							,"}"]
+--encode (Rect p w h) 	= T.pack $ unlines
+--							["{shape : 'rect'"
+--							,",origin : " ++ (encodePoint p)
+--							,",width : " ++ (show w)
+--							,",height : " ++ (show h)
+--							,"}"
+--							]
+--encode (Line ps)		= T.pack $ unlines
+--							["{shape : 'line'"
+--							,",path : [" ++ (intercalate "," $ map encodePoint ps) ++ "]"
+--							,"}"
+--							]
+--encode (Fill c s)		= T.pack $ unlines
+--							["{effect : 'fill'"
+--							,",color : " ++ (encodeColor c)
+--							,",shape : " ++ T.unpack (encode s)
+--							,"}"
+--							]
 						
 
-encodePoint :: Point -> String
-encodePoint (x,y) = concat ["{x : ", show x, ", y : ", show y, "}"]
+encodePointX :: Point -> String
+encodePointX (x,_) = show x
+encodePointY :: Point -> String
+encodePointY (_,y) = show y
 
 encodeColor :: Color -> String
 encodeColor (r,g,b,a) = concat ["{red : ", show r, ", green : ", show g, ", blue : ", show b, ", alpha : ", show a, "}"]

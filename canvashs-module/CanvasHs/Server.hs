@@ -2,9 +2,10 @@
 module CanvasHs.Server (start) where
 
 import CanvasHs.Protocol
+import CanvasHs.Data
 
-
-
+-- Paths_canvashs is required to include static files
+import Paths_canvashs 
 import qualified Network.WebSockets as WS
 import Control.Monad (forever)
 import qualified Data.Text as T
@@ -19,56 +20,44 @@ import Control.Concurrent (forkIO)
 
 import Data.IORef (IORef, newIORef, atomicModifyIORef)
 import Control.Monad.Trans (liftIO, lift)
+import Debug.Trace
 
-data CData = CI Int 
 
 start :: IO ()
 start = do
         forkIO serverHttp --de httpserver draait in een apart thread
-        counter <- newIORef (CI 0)
-        serverHandle <- WS.runServer "0.0.0.0" 8080 $ websockets counter --runserver is een extreem simpele server voor de websockets   
+        serverHandle --runserver is een extreem simpele server voor de websockets   
         return ()
+        where
+            serverHandle = liftIO $ WS.runServer "0.0.0.0" 8080 $ websockets
 
 serverHttp :: IO ()
 serverHttp = do
-                staticContent <- readFile "websocketstest.html"
-                WRP.run 8000 (httpget staticContent)
+                staticContent <- getDataFileName "canvashs-client/index.html" >>= readFile
+                fileA <- getFile "index.html"
+                fileB <- getFile "js/canvashs.js"
+                fileC <- getFile "js/jquery.js"
+                fileD <- getFile "js/kinetic.js"
+                forkIO $ WRP.run 8000 (httpget ([fileA, fileB, fileC, fileD]))
                 return ()
 
+getFile :: String -> IO String
+getFile name = getDataFileName ("canvashs-client/" ++ name) >>=readFile
 --  HTTP GET
-httpget :: String -> WAI.Application
-httpget a req = return $ do 
-                    WAI.ResponseBuilder status200 [("Content-Type", "text/html")] $ BL.copyByteString $ BU.fromString a
+httpget :: [String] -> WAI.Application
+httpget a req = traceShow (WAI.pathInfo req) $ return $ do WAI.ResponseBuilder status200 [("Content-Type", encoding)] $ BL.copyByteString $ BU.fromString page
+                    where
+                        (encoding, page) = case WAI.pathInfo req of
+                                    ["js","jquery.js"] -> ("text/javascript", (a !! 3))
+                                    ["js","kinetic.js"] -> ("text/javascript", (a !! 2))
+                                    ["js","canvashs.js"] -> ("text/javascript", (a !! 1))
+                                    _ -> ("text/html", (a !! 0))
+                
         
 --  WEBSOCKETS          
 -- RFC6455 heeft de beste browsersupport, zie ook: http://en.wikipedia.org/wiki/WebSocket#Browser_support
 -- zit om een vage reden niet in SebSockets (ondanks dat doc zegt van wel), Hybi00 werkt iig in IE11 en Chrome 29
-websockets :: IORef CData -> WS.Request -> WS.WebSockets WS.Hybi00 ()
-websockets counter rq = do
+websockets :: WS.Request -> WS.WebSockets WS.Hybi00 ()
+websockets rq = do
                         WS.acceptRequest rq
-                        WS.sendTextData $ T.pack "Hallo client, wat wil je met 3 vermenigvuldigen?"
-                        vermenigvuldig counter
-                    
-vermenigvuldig :: IORef CData -> WS.WebSockets WS.Hybi00 ()
-vermenigvuldig counter = forever $ do
-                            msg <- WS.receiveData
-                            newC <- liftIO $ incCounter counter
-                            WS.sendTextData $ T.concat [resultaat $ readMsg msg, T.pack (" | De counter is: " ++ (show $ readCData newC))]
-                            where 
-                                readMsg :: T.Text -> Maybe Int
-                                readMsg m = let rs = (reads $ T.unpack m)::[(Int, String)] in
-                                            if rs /= [] then
-                                                Just $ fst $ head rs
-                                            else
-                                                Nothing
-                    
-resultaat :: Maybe Int -> T.Text
-resultaat Nothing  = "Dat is geen leesbaar getal, grapjas"
-resultaat (Just 0) = "0 keer iets is 0, dat weet toch iedereen mallerd"
-resultaat (Just x) = T.pack $ ("Je resultaat is: " ++ (show $ x*3))
-
-incCounter :: IORef CData -> IO CData
-incCounter c = atomicModifyIORef c (\ct -> ((CI ((readCData ct) +1)), (CI (readCData ct))))
-                
-readCData :: CData -> Int
-readCData (CI n) = n
+                        WS.sendTextData $ encode (Circle (1,3) 100)
