@@ -1,14 +1,19 @@
 module CanvasHs.Data where
 
+-- | Convenience type for a point (x, y)
 type Point = (Int, Int)
 
+-- | Convenience type for a path consisting of points
 type Path = [Point]
 
+-- | Convenience type for a RGBA color
 type Color = (Int, Int, Int, Int)
 
+-- | A class that defines a function `defaults` that returns a default value
 class Defaults a where
     defaults :: a
 
+-- | Stores data about what events a shape is interested in
 data EventData = EventData {
                     -- | The ID of the event, should be unique.
                     eventId :: String,
@@ -28,12 +33,15 @@ data EventData = EventData {
                     mouseLeave :: Bool
                 } deriving (Eq, Show)
 
+-- | Defines defaults for EventData
 instance Defaults EventData where
     defaults = EventData "" False False False False False False False
 
+-- | Defines textsize
 data FontSize = Pt Int | Px Int
 		deriving (Eq, Show)
-		
+	
+-- | Ways to align text	
 data Alignment 
     -- | Aligns the start of the text to the specified point.
     = Start 
@@ -43,6 +51,7 @@ data Alignment
     | Center
 		deriving (Eq, Show)
 
+-- | Record holding formatting data for text, eg fonts and sizes
 data TextData = TextData {
                     -- | The font for this text, no guarantees are made about availability
                     font :: String,
@@ -58,9 +67,11 @@ data TextData = TextData {
                     alignment :: Alignment
                 } deriving (Eq, Show)
 
+-- | Defines defaults for TextData
 instance Defaults TextData where
     defaults = TextData "Arial" (Pt 12) False False False Center
 
+-- | All drawable objects that the user can define (also includes some modifying objects like scale)
 data Shape 
     -- | A rectangle. Has a startpoint (left upper corner) and width, height
     = Rect Point Int Int
@@ -74,7 +85,7 @@ data Shape
     | Polygon Path
     -- | A text. Has a centerpoint a string containing the text and some extra data.
     | Text Point String TextData
-    -- | Applies fill. Has a color and a shape that needs to be filled.s
+    -- | Applies fill. Has a color and a shape that needs to be filled.
     | Fill Color Shape
     -- | Applies stroke. Has a color, a strokewidth and a shape that needs to be stroked.
     | Stroke Color Int Shape
@@ -91,3 +102,35 @@ data Shape
     | Event EventData Shape
     -- | A container. Has width and height and a list of shapes in this container.
     | Container Int Int [Shape]
+
+
+-- | Keymodifiers that can be enabled in a keyboard event
+data Modifier 
+    = Shift | Ctrl | Alt | Super
+
+-- | The events the user can expect to get as input
+data Event
+    -- | A mousedown event consisting of a point and ID string of the interested object
+    = MouseDown Point String
+    -- | A mouseclick event consisting of a point and ID string of the interested object
+    | MouseClick Point String
+    -- | A mouseup event consisting of a point and ID string of the interested object
+    | MouseUp Point String
+    -- | A mousedoubleclick event consisting of a point and ID string of the interested object
+    | MouseDoubleClick Point String
+    -- TODO: Kan je ook in het niets draggen?
+    -- | A mousedrag event with start and end, both consisting of a Point an ID string
+    | MouseDrag Point String Point String
+    -- | A mouseenter event, therefore both Point and an ID string are set.
+    | MouseEnter Point String
+    -- | A mouseleave event, therefore both Point and an ID string are set.
+    | MouseLeave Point String
+    -- | A keydown event, consist of a keycharacter that was pressed and a list of modifiers that were active
+    | KeyDown Char [Modifier]
+    -- | A keyup event, consist of a keycharacter that was pressed and a list of modifiers that were active
+    | KeyUp Char [Modifier]
+    -- | A keyclick event, consist of a keycharacter that was pressed and a list of modifiers that were active
+    | KeyClick Char [Modifier]
+    -- | A scroll event consisting of a xdiff and a ydiff
+    | Scroll Int Int
+    
