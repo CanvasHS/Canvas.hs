@@ -12,7 +12,6 @@ module CanvasHs.Protocol
 	,decode
 ) where 
 
-import CanvasHs
 import CanvasHs.Data
 import qualified Data.Text as T
 import Data.List (intercalate)
