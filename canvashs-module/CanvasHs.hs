@@ -24,6 +24,7 @@ installEventHandler ::
 		(userState -> EventData -> (userState, [Shape])) -- ^ event handler on current state and incoming event, that produces a tuple of the new user states and shapes to draw
 	->	userState -- ^ start state
 	-> 	IO ()
+
 	
 installEventHandler handl startState = do
 	store <- newIORef (State{extState=startState, callback=handl})
