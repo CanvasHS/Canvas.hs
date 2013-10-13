@@ -1,6 +1,72 @@
+// Global variables
+var currentLayer = 0;
+var layerList = new Array();
+var stage = undefined;
+var connection = new WebSocket('ws://localhost:8080');
+var open = false;
+
+function parseServerMessage(message) {
+    layerList[currentLayer] = new Kinetic.Layer();
+    var figure;
+
+    switch (message.type) {
+        case "line":
+            figure = drawLine(message.start, message.end);
+            break;
+        case "polygon":
+            figure = drawPolygon();
+            break;
+        case "circle":
+            figure = drawCircle();
+            break;
+        default:
+            window.alert("Unrecognized JSON message received from server.");
+            figure = null;
+    }
+    layerList[currentLayer].add(figure);
+    stage.add(layerList[currentLayer]);
+    layerList[currentLayer].on('click', function(event) {
+        window.alert("Clicked on " + event.targetNode.getClassName() + " on layer " + layerList.indexOf(event.targetNode.getLayer()));
+    });
+    currentLayer++;
+}
+
+
+function drawLine(begin, end) {
+    figure = new Kinetic.Line({
+        points: [begin, end],
+        stroke: "blue",
+        strokeWidth: 8
+    });
+    return figure;
+}
+
+function drawPolygon() {
+    figure = new Kinetic.Polygon({
+        points: [73, 192, 73, 160, 340, 23, 500, 109, 499, 139, 342, 93],
+        fill: '#00D2FF',
+        stroke: 'black',
+        strokeWidth: 1
+    });
+    return figure;
+}
+
+function drawCircle() {
+    figure = new Kinetic.Circle({
+        radius: 100,
+        fill: '#FFD200',
+        stroke: 'black',
+        strokeWidth: 1,
+        x: 300,
+        y: 400
+    });
+    return figure;
+}
+
+
 $(document).ready(function() {
 
-    var stage = new Kinetic.Stage({
+    stage = new Kinetic.Stage({
         container: 'container',
         width: 900,
         height: 600
@@ -22,82 +88,23 @@ $(document).ready(function() {
     // add the layer to the stage
     stage.add(layer);
 
-    var currentLayer = 0;
-    var layerList = new Array();
 
-    // JSON enters from Haskell side
-    var eventFromServer = {
-        "command": "line",
-        "start": [150, 250],
-        "end": [600, 200]
+
+
+    // When the connection is open, send some data to the server
+    connection.onopen = function () {
     };
-    parseServerMessage(eventFromServer);
-    var eventFromServer = {
-        "command": "circle"
+
+    // Log errors
+    connection.onerror = function (error) {
+      console.log('WebSocket Error ');
+      console.log(error);
     };
-    parseServerMessage(eventFromServer);
-    var eventFromServer = {
-        "command": "polygon"
+
+    // Log messages from the server
+    connection.onmessage = function (e) {
+        console.log("test"+e.data);
+        parseServerMessage(jQuery.parseJSON(e.data));
     };
-    parseServerMessage(eventFromServer);
-
-
-    function parseServerMessage() {
-        layerList[currentLayer] = new Kinetic.Layer();
-        var figure;
-
-        switch (eventFromServer.command) {
-            case "line":
-                figure = drawLine(eventFromServer.start, eventFromServer.end);
-                break;
-            case "polygon":
-                figure = drawPolygon();
-                break;
-            case "circle":
-                figure = drawCircle();
-                break;
-            default:
-                window.alert("Unrecognized JSON message received from server.");
-                figure = null;
-        }
-        layerList[currentLayer].add(figure);
-        stage.add(layerList[currentLayer]);
-        layerList[currentLayer].on('click', function(event) {
-            window.alert("Clicked on " + event.targetNode.getClassName() + " on layer " + layerList.indexOf(event.targetNode.getLayer()));
-        });
-        currentLayer++;
-    }
-
-
-    function drawLine(begin, end) {
-        figure = new Kinetic.Line({
-            points: [begin, end],
-            stroke: "blue",
-            strokeWidth: 8
-        });
-        return figure;
-    }
-
-    function drawPolygon() {
-        figure = new Kinetic.Polygon({
-            points: [73, 192, 73, 160, 340, 23, 500, 109, 499, 139, 342, 93],
-            fill: '#00D2FF',
-            stroke: 'black',
-            strokeWidth: 1
-        });
-        return figure;
-    }
-
-    function drawCircle() {
-        figure = new Kinetic.Circle({
-            radius: 100,
-            fill: '#FFD200',
-            stroke: 'black',
-            strokeWidth: 1,
-            x: 300,
-            y: 400
-        });
-        return figure;
-    }
 
 });
