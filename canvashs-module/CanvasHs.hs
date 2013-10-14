@@ -23,7 +23,7 @@ data State a = 	State 	{extState :: a
 -- | Start CanvasHs om grafische weergave mogelijk te maken. registreert de event handler en de start state van
 --	 de de user.
 installEventHandler :: 
-		(userState -> EventData -> (userState, [Shape])) -- ^ event handler on current state and incoming event, that produces a tuple of the new user states and shapes to draw
+		(userState -> Event -> (userState, [Shape])) -- ^ event handler on current state and incoming event, that produces a tuple of the new user states and shapes to draw
 	->	userState -- ^ start state
 	-> 	IO ()	
 installEventHandler handl startState = do
