@@ -13,7 +13,7 @@ import CanvasHs.Data
 import CanvasHs.Server
 import CanvasHs.Launch
 
-import Data.IORef (IORef, newIORef, atomicModifyIORef)
+import Data.IORef (IORef, newIORef, atomicWriteIORef, readIORef)
 import Control.Monad.Trans (liftIO, lift)
 
 data State a = 	State 	{extState :: a
@@ -36,5 +36,14 @@ basicTest :: IO ()
 basicTest = do
 	launchBrowser "http://localhost:8000"
 	start -- starts server
+	
+-- | updates the stored State to the new State and returns the new State
+updateState :: IORef (State a) -> (State a) -> IO (State a)
+updateState io st = do
+						atomicWriteIORef io st
+						return st
 
+-- | read the State stored
+readState :: IORef (State a) -> IO (State a)
+readState = readIORef
 
