@@ -17,7 +17,7 @@ import Data.IORef (IORef, newIORef, atomicModifyIORef)
 import Control.Monad.Trans (liftIO, lift)
 
 data State a = 	State 	{extState :: a
-						,callback :: (a -> EventData -> (a, [Shape]))
+						,callback :: (a -> Event -> (a, [Shape]))
 						}
 
 -- | Start CanvasHs om grafische weergave mogelijk te maken. registreert de event handler en de start state van
