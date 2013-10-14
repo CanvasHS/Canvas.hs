@@ -17,7 +17,7 @@ function parseServerMessage(message) {
             figure = drawPolygon();
             break;
         case "circle":
-            figure = drawCircle();
+            figure = drawCircle(message.data.x, message.data.y, message.data.radius);
             break;
         default:
             window.alert("Unrecognized JSON message received from server.");
@@ -51,16 +51,20 @@ function drawPolygon() {
     return figure;
 }
 
-function drawCircle() {
+function drawCircle(_x, _y, _radius) {
     figure = new Kinetic.Circle({
-        radius: 100,
+        radius: _radius,
         fill: '#FFD200',
         stroke: 'black',
         strokeWidth: 1,
-        x: 300,
-        y: 400
+        x: _x,
+        y: _y
     });
     return figure;
+}
+
+function s(){
+	connection.send("");
 }
 
 
