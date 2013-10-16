@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module CanvasHs.InputTranslator where
+module CanvasHs.Protocol.Input where
 
 
 import Data.Aeson ((.:), (.:?), decode, FromJSON(..), Value(..))
@@ -7,9 +7,6 @@ import Control.Applicative ((<$>), (<*>))
 import Data.Text
 
 import CanvasHs.Data
-
---import CanvasHs
---import CanvasHs.Data
 
 data JSONEvent = JSONEvent {
     event :: Text,
