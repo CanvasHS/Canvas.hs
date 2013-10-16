@@ -21,11 +21,11 @@ Library
                   http-types >= 0.8.1,
                   wai >= 1.4,
                   text >= 0.11,
-                  directory >= 1.2
-  Exposed-modules:	CanvasHs
+                  directory >= 1.2,
+                  aeson >= 0.6
+  Exposed-modules:	CanvasHs, CanvasHs.Data
   hs-source-dirs:	canvashs-module
   other-modules:  Paths_canvashs,
-                  CanvasHs.Data,
                   CanvasHs.Launch,
                   CanvasHs.Server,
                   CanvasHs.Protocol

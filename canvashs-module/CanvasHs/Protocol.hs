@@ -60,5 +60,6 @@ encodeColor (r,g,b,a) = concat ["{red : ", show r, ", green : ", show g, ", blue
 
 -- | Ontsleuteld een inkomend bericht naar een event
 --	 Moet nog daadwerkelijk geïmplementeerd worden. Dat zal uiteindelijk met een eigen parser moeten
-decode :: T.Text -> EventData
-decode _ = defaults
+decode :: T.Text -> Event
+decode "INIT" 	= StartEvent
+decode _ 		= MouseClick (10,50) "DUMMY"
