@@ -9,6 +9,7 @@ import Paths_canvashs
 import qualified Network.WebSockets as WS
 import Control.Monad (forever)
 import qualified Data.Text as T
+import Data.Maybe
 
 import qualified Network.Wai as WAI
 import Network.HTTP.Types (status200)
@@ -17,6 +18,7 @@ import qualified Blaze.ByteString.Builder as BL (copyByteString)
 import Data.Monoid
 import qualified Data.ByteString.UTF8 as BU
 import Control.Concurrent (forkIO)
+import System.Directory
 
 import Data.IORef (IORef, newIORef, atomicModifyIORef)
 import Control.Monad.Trans (liftIO, lift)
@@ -34,15 +36,23 @@ start = do
 serverHttp :: IO ()
 serverHttp = do
                 staticContent <- getDataFileName "canvashs-client/index.html" >>= readFile
-                fileA <- getFile "index.html"
-                fileB <- getFile "js/canvashs.js"
-                fileC <- getFile "js/jquery.js"
-                fileD <- getFile "js/kinetic.js"
-                forkIO $ WRP.run 8000 (httpget ([fileA, fileB, fileC, fileD]))
+                dirFiles <- (getDirectoryFiles "canvashs-client")
+                files <- mapM getFile ["index.html", "js/canvashs.js", "js/jquery.js", "js/kinetic.js"]
+                traceShow dirFiles $ forkIO $ WRP.run 8000 (httpget (files))
                 return ()
 
+getDirectoryFiles :: String -> IO [String]
+getDirectoryFiles path = do
+    files <- getDataFileName path >>= getDirectoryContents 
+    filesExist <- mapM doesFileExist files
+    mapM getFile [ files !! i | i <- [0..(length files-1)], filesExist !! i ]
 getFile :: String -> IO String
 getFile name = getDataFileName ("canvashs-client/" ++ name) >>=readFile
+--getFileMaybe :: String -> Maybe (IO String)
+--getFileMaybe name | doesFileExist path = Just (getDataFileName path >>=readFile)
+--                  | otherwise = Nothing
+--    where
+--        path = ("canvashs-client/" ++ name)
 --  HTTP GET
 httpget :: [String] -> WAI.Application
 httpget a req = traceShow (WAI.pathInfo req) $ return $ do WAI.ResponseBuilder status200 [("Content-Type", encoding)] $ BL.copyByteString $ BU.fromString page
