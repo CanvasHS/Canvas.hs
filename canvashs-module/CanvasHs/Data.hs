@@ -133,4 +133,6 @@ data Event
     | KeyClick Char [Modifier]
     -- | A scroll event consisting of a xdiff and a ydiff
     | Scroll Int Int
+	-- | Start event is thrown when the server is started to notify user
+	| StartEvent
     

@@ -1,5 +1,6 @@
 module CanvasHs.Launch (launchBrowser) where
 
+import Prelude
 import System.Info
 import System.Process
 import System.Exit
