@@ -5,13 +5,11 @@ module CanvasHs.Protocol.Input where
 import Data.Aeson ((.:), (.:?), decode, FromJSON(..), Value(..))
 import Control.Applicative ((<$>), (<*>))
 import Data.Text
+import Data.Maybe
+import Control.Monad
+import qualified Data.ByteString.Lazy.Char8 as BS
 
 import CanvasHs.Data
-
-data JSONEvent = JSONEvent {
-    event :: Text,
-    eventData :: JSONEventData
-} deriving(Eq, Show)
 
 data JSONEventData = JSONEventData {
         jeventId :: Maybe Text,
@@ -21,24 +19,10 @@ data JSONEventData = JSONEventData {
         control :: Maybe Bool,
         alt :: Maybe Bool,
         shift :: Maybe Bool,
-        meta :: Maybe Bool
+        super :: Maybe Bool,
+        xdelta :: Maybe Integer,
+        ydelta :: Maybe Integer
     } deriving(Eq, Show)
-    
-
-instance FromJSON JSONEvent where
-    parseJSON (Object v) = do
-        name <- v .: "event"
-        eventdata <- parseJSON =<< (v .: "data")
-
-        {-result <- case name of 
-            "mousedown" -> MouseDown (x $ eventdata, y $ eventdata) unpack $ jeventId $ eventdata
-            "mouseclick" -> MouseClick (x $ eventdata, y $ eventdata) unpack $ jeventId $ eventdata
-            "mouseup" -> MouseUp (x $ eventdata, y $ eventdata) unpack $ jeventId $ eventdata
-            "mousedoubleclick" -> MouseDoubleClick (x $ eventdata, y $ eventdata) unpack $ id $ eventdata
-            "mouseenter" -> MouseEnter (x $ eventdata, y $ eventdata) unpack $ jeventId $ eventdata
-            "mouseleave" -> MouseLeave (x $ eventdata, y $ eventdata) unpack $ jeventId $ eventdata-}
-
-        return $ JSONEvent name eventdata
 
 instance FromJSON JSONEventData where
     parseJSON (Object v) = JSONEventData <$>
@@ -49,5 +33,57 @@ instance FromJSON JSONEventData where
                             v .:? "control" <*>
                             v .:? "alt" <*>
                             v .:? "shift" <*>
-                            v .:? "meta"
+                            v .:? "super" <*>
+                            v .:? "xdelta" <*>
+                            v .:? "ydelta"
 
+instance FromJSON Event where
+    parseJSON (Object v) = do
+        makeEvent <$>
+            v .: "event" <*>
+            v .: "eventData"
+
+-- Ooit gehoord van pattern matching, nou ik blijkbaar wel
+makeEvent :: Text -> JSONEventData -> Event
+makeEvent "mousedown" 
+    (JSONEventData{jeventId = Just id, x = Just x, y = Just y}) 
+        = MouseDown (fromIntegral $ x, fromIntegral $ y) (unpack $ id)
+
+makeEvent "mouseclick"
+    (JSONEventData{jeventId = Just id, x = Just x, y = Just y})  
+        = MouseClick (fromIntegral $ x, fromIntegral $ y) (unpack $ id)
+
+makeEvent "mouseup" 
+    (JSONEventData{jeventId = Just id, x = Just x, y = Just y})
+         = MouseUp (fromIntegral $ x, fromIntegral $ y) (unpack $ id)
+
+makeEvent "mousedoubleclick"
+    (JSONEventData{jeventId = Just id, x = Just x, y = Just y})
+         = MouseDoubleClick (fromIntegral $ x, fromIntegral $ y) (unpack $ id)
+
+makeEvent "mouseenter"
+    (JSONEventData{jeventId = Just id, x = Just x, y = Just y})
+         = MouseEnter (fromIntegral $ x, fromIntegral $ y) (unpack $ id)
+
+makeEvent "mouseleave"
+    (JSONEventData{jeventId = Just id, x = Just x, y = Just y})
+         = MouseLeave (fromIntegral $ x, fromIntegral $ y) (unpack $ id)
+
+makeEvent "keydown"
+    (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh, super = Just su})
+        = KeyDown ((unpack $ k) !! 0) (makeModifiers c a sh su)
+
+makeEvent "keyup"
+    (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh, super = Just su})
+        = KeyUp ((unpack $ k) !! 0) (makeModifiers c a sh su)
+
+makeEvent "scroll"
+    (JSONEventData{xdelta = Just x, ydelta = Just y})
+        = Scroll (fromIntegral $ x) (fromIntegral $ y)
+
+makeModifiers :: Bool -> Bool -> Bool -> Bool -> [Modifier]
+makeModifiers ctrl alt shift super = 
+    (if ctrl then [Ctrl] else []) ++ 
+    (if alt then [Alt] else []) ++
+    (if shift then [Shift] else []) ++
+    (if super then [Super] else [])
