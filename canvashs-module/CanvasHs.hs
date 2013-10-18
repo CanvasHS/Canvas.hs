@@ -16,7 +16,7 @@ import CanvasHs.Protocol
 
 import qualified Data.Text as T
 
-import Data.IORef (IORef, newIORef, atomicWriteIORef, readIORef)
+import Data.IORef (IORef, newIORef, atomicModifyIORef, readIORef)
 import Control.Monad.Trans (liftIO, lift)
 
 data State a = 	State 	{extState :: a
@@ -38,19 +38,9 @@ installEventHandler handl startState = do
 -- | handles input from the canvas, calls the handler on it and sends the result back to the canvas
 handleInput :: IORef (State a) -> T.Text -> IO (Maybe T.Text)
 handleInput st ip	= do
-							curState <- readState st
+							curState <- readIORef st
 							let
 								(newState, shapes) = (callback curState) (extState curState) $ decode ip
-							updateState st curState{extState=newState}
-							return $ Just $ encode $ head shapes  -- Just $ encode shapes
-	
--- | updates the stored State to the new State and returns the new State
-updateState :: IORef (State a) -> (State a) -> IO (State a)
-updateState io st = do
-						atomicWriteIORef io st
-						return st
-
--- | read the State stored
-readState :: IORef (State a) -> IO (State a)
-readState = readIORef
+							atomicModifyIORef st (\_ -> (curState{extState=newState}, ())) --update de state
+							return $ Just $ encode $ head shapes  -- Just $ encode shapes 
 
