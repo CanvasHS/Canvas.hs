@@ -143,12 +143,11 @@ iEncodeEventData (Just j) e = j {eventId = Just $ T.pack $ D.eventId e
                                 ,listen = (++ mklisten e) <$> listen j
                                 }
                                 where
-                                    -- | TODO: protocol spreekt van camelCase (mouseDown) terwijl voorbeeldcode van mousedown spreekt
                                     mklisten e =     [] 
                                                     ++ if D.mouseDown e then ["mousedown"] else []
                                                     ++ if D.mouseClick e then ["mouseclick"] else []
                                                     ++ if D.mouseUp e then ["mouseup"] else []
-                                                    ++ if D.mouseDoubleClick e then ["mousedubbleclick"] else []
+                                                    ++ if D.mouseDoubleClick e then ["mousedoubleclick"] else []
                                                     ++ if D.mouseDrag e then ["mousedrag"] else []
                                                     ++ if D.mouseEnter e then ["mouseenter"] else []
                                                     ++ if D.mouseLeave e then ["mouseleave"] else []
