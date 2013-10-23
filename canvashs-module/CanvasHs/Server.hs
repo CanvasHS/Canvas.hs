@@ -44,10 +44,14 @@ serverHttp :: IO ()
 serverHttp = do
                 staticContent <- getDataFileName "canvashs-client/index.html" >>= readFile
                 fileA <- getFile "index.html"
-                fileB <- getFile "js/canvashs.js"
-                fileC <- getFile "js/jquery.js"
-                fileD <- getFile "js/kinetic.js"
-                forkIO $ WRP.run 8000 (httpget ([fileA, fileB, fileC, fileD]))
+                fileB <- getFile "js/main.js"
+                fileC <- getFile "js/plugins.js"
+                fileD <- getFile "js/vendor/kinetic.js"
+                fileE <- getFile "js/vendor/modernizr.js"
+                fileF <- getFile "js/vendor/jquery.js"
+                fileG <- getFile "css/main.css"
+                fileH <- getFile "css/normalize.css"
+                forkIO $ WRP.run 8000 (httpget ([fileA, fileB, fileC, fileD, fileE, fileF, fileG, fileH]))
                 return ()
 
 getFile :: String -> IO String
@@ -57,9 +61,13 @@ httpget :: [String] -> WAI.Application
 httpget a req = traceShow (WAI.pathInfo req) $ return $ do WAI.ResponseBuilder status200 [("Content-Type", encoding)] $ BL.copyByteString $ BU.fromString page
                     where
                         (encoding, page) = case WAI.pathInfo req of
-                                    ["js","jquery.js"] -> ("text/javascript", (a !! 3))
-                                    ["js","kinetic.js"] -> ("text/javascript", (a !! 2))
-                                    ["js","canvashs.js"] -> ("text/javascript", (a !! 1))
+                                    ["css","normalize.js"] -> ("text/javascript", (a !! 7))
+                                    ["css","main.js"] -> ("text/javascript", (a !! 6))
+                                    ["js","vendor","jquery.js"] -> ("text/javascript", (a !! 5))
+                                    ["js","vendor","modernizr.js"] -> ("text/javascript", (a !! 4))
+                                    ["js","vendor","kinetic.js"] -> ("text/javascript", (a !! 3))
+                                    ["js","plugins.js"] -> ("text/javascript", (a !! 2))
+                                    ["js","main.js"] -> ("text/javascript", (a !! 1))
                                     _ -> ("text/html", (a !! 0))
                 
         
@@ -79,23 +87,6 @@ websockets f rq = 	do
 							else do 
 								let 
 									Just m = resp
-								WS.sendTextData m
-									
-							
-					
-						
-						
-						
-						
-						
-						
-						
-						
-						
-						
-						
-						
-						
-						
+								WS.sendTextData m		
 						
 						
