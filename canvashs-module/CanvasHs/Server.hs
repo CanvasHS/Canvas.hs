@@ -61,8 +61,8 @@ httpget :: [String] -> WAI.Application
 httpget a req = traceShow (WAI.pathInfo req) $ return $ do WAI.ResponseBuilder status200 [("Content-Type", encoding)] $ BL.copyByteString $ BU.fromString page
                     where
                         (encoding, page) = case WAI.pathInfo req of
-                                    ["css","normalize.js"] -> ("text/javascript", (a !! 7))
-                                    ["css","main.js"] -> ("text/javascript", (a !! 6))
+                                    ["css","normalize.css"] -> ("text/css", (a !! 7))
+                                    ["css","main.css"] -> ("text/css", (a !! 6))
                                     ["js","vendor","jquery.js"] -> ("text/javascript", (a !! 5))
                                     ["js","vendor","modernizr.js"] -> ("text/javascript", (a !! 4))
                                     ["js","vendor","kinetic.js"] -> ("text/javascript", (a !! 3))
