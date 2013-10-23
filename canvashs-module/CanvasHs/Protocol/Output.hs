@@ -81,7 +81,7 @@ iEncode (D.Translate dx dy s) = js {shapeData = sd {x = (+dx) <$> (x sd), y = (+
                                 where
                                     js = iEncode s
                                     sd = shapeData js
--- | TODO: Volgens protocol een scale :: Int, volgens datamodel een xscale en yscale
+
 iEncode (D.Scale dx dy s)        = js {shapeData = sd {scaleX = Just dx, scaleY = Just dy}}
                                 where 
                                     js = iEncode s
@@ -89,7 +89,7 @@ iEncode (D.Scale dx dy s)        = js {shapeData = sd {scaleX = Just dx, scaleY 
 iEncode (D.Event e s)            = js {shapeEventData = Just (iEncodeEventData (shapeEventData js) e)}
                                 where
                                     js = iEncode s
--- | TODO: moet een container niet ook een point?
+
 iEncode (D.Container w h ss)    = JSONShape {shapeType = "container"
                                         ,shapeData = iEncodePoint (0,0)
                                         ,shapeEventData = Nothing
