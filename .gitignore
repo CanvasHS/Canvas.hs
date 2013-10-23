@@ -7,4 +7,4 @@ cabal-dev
 .virthualenv
 lib
 docs
-DS_Store
+.DS_Store
