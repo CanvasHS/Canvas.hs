@@ -77,7 +77,7 @@ function drawGroup(data) {
 
 $(document).ready(function() {
 
-    var width = 900; // defined here because the contaier also needs these proportions 
+    var width = 900; // defined here because the container also needs these proportions 
     var height = 600;
 
     $( "#wrapper" ).css( "min-width", width+"px" );
@@ -94,8 +94,8 @@ $(document).ready(function() {
 
     stage = new Kinetic.Stage({
         container: 'canvas',
-        width: width,
-        height: height
+        width: 900,
+        height: 600
     });
 
     // When the connection is open, send some data to the server
@@ -111,7 +111,7 @@ $(document).ready(function() {
     // Log messages from the server
     connection.onmessage = function (e) {
         console.log("test"+e.data);
-        parseServerMessage(jQuery.parseJSON(e.data));
+        parseFigureMessage(jQuery.parseJSON(e.data));
     };
 
     window.setInterval(function(){
