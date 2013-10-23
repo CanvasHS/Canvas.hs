@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module CanvasHs.Protocol.Input where
+module CanvasHs.Protocol.Input (FromJSON(..)) where
 
 
 import Data.Aeson ((.:), (.:?), decode, FromJSON(..), Value(..))
