@@ -43,7 +43,7 @@ Library
 --  type:            exitcode-stdio-1.0
 --  main-is:         tests/JavascriptTests.hs
 --  build-depends:   
---                   base >= 4 && < 5,
+--                  base >= 4 && < 5,
 --                   process >= 1.1
 
 
@@ -52,7 +52,7 @@ Test-Suite module-test
   type:            exitcode-stdio-1.0
   hs-source-dirs:  canvashs-module/tests/,
                    canvashs-module/
-  ghc-options:     -Wall -Werror
+  ghc-options:     -Wall
   main-is:         Test.hs
   build-depends:   
                    base >= 4 && < 5,
