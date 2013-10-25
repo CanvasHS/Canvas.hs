@@ -3,25 +3,20 @@ module CanvasHs.Server (start) where
 
 import CanvasHs.Protocol
 import CanvasHs.Data
+import CanvasHs.Server.Static
 
 -- Paths_canvashs is required to include static files
-import Paths_canvashs 
 import qualified Network.WebSockets as WS
 import Control.Monad (forever)
 import qualified Data.Text as T
 import Data.Maybe (isNothing)
 
-import qualified Network.Wai as WAI
-import Network.HTTP.Types (status200)
 import qualified Network.Wai.Handler.Warp as WRP (run)
-import qualified Blaze.ByteString.Builder as BL (copyByteString)
 import Data.Monoid
-import qualified Data.ByteString.UTF8 as BU
 import Control.Concurrent (forkIO)
 
 import Data.IORef (IORef, newIORef, atomicModifyIORef)
 import Control.Monad.Trans (liftIO, lift)
-import Debug.Trace
 
 {- | 
 	Starts the server, this starts a httpserver on 8000 which will serve the static content
@@ -34,42 +29,20 @@ import Debug.Trace
 -}
 start :: (T.Text -> IO (Maybe T.Text)) -> IO ()
 start f =	do
-				forkIO serverHttp --de httpserver draait in een apart thread
+				http <- forkIO serverHttp --de httpserver draait in een apart thread
 				serverHandle --runserver is een extreem simpele server voor de websockets   
+--                (killThread http)
 				return ()
 				where
 					serverHandle = liftIO $ WS.runServer "0.0.0.0" 8080 $ websockets f
 
 serverHttp :: IO ()
 serverHttp = do
-                staticContent <- getDataFileName "canvashs-client/index.html" >>= readFile
-                fileA <- getFile "index.html"
-                fileB <- getFile "js/main.js"
-                fileC <- getFile "js/plugins.js"
-                fileD <- getFile "js/vendor/kinetic.js"
-                fileE <- getFile "js/vendor/modernizr.js"
-                fileF <- getFile "js/vendor/jquery.js"
-                fileG <- getFile "css/main.css"
-                fileH <- getFile "css/normalize.css"
-                forkIO $ WRP.run 8000 (httpget ([fileA, fileB, fileC, fileD, fileE, fileF, fileG, fileH]))
+				-- Serve static files
+                dirFiles <- getDirectories "canvashs-client" >>= \dirs -> mapM getDirectoryFiles ("canvashs-client":dirs)
+                forkIO $ WRP.run 8000 (httpget (concat dirFiles))
                 return ()
 
-getFile :: String -> IO String
-getFile name = getDataFileName ("canvashs-client/" ++ name) >>=readFile
---  HTTP GET
-httpget :: [String] -> WAI.Application
-httpget a req = traceShow (WAI.pathInfo req) $ return $ do WAI.ResponseBuilder status200 [("Content-Type", encoding)] $ BL.copyByteString $ BU.fromString page
-                    where
-                        (encoding, page) = case WAI.pathInfo req of
-                                    ["css","normalize.css"] -> ("text/css", (a !! 7))
-                                    ["css","main.css"] -> ("text/css", (a !! 6))
-                                    ["js","vendor","jquery.js"] -> ("text/javascript", (a !! 5))
-                                    ["js","vendor","modernizr.js"] -> ("text/javascript", (a !! 4))
-                                    ["js","vendor","kinetic.js"] -> ("text/javascript", (a !! 3))
-                                    ["js","plugins.js"] -> ("text/javascript", (a !! 2))
-                                    ["js","main.js"] -> ("text/javascript", (a !! 1))
-                                    _ -> ("text/html", (a !! 0))
-                
         
 --  WEBSOCKETS          
 -- RFC6455 heeft de beste browsersupport, zie ook: http://en.wikipedia.org/wiki/WebSocket#Browser_support
