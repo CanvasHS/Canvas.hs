@@ -103,10 +103,10 @@ data Shape
     -- | A container. Has width and height and a list of shapes in this container.
     | Container Int Int [Shape]
 
-
 -- | Keymodifiers that can be enabled in a keyboard event
 data Modifier 
     = Shift | Ctrl | Alt | Super
+    deriving(Eq, Show)
 
 -- | The events the user can expect to get as input
 data Event
@@ -135,4 +135,4 @@ data Event
     | Scroll Int Int
 	-- | Start event is thrown when the server is started to notify user
 	| StartEvent
-    
+    deriving(Eq, Show)

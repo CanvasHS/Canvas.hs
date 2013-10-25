@@ -16,9 +16,11 @@ import CanvasHs.Data
 import qualified Data.Text as T
 import Data.List (intercalate)
 
--- | encode maakt van een Output een JSON-string (type Data.Text.Text) die voldoet aan het protocol
---	 @ensure \result is een valide JSON-object
---   LET OP: het resultaat voldoet momenteel NIET aan het protocol!
+{- 	|
+	encode maakt van een Output een JSON-string (type Data.Text.Text) die voldoet aan het protocol
+	@ensure \result is een valide JSON-object
+	LET OP: het resultaat voldoet momenteel NIET aan het protocol!
+-}
 encode :: Shape -> T.Text
 encode (Circle p r)		= T.pack $ unlines [
 							"{"
