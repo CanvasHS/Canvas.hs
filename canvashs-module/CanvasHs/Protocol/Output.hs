@@ -1,10 +1,13 @@
 ﻿{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module CanvasHs.Protocol.Output where
+module CanvasHs.Protocol.Output
+(   iEncode
+,   ToJSON(..)
+) 	where
 
 import GHC.Generics
-import Data.Aeson (ToJSON)
+import Data.Aeson (ToJSON, toJSON, object, (.=))
 import qualified Data.Text as T
 import Control.Applicative ((<$>))
 
@@ -16,7 +19,7 @@ data JSONShape
         shapeData      :: JSONShapeData, 
         shapeEventData :: Maybe JSONEventData, 
         shapeChildren  :: Maybe [JSONShape]
-    } deriving (Show, Generic)
+    } deriving (Show)
 
 data JSONShapeData
     = JSONShapeData { 
@@ -42,7 +45,9 @@ data JSONEventData
         listen         :: Maybe [T.Text]
     } deriving (Show, Generic)
 
-instance ToJSON JSONShape
+instance ToJSON JSONShape where
+    toJSON (JSONShape {shapeType = t, shapeData = d, shapeEventData = e, shapeChildren = cs})
+        = object ["type" .= t, "data" .= d, "eventData" .= e, "children" .= cs]
 instance ToJSON JSONShapeData
 instance ToJSON JSONEventData
 
@@ -151,16 +156,3 @@ iEncodeEventData (Just j) e = j {eventId = Just $ T.pack $ D.eventId e
                                                     ++ if D.mouseDrag e then ["mousedrag"] else []
                                                     ++ if D.mouseEnter e then ["mouseenter"] else []
                                                     ++ if D.mouseLeave e then ["mouseleave"] else []
-
-
-
-
-
-
-
-
-
-
-
-
-
