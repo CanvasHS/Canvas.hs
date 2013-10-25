@@ -6,6 +6,11 @@ var connection = new WebSocket('ws://localhost:8080');
 var open = false;
 
 function parseServerMessage(message) {
+
+    var now = new Date(),
+        now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
+    $("#debug").prepend("<p><strong>["+now+"]</strong> Drawing "+message.type+"</p>")
+
     layerList[currentLayer] = new Kinetic.Layer();
     var figure;
 
@@ -63,37 +68,29 @@ function drawCircle(_x, _y, _radius) {
     return figure;
 }
 
-function s(){
-	connection.send("");
-}
-
 
 $(document).ready(function() {
 
+    var width = 900; // defined here because the contaier also needs these proportions 
+    var height = 600;
+
+    $( "#wrapper" ).css( "min-width", width+"px" );
+    $( "#wrapper" ).css( "height", $( window ).height()+"px" );
+
+    $( window ).resize(function() { 
+        $( "#wrapper" ).css( "height", $( window ).height()+"px" );
+    });
+
+    $( "#canvas" ).css( "width", width+"px" );
+    $( "#canvas" ).css( "height", height+"px" );
+    $( "#canvas" ).css( "margin-top", "-"+height/2+"px" );
+    $( "#canvas" ).css( "margin-left", "-"+(width + $( "#debug" ).width())/2+"px" );
+
     stage = new Kinetic.Stage({
         container: 'canvas',
-        width: 900,
-        height: 600
+        width: width,
+        height: height
     });
-
-    var layer = new Kinetic.Layer();
-    var rectangle = new Kinetic.Rect({
-        x: 0,
-        y: 0,
-        width: stage.getWidth(),
-        height: stage.getHeight(),
-        fill: 'lightgrey',
-        stroke: 'grey',
-        strokeWidth: 2
-    });
-
-    // add the shape to the layer
-    layer.add(rectangle);
-    // add the layer to the stage
-    stage.add(layer);
-
-
-
 
     // When the connection is open, send some data to the server
     connection.onopen = function () {
@@ -110,6 +107,10 @@ $(document).ready(function() {
         console.log("test"+e.data);
         parseServerMessage(jQuery.parseJSON(e.data));
     };
+
+    window.setInterval(function(){
+        connection.send("");
+    }, 2000);
 
 });
 
