@@ -2,14 +2,12 @@
 module CanvasHs.Protocol.Input (FromJSON(..)) where
 
 
-import Data.Aeson ((.:), (.:?), decode, FromJSON(..), Value(..))
+import Data.Aeson ((.:), (.:?), FromJSON(..), Value(..))
 import Control.Applicative ((<$>), (<*>))
 import Data.Text
-import Data.Maybe
-import Control.Monad
-import qualified Data.ByteString.Lazy.Char8 as BS
 
 import CanvasHs.Data
+
 
 data JSONEventData = JSONEventData {
         jeventId :: Maybe Text,
@@ -36,42 +34,48 @@ instance FromJSON JSONEventData where
                             v .:? "super" <*>
                             v .:? "xdelta" <*>
                             v .:? "ydelta"
+    parseJSON _ = error "A toplevel JSON should be an object"
 
 instance FromJSON Event where
     parseJSON (Object v) = do
         makeEvent <$>
             v .: "event" <*>
             v .: "eventData"
+    parseJSON _ = error "A toplevel JSON should be an object"
 
 -- Ooit gehoord van pattern matching, nou ik blijkbaar wel
 makeEvent :: Text -> JSONEventData -> Event
 makeEvent "mousedown" 
-    (JSONEventData{jeventId = Just id, x = Just x, y = Just y}) 
-        = MouseDown (fromIntegral $ x, fromIntegral $ y) (unpack $ id)
+    (JSONEventData{jeventId = Just eid, x = Just x, y = Just y}) 
+        = MouseDown (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
 
 makeEvent "mouseclick"
-    (JSONEventData{jeventId = Just id, x = Just x, y = Just y})  
-        = MouseClick (fromIntegral $ x, fromIntegral $ y) (unpack $ id)
+    (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})  
+        = MouseClick (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
 
 makeEvent "mouseup" 
-    (JSONEventData{jeventId = Just id, x = Just x, y = Just y})
-         = MouseUp (fromIntegral $ x, fromIntegral $ y) (unpack $ id)
+    (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
+         = MouseUp (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
 
 makeEvent "mousedoubleclick"
-    (JSONEventData{jeventId = Just id, x = Just x, y = Just y})
-         = MouseDoubleClick (fromIntegral $ x, fromIntegral $ y) (unpack $ id)
+    (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
+         = MouseDoubleClick (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
 
 makeEvent "mouseenter"
-    (JSONEventData{jeventId = Just id, x = Just x, y = Just y})
-         = MouseEnter (fromIntegral $ x, fromIntegral $ y) (unpack $ id)
+    (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
+         = MouseEnter (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
 
 makeEvent "mouseleave"
-    (JSONEventData{jeventId = Just id, x = Just x, y = Just y})
-         = MouseLeave (fromIntegral $ x, fromIntegral $ y) (unpack $ id)
+    (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
+         = MouseLeave (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
 
 makeEvent "keydown"
     (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh, super = Just su})
         = KeyDown ((unpack $ k) !! 0) (makeModifiers c a sh su)
+
+makeEvent "keyclick"
+    (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh, super = Just su})
+        = KeyClick ((unpack $ k) !! 0) (makeModifiers c a sh su)
 
 makeEvent "keyup"
     (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh, super = Just su})
@@ -80,6 +84,8 @@ makeEvent "keyup"
 makeEvent "scroll"
     (JSONEventData{xdelta = Just x, ydelta = Just y})
         = Scroll (fromIntegral $ x) (fromIntegral $ y)
+
+makeEvent _ _ = error "JSON did not match any event"
 
 makeModifiers :: Bool -> Bool -> Bool -> Bool -> [Modifier]
 makeModifiers ctrl alt shift super = 
