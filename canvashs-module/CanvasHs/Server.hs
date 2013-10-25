@@ -42,6 +42,7 @@ serverHttp = do
                 dirFiles <- getDirectories "canvashs-client" >>= \dirs -> mapM getDirectoryFiles ("canvashs-client":dirs)
                 forkIO $ WRP.run 8000 (httpget (concat dirFiles))
                 return ()
+
         
 --  WEBSOCKETS          
 -- RFC6455 heeft de beste browsersupport, zie ook: http://en.wikipedia.org/wiki/WebSocket#Browser_support
@@ -59,23 +60,6 @@ websockets f rq = 	do
 							else do 
 								let 
 									Just m = resp
-								WS.sendTextData m
-									
-							
-					
-						
-						
-						
-						
-						
-						
-						
-						
-						
-						
-						
-						
-						
-						
+								WS.sendTextData m		
 						
 						
