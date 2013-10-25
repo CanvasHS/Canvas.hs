@@ -20,13 +20,13 @@ import Data.IORef (IORef, newIORef, atomicModifyIORef, readIORef)
 import Control.Monad.Trans (liftIO, lift)
 
 data State a = 	State 	{extState :: a
-						,callback :: (a -> Event -> (a, [Shape]))
+						,callback :: (a -> Event -> (a, Shape))
 						}
 
 -- | Start CanvasHs om grafische weergave mogelijk te maken. registreert de event handler en de start state van
 --	 de de user.
 installEventHandler :: 
-		(userState -> Event -> (userState, [Shape])) -- ^ event handler on current state and incoming event, that produces a tuple of the new user states and shapes to draw
+		(userState -> Event -> (userState, Shape)) -- ^ event handler on current state and incoming event, that produces a tuple of the new user state and shape to draw
 	->	userState -- ^ start state
 	-> 	IO ()	
 installEventHandler handl startState = do
@@ -40,7 +40,7 @@ handleInput :: IORef (State a) -> T.Text -> IO (Maybe T.Text)
 handleInput st ip	= do
 							curState <- readIORef st
 							let
-								(newState, shapes) = (callback curState) (extState curState) $ decode ip
+								(newState, shape) = (callback curState) (extState curState) $ decode ip
 							atomicModifyIORef st (\_ -> (curState{extState=newState}, ())) --update de state
-							return $ Just $ encode $ head shapes  -- Just $ encode shapes 
+							return $ Just $ encode shape
 
