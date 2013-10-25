@@ -11,9 +11,7 @@ data-files:          canvashs-client/*.html,
                      canvashs-client/css/*.css
 
 Library      
-  build-depends: 	base >= 4, QuickCheck >= 2.4, websockets, warp, blaze-html, utf8-string, process >= 1.1, mtl >= 2.1, blaze-builder >= 0.3.1, http-types >= 0.8.1, wai >= 1.4, text >= 
-0.11, aeson >= 0.6, bytestring >= 0.10.0.2, ghc-prim
-
+  build-depends:   base >= 4, QuickCheck >= 2.4, websockets, warp, blaze-html, utf8-string, process >= 1.1, mtl >= 2.1, blaze-builder >= 0.3.1, http-types >= 0.8.1, wai >= 1.4, text >= 0.11, aeson >= 0.6, bytestring >= 0.10.0.2, ghc-prim >= 0.2.0.0
   Exposed-modules:	CanvasHs, CanvasHs.Data
   hs-source-dirs:	canvashs-module
   other-modules:  Paths_canvashs,
