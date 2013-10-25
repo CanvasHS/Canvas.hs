@@ -31,9 +31,21 @@ function parseServerMessage(message) {
     layerList[currentLayer].add(figure);
     stage.add(layerList[currentLayer]);
     layerList[currentLayer].on('click', function(event) {
-        window.alert("Clicked on " + event.targetNode.getClassName() + " on layer " + layerList.indexOf(event.targetNode.getLayer()));
+        window.alert("Clicked on " + event.targetNode.getClassName() + " on layer " + layerList.indexOf(event.targetNode.getLayer()) + "\nSend to server as generic click (see console)");
+        /*msg = '{"event":"mouseclick", "data":["id":"TESTID", "x":10, "y":10]}';
+        TEMPsendMessageToServer(msg);*/
     });
     currentLayer++;
+}
+
+/*
+* TEMPORARY FUNCTION FOR DEBUG PURPOSES 
+* ONLY USE WHILE PROPER FUNCTION IS NOT YET IN PLACE
+*/
+function TEMPsendMessageToServer(msg){
+    /*console.log("Sending message to server using TEMP function:");
+    console.log(msg);
+    connection.send(msg);*/
 }
 
 
@@ -104,7 +116,8 @@ $(document).ready(function() {
 
     // Log messages from the server
     connection.onmessage = function (e) {
-        console.log("test"+e.data);
+        console.log("received raw data:");
+        console.log(e.data);
         parseServerMessage(jQuery.parseJSON(e.data));
     };
 
