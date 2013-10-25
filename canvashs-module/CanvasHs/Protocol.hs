@@ -13,55 +13,24 @@ module CanvasHs.Protocol
 ) where 
 
 import CanvasHs.Data
+import CanvasHs.Protocol.Output
+import CanvasHs.Protocol.Input
+
 import qualified Data.Text as T
 import Data.List (intercalate)
+import qualified Data.Aeson as Aeson (encode, eitherDecode)
+import qualified Data.ByteString.Lazy.UTF8 as BU (fromString, toString)
+import Data.Either (either)
 
 {- 	|
-	encode maakt van een Output een JSON-string (type Data.Text.Text) die voldoet aan het protocol
+	encode maakt van een Output een JSON-string (type Data.Text) die voldoet aan het protocol
 	@ensure \result is een valide JSON-object
-	LET OP: het resultaat voldoet momenteel NIET aan het protocol!
 -}
 encode :: Shape -> T.Text
-encode (Circle p r)		= T.pack $ unlines [
-							"{"
-							,"    \"type\": \"circle\","
-							,"    \"data\": {"
-							,"        \"id\": \"circle_nr_1\","
-							,"        \"x\": " ++ (encodePointX p) ++ ","
-							,"        \"y\": " ++ (encodePointY p) ++ ","
-							,"        \"radius\": "++(show r)
-							,"    }"
-							,"}"]
---encode (Rect p w h) 	= T.pack $ unlines
---							["{shape : 'rect'"
---							,",origin : " ++ (encodePoint p)
---							,",width : " ++ (show w)
---							,",height : " ++ (show h)
---							,"}"
---							]
---encode (Line ps)		= T.pack $ unlines
---							["{shape : 'line'"
---							,",path : [" ++ (intercalate "," $ map encodePoint ps) ++ "]"
---							,"}"
---							]
---encode (Fill c s)		= T.pack $ unlines
---							["{effect : 'fill'"
---							,",color : " ++ (encodeColor c)
---							,",shape : " ++ T.unpack (encode s)
---							,"}"
---							]
-						
-
-encodePointX :: Point -> String
-encodePointX (x,_) = show x
-encodePointY :: Point -> String
-encodePointY (_,y) = show y
-
-encodeColor :: Color -> String
-encodeColor (r,g,b,a) = concat ["{red : ", show r, ", green : ", show g, ", blue : ", show b, ", alpha : ", show a, "}"]
+encode = T.pack . BU.toString . Aeson.encode . iEncode
 
 -- | Ontsleuteld een inkomend bericht naar een event
---	 Moet nog daadwerkelijk geïmplementeerd worden. Dat zal uiteindelijk met een eigen parser moeten
+--   De daadwerkelijke code hiervoor staat in CanvasHs.Protocol.Output
 decode :: T.Text -> Event
-decode "INIT" 	= StartEvent
-decode _ 		= MouseClick (10,50) "DUMMY"
+decode "INIT"   = StartEvent
+decode s        = either (\b -> error $ "Aeson decode error: "++b) (\b -> b) $ Aeson.eitherDecode $ BU.fromString $ T.unpack s
