@@ -23,9 +23,9 @@ data JSONShape
 
 data JSONShapeData
     = JSONShapeData { 
---        stroke         :: Maybe T.Text, 
+        stroke         :: Maybe T.Text, 
         strokeWidth    :: Maybe Int, 
---        fill           :: Maybe T.Text, 
+        fill           :: Maybe T.Text, 
         scaleX         :: Maybe Float, 
         scaleY         :: Maybe Float, 
         rotateDeg      :: Maybe Int, 
@@ -104,11 +104,11 @@ iEncode (D.Container w h ss)    = JSONShape {shapeType = "container"
 iEncodePoint :: D.Point -> JSONShapeData
 iEncodePoint (x',y')    
     = JSONShapeData { 
---        stroke         = Nothing,
+        stroke         = Just "black",
         strokeWidth    = Nothing, 
---        fill           = Nothing, 
-        scaleX         = Nothing, 
-        scaleY         = Nothing, 
+        fill           = Just "black", 
+        scaleX         = Just 1, 
+        scaleY         = Just 1, 
         rotateDeg      = Nothing, 
         fontSize       = Nothing, 
         fontFamily     = Nothing, 
@@ -123,11 +123,11 @@ iEncodePoint (x',y')
 iEncodePoints :: [D.Point] -> JSONShapeData
 iEncodePoints ps
     = JSONShapeData { 
---        stroke         = Nothing,
+        stroke         = Nothing,
         strokeWidth    = Nothing, 
---        fill           = Nothing, 
-        scaleX         = Nothing, 
-        scaleY         = Nothing, 
+        fill           = Just "black", 
+        scaleX         = Just 1, 
+        scaleY         = Just 1, 
         rotateDeg      = Nothing, 
         fontSize       = Nothing, 
         fontFamily     = Nothing, 
