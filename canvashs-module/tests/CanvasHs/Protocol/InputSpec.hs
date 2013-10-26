@@ -2,13 +2,29 @@ module CanvasHs.Protocol.InputSpec (main,spec) where
 
 import Test.Hspec
 import Test.QuickCheck
-import CanvasHs.Protocol.Input
 import CanvasHs.Data
 import CanvasHs.Protocol (decode)
 import Data.Text
- 
---instance Arbitrary Char where
---    arbitrary     = choose ('\32', '\128')
+import Text.Printf
+
+-- | A JSON valid string
+newtype JSONString = JSONString String
+
+-- | Instance for QuickChecks arbitrary
+instance Arbitrary JSONString where
+    arbitrary     = do
+        len <- choose(1,20)
+        arb <- (vectorOf len $ oneof [choose('a', 'z'), choose('A', 'Z')])
+        return $ JSONString arb
+
+-- | A JSON valid character
+newtype JSONChar = JSONChar Char
+
+-- | Instance for QuickChecks arbitrary
+instance Arbitrary JSONChar where
+    arbitrary = do
+        char <- oneof [choose('a', 'z'), choose('A', 'Z')]
+        return $ JSONChar char
 
 main :: IO ()
 main = hspec spec
@@ -16,29 +32,75 @@ main = hspec spec
 spec :: Spec
 spec = do
         describe "mousedown event" $ do
-            it "can decode an mousedown event" $ do
-                (decode $ pack $ "{\"event\":\"mousedown\", \"eventData\":{\"id\": \"myAwesomeShape\", \"x\": 150, \"y\":200}}") `shouldBe` (MouseDown (150, 200) "myAwesomeShape")
-            it "can decode an mouseclick event" $ do
-                (decode $ pack $ "{\"event\":\"mouseclick\", \"eventData\":{\"id\": \"myAwesomeShape\", \"x\": 150, \"y\":200}}") `shouldBe` (MouseClick (150, 200) "myAwesomeShape")
-
-
---            it "returns an *arbitrary* mousedown event" $
---                property $ \x y eid -> (decode $ buildMouse "mousedown" x y eid) == (MouseDown (x, y) eid)
-            it "can decode an mouseup event" $ do
-                (decode $ pack $ "{\"event\":\"mouseup\", \"eventData\":{\"id\": \"myAwesomeShape\", \"x\": 150, \"y\":200}}") `shouldBe` (MouseUp (150, 200) "myAwesomeShape")
-            it "can decode an mouseenter event" $ do
-                (decode $ pack $ "{\"event\":\"mouseenter\", \"eventData\":{\"id\": \"myAwesomeShape\", \"x\": 150, \"y\":200}}") `shouldBe` (MouseEnter (150, 200) "myAwesomeShape")
-            it "can decode an mouseleave event" $ do
-                (decode $ pack $ "{\"event\":\"mouseleave\", \"eventData\":{\"id\": \"myAwesomeShape\", \"x\": 150, \"y\":200}}") `shouldBe` (MouseLeave (150, 200) "myAwesomeShape")
-            it "can decode an keydown event" $ do
-                (decode $ pack $ "{\"event\":\"keydown\", \"eventData\":{\"key\": \"c\", \"control\": true, \"alt\": true, \"shift\": true, \"super\": true}}") `shouldBe` (KeyDown 'c' [Ctrl, Alt, Shift, Super])
-            it "can decode an keyclick event" $ do
-                (decode $ pack $ "{\"event\":\"keyclick\", \"eventData\":{\"key\": \"c\", \"control\": true, \"alt\": true, \"shift\": true, \"super\": true}}") `shouldBe` (KeyClick 'c' [Ctrl, Alt, Shift, Super])
-            it "can decode an keyup event" $ do
-                (decode $ pack $ "{\"event\":\"keyup\", \"eventData\":{\"key\": \"c\", \"control\": true, \"alt\": true, \"shift\": true, \"super\": true}}") `shouldBe` (KeyUp 'c' [Ctrl, Alt, Shift, Super])
+            it "can decode a mousedown event" $ do
+                (decode $ pack $ buildMousePF "mousedown" 150 200 "myAwesomeShape") `shouldBe` (MouseDown (150, 200) "myAwesomeShape")
+            it "can decode *arbitrary* mousedown event" $ do
+                JSONString eid <- arbitrary
+                property $ \x y -> (decode $ pack $ buildMousePF "mousedown" x y eid) == (MouseDown (x, y) eid)
+        describe "mouseclick event" $ do
+            it "can decode a mouseclick event" $ do
+                (decode $ pack $ buildMousePF "mouseclick" 150 200 "myAwesomeShape") `shouldBe` (MouseClick (150, 200) "myAwesomeShape")
+            it "can decode *arbitrary* mouseclick event" $ do
+                JSONString eid <- arbitrary
+                property $ \x y -> (decode $ pack $ buildMousePF "mouseclick" x y eid) == (MouseClick (x, y) eid)
+        describe "mouseup event" $ do
+            it "can decode a mouseup event" $ do
+                (decode $ pack $ buildMousePF "mouseup" 150 200 "myAwesomeShape") `shouldBe` (MouseUp (150, 200) "myAwesomeShape")
+            it "can decode *arbitrary* mouseup event" $ do
+                JSONString eid <- arbitrary
+                property $ \x y -> (decode $ pack $ buildMousePF "mouseup" x y eid) == (MouseUp (x, y) eid)
+        describe "mouseenter event" $ do
+            it "can decode a mouseenter event" $ do
+                (decode $ pack $ buildMousePF "mouseenter" 150 200 "myAwesomeShape") `shouldBe` (MouseEnter (150, 200) "myAwesomeShape")
+            it "can decode *arbitrary* mouseenter event" $ do
+                JSONString eid <- arbitrary
+                property $ \x y -> (decode $ pack $ buildMousePF "mouseenter" x y eid) == (MouseEnter (x, y) eid)
+        describe "mouseleave event" $ do
+            it "can decode a mouseleave event" $ do
+                (decode $ pack $ buildMousePF "mouseleave" 150 200 "myAwesomeShape") `shouldBe` (MouseLeave (150, 200) "myAwesomeShape")
+            it "can decode *arbitrary* mouseleave event" $ do
+                JSONString eid <- arbitrary
+                property $ \x y -> (decode $ pack $ buildMousePF "mouseleave" x y eid) == (MouseLeave (x, y) eid)
+        describe "keydown event" $ do
+            it "can decode a keydown event" $ do
+                (decode $ pack $ buildKeyPF "keydown" 'c' True True True True) `shouldBe` (KeyDown 'c' [Ctrl, Alt, Shift, Super])
+            it "can decode *arbitrary* keydown event" $ do
+                JSONChar key <- arbitrary
+                property $ \control alt shift super -> (decode $ pack $ buildKeyPF "keydown" key control alt shift super) == (KeyDown key $ makeModifiers control alt shift super)
+        describe "keyclick event" $ do
+            it "can decode a keyclick event" $ do
+                (decode $ pack $ buildKeyPF "keyclick" 'c' True True True True) `shouldBe` (KeyClick 'c' [Ctrl, Alt, Shift, Super])
+            it "can decode *arbitrary* keyclick event" $ do
+                JSONChar key <- arbitrary
+                property $ \control alt shift super -> (decode $ pack $ buildKeyPF "keyclick" key control alt shift super) == (KeyClick key $ makeModifiers control alt shift super)
+        describe "keyup event" $ do
+            it "can decode a keyup event" $ do
+                (decode $ pack $ buildKeyPF "keyup" 'c' True True True True) `shouldBe` (KeyUp 'c' [Ctrl, Alt, Shift, Super])
+            it "can decode *arbitrary* keyup event" $ do
+                JSONChar key <- arbitrary
+                property $ \control alt shift super -> (decode $ pack $ buildKeyPF "keyup" key control alt shift super) == (KeyUp key $ makeModifiers control alt shift super)
+        describe "scroll event" $ do
             it "can decode a scroll event" $ do
                 (decode $ pack $ "{\"event\":\"scroll\", \"eventData\":{\"xdelta\": 10, \"ydelta\": 10}}") `shouldBe` (Scroll 10 10)
+            it "can decond an *arbitrary* scroll event" $ do
+                property $ \xdiff ydiff -> (decode $ pack $ "{\"event\":\"scroll\", \"eventData\":{\"xdelta\":" ++ (show xdiff) ++ ", \"ydelta\": " ++ (show ydiff) ++ "}}") `shouldBe` (Scroll xdiff ydiff)
 
 
-buildMouse :: String -> Int -> Int -> String -> Text
-buildMouse ty x y eid = pack $ "{\"event\":\"" ++ ty ++ "\", \"eventData\":{\"id\": \"" ++ (eid) ++ "\", \"x\": " ++ (show x) ++ ", \"y\": " ++ (show y) ++ "}}"
+-- | Convenience function for building json mouse event strings
+buildMousePF :: String -> Int -> Int -> String -> String
+buildMousePF event x y eid = 
+    printf "{\"event\":\"%s\", \"eventData\":{\"id\": \"%s\", \"x\": %d , \"y\": %d }}" event eid x y
+
+-- | Convenience function for building json key event strings
+buildKeyPF :: String -> Char -> Bool -> Bool -> Bool -> Bool -> String
+buildKeyPF event key control alt shift super =
+    printf "{\"event\":\"%s\", \"eventData\":{\"key\": \"%c\", \"control\": %s, \"alt\": %s, \"shift\": %s, \"super\": %s}}" event key (if control then "true" else "false") (if alt then "true" else "false") (if shift then "true" else "false") (if super then "true" else "false")
+
+-- | This function is exactly what is used to construct the modifiers array
+-- | but it is not exported from the import module and therefore it is copied here
+makeModifiers :: Bool -> Bool -> Bool -> Bool -> [Modifier]
+makeModifiers ctrl alt shift super = 
+    (if ctrl then [Ctrl] else []) ++ 
+    (if alt then [Alt] else []) ++
+    (if shift then [Shift] else []) ++
+    (if super then [Super] else [])
