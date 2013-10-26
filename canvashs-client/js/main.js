@@ -17,6 +17,12 @@ function placeFigure(figure) {
     debugMessage("Drawing "+figure.className);
     // Click event used for debugging is added below
     layerList[currentLayer].on('click', clickEventHandler);
+    layerList[currentLayer].on('mousedown', mouseDownEventHandler);
+    layerList[currentLayer].on('mouseup', mouseUpEventHandler);
+    layerList[currentLayer].on('mouseover', mouseOverEventHandler);
+    //layerList[currentLayer].on('mousemove', mouseMoveEventHandler);
+    layerList[currentLayer].on('mouseout', mouseOutEventHandler);
+    layerList[currentLayer].on('mousedrag', mouseDragEventHandler);
     currentLayer++;
 }
 function makeFigure(message) {
@@ -79,15 +85,22 @@ function drawText(data) {
 function drawGroup(data) {
     return new Kinetic.Group(data);
 }
-function clickEventHandler(event) {
-    window.alert("Clicked on " + event.targetNode.getClassName() + " on layer " + layerList.indexOf(event.targetNode.getLayer()));
-    console.log(event.targetNode);
-    connection.send(jQuery.parseJSON({
-        "event":"mouseclick",
+function clickEventHandler(event) { mouseEvent("mouseclick", event); }
+function mouseDownEventHandler(event) { mouseEvent("mousedown", event); }
+function mouseUpEventHandler(event) { mouseEvent("mouseup", event); }
+function mouseOverEventHandler(event) { mouseEvent("mouseover", event); }
+function mouseOutEventHandler(event) { mouseEvent("mouseout", event); }
+function mouseMoveEventHandler(event) { mouseEvent("mousemove", event); }
+function mouseDragEventHandler(event) { mouseEvent("mousedrag", event); }
+function mouseEvent(eventName, event) {
+    // Compensate for the position of the canvas
+    var canvasPos = $("#canvas").position();
+    connection.send(JSON.stringify({
+        "event":eventName,
         "data":{
             "id": "myAwesomeShape",
-            "x": 150,
-            "y": 150
+            "x": event.x-canvasPos.left+575,
+            "y": event.y-canvasPos.top+300
         }
     }));
 }
