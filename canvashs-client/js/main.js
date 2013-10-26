@@ -122,11 +122,10 @@ $(document).ready(function() {
     connection.onmessage = function (e) {
         console.log("received raw data:");
         console.log(e.data);
-        parseServerMessage(jQuery.parseJSON(e.data));
+        parseFigureMessage(jQuery.parseJSON(e.data));
     };
 
     window.setInterval(function(){
-        connection.send("");
     }, 2000);
 
 //    for(var n = 0; n < message.objects.length; n++) {
