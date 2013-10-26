@@ -6,23 +6,21 @@ var connection = new WebSocket('ws://localhost:8080');
 var open = false;
 
 function parseFigureMessage(message) {
-    layerList[currentLayer] = new Kinetic.Layer();
     var figure = makeFigure(message);
+    placeFigure(figure);
+}
+function placeFigure(figure) {
 
-    var now = new Date(),
-        now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
-    $("#debug").prepend("<p><strong>["+now+"]</strong> Drawing "+message.type+"</p>")
-
+    layerList[currentLayer] = new Kinetic.Layer();
     layerList[currentLayer].add(figure);
+    debugMessage("Drawing "+message.type);
     stage.add(layerList[currentLayer]);
-
+    currentLayer++;
     // Click event used for debugging is added below
     layerList[currentLayer].on('click', function(event) {
         window.alert("Clicked on " + event.targetNode.getClassName() + " on layer " + layerList.indexOf(event.targetNode.getLayer()));
     });
-    currentLayer++;
 }
-
 function makeFigure(message) {
     var figure;
     switch (message.type) {
@@ -84,6 +82,12 @@ function drawGroup(data) {
     return new Kinetic.Group(data);
 }
 
+function debugMessage(message) {
+
+    var now = new Date(),
+        now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
+    $("#debug").prepend("<p><strong>["+now+"]</strong> "+message+"</p>")
+}
 
 $(document).ready(function() {
 
