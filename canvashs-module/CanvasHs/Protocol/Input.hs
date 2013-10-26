@@ -61,13 +61,13 @@ makeEvent "mousedoubleclick"
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
          = MouseDoubleClick (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
 
-makeEvent "mouseenter"
+makeEvent "mouseover"
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
-         = MouseEnter (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
+         = MouseOver (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
 
-makeEvent "mouseleave"
+makeEvent "mouseout"
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
-         = MouseLeave (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
+         = MouseOut (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
 
 makeEvent "keydown"
     (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh, super = Just su})
