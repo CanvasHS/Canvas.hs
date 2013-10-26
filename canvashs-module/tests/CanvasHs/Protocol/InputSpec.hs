@@ -5,12 +5,10 @@ import Test.QuickCheck
 import CanvasHs.Protocol.Input
 import CanvasHs.Data
 import CanvasHs.Protocol (decode)
-import Data.Char
-import Data.Maybe
 import Data.Text
  
-instance Arbitrary Char where
-    arbitrary     = choose ('\32', '\128')
+--instance Arbitrary Char where
+--    arbitrary     = choose ('\32', '\128')
 
 main :: IO ()
 main = hspec spec
