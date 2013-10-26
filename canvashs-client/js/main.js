@@ -81,13 +81,14 @@ function drawGroup(data) {
 }
 function clickEventHandler(event) {
     window.alert("Clicked on " + event.targetNode.getClassName() + " on layer " + layerList.indexOf(event.targetNode.getLayer()));
-    console.log(event.targetNode);
-    connection.send(jQuery.parseJSON({
+    // Compensate for the position of the canvas
+    var canvasPos = $("#canvas").position();
+    connection.send(JSON.stringify({
         "event":"mouseclick",
         "data":{
             "id": "myAwesomeShape",
-            "x": 150,
-            "y": 150
+            "x": event.x-canvasPos.left+575,
+            "y": event.y-canvasPos.top+300
         }
     }));
 }
