@@ -51,18 +51,7 @@ function makeFigure(message) {
             window.alert("Unrecognized JSON message received from server.");
             figure = null;
     }
-<<<<<<< HEAD
-    layerList[currentLayer].add(figure);
-    stage.add(layerList[currentLayer]);
-    layerList[currentLayer].on('click', function(event) {
-        window.alert("Clicked on " + event.targetNode.getClassName() + " on layer " + layerList.indexOf(event.targetNode.getLayer()) + "\nSend to server as generic click (see console)");
-        /*msg = '{"event":"mouseclick", "data":["id":"TESTID", "x":10, "y":10]}';
-        TEMPsendMessageToServer(msg);*/
-    });
-    currentLayer++;
-=======
     return figure;
->>>>>>> origin/dev_martijn
 }
 
 /*
