@@ -16,9 +16,7 @@ function placeFigure(figure) {
     stage.add(layerList[currentLayer]);
     debugMessage("Drawing "+figure.className);
     // Click event used for debugging is added below
-    layerList[currentLayer].on('click', function(event) {
-        window.alert("Clicked on " + event.targetNode.getClassName() + " on layer " + layerList.indexOf(event.targetNode.getLayer()));
-    });
+    layerList[currentLayer].on('click', clickEventHandler);
     currentLayer++;
 }
 function makeFigure(message) {
@@ -81,7 +79,18 @@ function drawText(data) {
 function drawGroup(data) {
     return new Kinetic.Group(data);
 }
-
+function clickEventHandler(event) {
+    window.alert("Clicked on " + event.targetNode.getClassName() + " on layer " + layerList.indexOf(event.targetNode.getLayer()));
+    console.log(event.targetNode);
+    connection.send(jQuery.parseJSON({
+        "event":"mouseclick",
+        "data":{
+            "id": "myAwesomeShape",
+            "x": 150,
+            "y": 150
+        }
+    }));
+}
 function debugMessage(message) {
 
     var now = new Date(),
@@ -129,8 +138,6 @@ $(document).ready(function() {
         parseFigureMessage(jQuery.parseJSON(e.data));
     };
 
-    window.setInterval(function(){
-    }, 2000);
 
 //    for(var n = 0; n < message.objects.length; n++) {
 //        parseFigureMessage(message.objects[n]);
