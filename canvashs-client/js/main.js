@@ -5,37 +5,51 @@ var stage = undefined;
 var connection = new WebSocket('ws://localhost:8080');
 var open = false;
 
-function parseServerMessage(message) {
-
-    var now = new Date(),
-        now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
-    $("#debug").prepend("<p><strong>["+now+"]</strong> Drawing "+message.type+"</p>")
+function parseFigureMessage(message) {
+    var figure = makeFigure(message);
+    placeFigure(figure);
+}
+function placeFigure(figure) {
 
     layerList[currentLayer] = new Kinetic.Layer();
+    layerList[currentLayer].add(figure);
+    stage.add(layerList[currentLayer]);
+    debugMessage("Drawing "+figure.className);
+    // Click event used for debugging is added below
+    layerList[currentLayer].on('click', function(event) {
+        window.alert("Clicked on " + event.targetNode.getClassName() + " on layer " + layerList.indexOf(event.targetNode.getLayer()));
+    });
+    currentLayer++;
+}
+function makeFigure(message) {
     var figure;
-
     switch (message.type) {
         case "line":
-            figure = drawLine(message.start, message.end);
+            figure = drawLine(message.data);
             break;
         case "polygon":
-            figure = drawPolygon();
+            figure = drawPolygon(message.data);
             break;
         case "circle":
-            figure = drawCircle(message.data.x, message.data.y, message.data.radius);
+            figure = drawCircle(message.data);
+            break;
+        case "rect":
+            figure = drawRect(message.data);
+            break;
+        case "text":
+            figure = drawText(message.data);
+            break;
+        case "container":
+            figure = drawGroup(message.data);
+            message.children.forEach(function(child) {
+                figure.add(makeFigure(child));
+            });
             break;
         default:
             window.alert("Unrecognized JSON message received from server.");
             figure = null;
     }
-    layerList[currentLayer].add(figure);
-    stage.add(layerList[currentLayer]);
-    layerList[currentLayer].on('click', function(event) {
-        window.alert("Clicked on " + event.targetNode.getClassName() + " on layer " + layerList.indexOf(event.targetNode.getLayer()) + "\nSend to server as generic click (see console)");
-        /*msg = '{"event":"mouseclick", "data":["id":"TESTID", "x":10, "y":10]}';
-        TEMPsendMessageToServer(msg);*/
-    });
-    currentLayer++;
+    return figure;
 }
 
 /*
@@ -49,41 +63,35 @@ function TEMPsendMessageToServer(msg){
 }
 
 
-function drawLine(begin, end) {
-    figure = new Kinetic.Line({
-        points: [begin, end],
-        stroke: "blue",
-        strokeWidth: 8
-    });
-    return figure;
+function drawLine(data) {
+    return new Kinetic.Line(data);
+}
+function drawPolygon(data) {
+    return new Kinetic.Polygon(data);
+}
+function drawCircle(data) {
+    return new Kinetic.Circle(data);
+}
+function drawRect(data) {
+    return new Kinetic.Rect(data);
+}
+function drawText(data) {
+    return new Kinetic.Text(data);
+}
+function drawGroup(data) {
+    return new Kinetic.Group(data);
 }
 
-function drawPolygon() {
-    figure = new Kinetic.Polygon({
-        points: [73, 192, 73, 160, 340, 23, 500, 109, 499, 139, 342, 93],
-        fill: '#00D2FF',
-        stroke: 'black',
-        strokeWidth: 1
-    });
-    return figure;
-}
+function debugMessage(message) {
 
-function drawCircle(_x, _y, _radius) {
-    figure = new Kinetic.Circle({
-        radius: _radius,
-        fill: '#FFD200',
-        stroke: 'black',
-        strokeWidth: 1,
-        x: _x,
-        y: _y
-    });
-    return figure;
+    var now = new Date(),
+        now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
+    $("#debug").prepend("<p><strong>["+now+"]</strong> "+message+"</p>")
 }
-
 
 $(document).ready(function() {
 
-    var width = 900; // defined here because the contaier also needs these proportions 
+    var width = 900; // defined here because the container also needs these proportions 
     var height = 600;
 
     $( "#wrapper" ).css( "min-width", width+"px" );
@@ -100,8 +108,8 @@ $(document).ready(function() {
 
     stage = new Kinetic.Stage({
         container: 'canvas',
-        width: width,
-        height: height
+        width: 900,
+        height: 600
     });
 
     // When the connection is open, send some data to the server
@@ -118,12 +126,14 @@ $(document).ready(function() {
     connection.onmessage = function (e) {
         console.log("received raw data:");
         console.log(e.data);
-        parseServerMessage(jQuery.parseJSON(e.data));
+        parseFigureMessage(jQuery.parseJSON(e.data));
     };
 
     window.setInterval(function(){
-        connection.send("");
     }, 2000);
 
+//    for(var n = 0; n < message.objects.length; n++) {
+//        parseFigureMessage(message.objects[n]);
+//    }
 });
 
