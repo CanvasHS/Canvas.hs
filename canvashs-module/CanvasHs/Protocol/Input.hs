@@ -40,7 +40,7 @@ instance FromJSON Event where
     parseJSON (Object v) = do
         makeEvent <$>
             v .: "event" <*>
-            v .: "eventData"
+            v .: "data"
     parseJSON _ = error "A toplevel JSON should be an object"
 
 -- Ooit gehoord van pattern matching, nou ik blijkbaar wel
