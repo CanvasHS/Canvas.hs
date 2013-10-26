@@ -88,4 +88,4 @@ forkChild io = do
     mvar <- newEmptyMVar
     childs <- takeMVar children
     putMVar children (mvar:childs)
-    forkFinally io (\_ -> putMVar mvar ())
+    forkIO (io `finally` putMVar mvar ())
