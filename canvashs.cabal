@@ -10,7 +10,7 @@ data-files:          canvashs-client/*.html,
                      canvashs-client/css/*.css
 
 Library
-  build-depends: 	base >= 4,
+  build-depends: 	base >= 4.6,
                   QuickCheck >= 2.4,
                   websockets == 0.7.4.1,
                   warp,
