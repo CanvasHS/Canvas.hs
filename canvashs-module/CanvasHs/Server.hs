@@ -14,6 +14,7 @@ import Data.Maybe (isNothing)
 import qualified Network.Wai.Handler.Warp as WRP (run)
 import Data.Monoid
 import Control.Concurrent
+import Control.Exception (finally)
 import System.IO.Unsafe
 
 import Data.IORef (IORef, newIORef, atomicModifyIORef)
@@ -88,4 +89,4 @@ forkChild io = do
     mvar <- newEmptyMVar
     childs <- takeMVar children
     putMVar children (mvar:childs)
-    forkFinally io (\_ -> putMVar mvar ())
+    forkIO (io `finally` putMVar mvar ())
