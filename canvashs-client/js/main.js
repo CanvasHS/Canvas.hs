@@ -13,13 +13,13 @@ function placeFigure(figure) {
 
     layerList[currentLayer] = new Kinetic.Layer();
     layerList[currentLayer].add(figure);
-    debugMessage("Drawing "+message.type);
     stage.add(layerList[currentLayer]);
-    currentLayer++;
+    debugMessage("Drawing "+figure.className);
     // Click event used for debugging is added below
     layerList[currentLayer].on('click', function(event) {
         window.alert("Clicked on " + event.targetNode.getClassName() + " on layer " + layerList.indexOf(event.targetNode.getLayer()));
     });
+    currentLayer++;
 }
 function makeFigure(message) {
     var figure;
