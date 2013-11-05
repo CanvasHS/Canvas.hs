@@ -5,25 +5,56 @@ var stage = undefined;
 var connection = new WebSocket('ws://localhost:8080');
 var open = false;
 
+// Event handlers
+function parseMessage(event) {
+    console.log("received raw data:");
+    console.log(event.data);
+    placeFigure(parseFigureMessage(jQuery.parseJSON(event.data)));
+}
+function connectionError(error) {
+    console.log('WebSocket Error ');
+    console.log(error);
+}
 function parseFigureMessage(message) {
     var figure = makeFigure(message);
-    placeFigure(figure);
+    console.log(message);
+    parseEventData(figure, message);
+    return figure;
+}
+function newDefaultLayer() {
+    currentLayer++;
+    layerList[currentLayer] = new Kinetic.Layer();
+    stage.add(layerList[currentLayer]);
+}
+function parseEventData(figure, message) {   
+    if(message.eventData != undefined && message.eventData != null) {
+        if(message.eventData.listen.indexOf("mouseclick") != -1) {
+            figure.on('click', clickEventHandler.bind(undefined, message.eventData.eventId));
+        }
+        if(message.eventData.listen.indexOf("mousedown") != -1) {
+            figure.on('mousedown', mouseDownEventHandler.bind(undefined, message.eventData.eventId));
+        }
+        if(message.eventData.listen.indexOf("mouseup") != -1) {
+            figure.on('mouseup', mouseUpEventHandler.bind(undefined, message.eventData.eventId));
+        }
+        if(message.eventData.listen.indexOf("mouseover") != -1) {
+            figure.on('mouseover', mouseOverEventHandler.bind(undefined, message.eventData.eventId));
+        }
+        if(message.eventData.listen.indexOf("mousemove") != -1) {
+            figure.on('mousemove', mouseMoveEventHandler.bind(undefined, message.eventData.eventId));
+        }
+        if(message.eventData.listen.indexOf("mouseout") != -1) {
+            figure.on('mouseout', mouseOutEventHandler.bind(undefined, message.eventData.eventId));
+        }
+        if(message.eventData.listen.indexOf("mousedrag") != -1) {
+            figure.on('mousedrag', mouseDragEventHandler.bind(undefined, message.eventData.eventId));
+        }
+    }
 }
 function placeFigure(figure) {
-
-    layerList[currentLayer] = new Kinetic.Layer();
     layerList[currentLayer].add(figure);
-    stage.add(layerList[currentLayer]);
+    layerList[currentLayer].batchDraw();
     debugMessage("Drawing "+figure.className);
-    // Click event used for debugging is added below
-    layerList[currentLayer].on('click', clickEventHandler);
-    layerList[currentLayer].on('mousedown', mouseDownEventHandler);
-    layerList[currentLayer].on('mouseup', mouseUpEventHandler);
-    layerList[currentLayer].on('mouseover', mouseOverEventHandler);
-    //layerList[currentLayer].on('mousemove', mouseMoveEventHandler);
-    layerList[currentLayer].on('mouseout', mouseOutEventHandler);
-    layerList[currentLayer].on('mousedrag', mouseDragEventHandler);
-    currentLayer++;
 }
 function makeFigure(message) {
     var figure;
@@ -46,7 +77,7 @@ function makeFigure(message) {
         case "container":
             figure = drawGroup(message.data);
             message.children.forEach(function(child) {
-                figure.add(makeFigure(child));
+                figure.add(parseFigureMessage(child));
             });
             break;
         default:
@@ -55,18 +86,6 @@ function makeFigure(message) {
     }
     return figure;
 }
-
-/*
-* TEMPORARY FUNCTION FOR DEBUG PURPOSES 
-* ONLY USE WHILE PROPER FUNCTION IS NOT YET IN PLACE
-*/
-function TEMPsendMessageToServer(msg){
-    /*console.log("Sending message to server using TEMP function:");
-    console.log(msg);
-    connection.send(msg);*/
-}
-
-
 function drawLine(data) {
     return new Kinetic.Line(data);
 }
@@ -85,22 +104,23 @@ function drawText(data) {
 function drawGroup(data) {
     return new Kinetic.Group(data);
 }
-function clickEventHandler(event) { mouseEvent("mouseclick", event); }
-function mouseDownEventHandler(event) { mouseEvent("mousedown", event); }
-function mouseUpEventHandler(event) { mouseEvent("mouseup", event); }
-function mouseOverEventHandler(event) { mouseEvent("mouseover", event); }
-function mouseOutEventHandler(event) { mouseEvent("mouseout", event); }
-function mouseMoveEventHandler(event) { mouseEvent("mousemove", event); }
-function mouseDragEventHandler(event) { mouseEvent("mousedrag", event); }
-function mouseEvent(eventName, event) {
+function clickEventHandler(id, event) { mouseEvent("mouseclick", id, event); }
+function mouseDownEventHandler(id, event) { mouseEvent("mousedown", id, event); }
+function mouseUpEventHandler(id, event) { mouseEvent("mouseup", id, event); }
+function mouseOverEventHandler(id, event) { mouseEvent("mouseover", id, event); }
+function mouseOutEventHandler(id, event) { mouseEvent("mouseout", id, event); }
+function mouseMoveEventHandler(id, event) { mouseEvent("mousemove", id, event); }
+function mouseDragEventHandler(id, event) { mouseEvent("mousedrag", id, event); }
+function mouseEvent(eventName, id, event) {
     // Compensate for the position of the canvas
     var canvasPos = $("#canvas").position();
+    console.log(event);
     connection.send(JSON.stringify({
         "event":eventName,
         "data":{
-            "id": "myAwesomeShape",
-            "x": event.x-canvasPos.left+575,
-            "y": event.y-canvasPos.top+300
+            "id": id,
+            "x": event.pageX-canvasPos.left+575,
+            "y": event.pageY-canvasPos.top+300
         }
     }));
 }
@@ -133,27 +153,26 @@ $(document).ready(function() {
         width: 900,
         height: 600
     });
+    var rect = drawRect({width: 900,
+        height: 600})
+    rect.on('click', clickEventHandler.bind(undefined, ""));
+    layer = new Kinetic.Layer();
+    layer.add(rect);
+    stage.add(layer);
 
     // When the connection is open, send some data to the server
     connection.onopen = function () {
     };
 
     // Log errors
-    connection.onerror = function (error) {
-      console.log('WebSocket Error ');
-      console.log(error);
-    };
+    connection.onerror = connectionError;
 
     // Log messages from the server
-    connection.onmessage = function (e) {
-        console.log("received raw data:");
-        console.log(e.data);
-        parseFigureMessage(jQuery.parseJSON(e.data));
-    };
+    connection.onmessage = parseMessage;
+
+    // Create new layer to draw on
+    newDefaultLayer();
 
 
-//    for(var n = 0; n < message.objects.length; n++) {
-//        parseFigureMessage(message.objects[n]);
-//    }
 });
 
