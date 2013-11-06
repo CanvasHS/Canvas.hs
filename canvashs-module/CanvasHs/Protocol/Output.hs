@@ -33,7 +33,8 @@ data JSONShapeData
         scaleY         :: Maybe Float, 
         rotateDeg      :: Maybe Int, 
         fontSize       :: Maybe Int, 
-        fontFamily     :: Maybe T.Text, 
+        fontFamily     :: Maybe T.Text,
+        text           :: Maybe T.Text,
         points         :: Maybe [Int], 
         x              :: Maybe Int, 
         y              :: Maybe Int, 
@@ -80,7 +81,12 @@ iEncode (D.Polygon ps)        = JSONShape {shapetype = "polygon"
                                         ,shapeeventData = Nothing
                                         ,shapechildren = Nothing
                                         }
--- iEncode (D.Text p s td) TODO: moeite
+iEncode (D.Text p s td)       = JSONShape { shapetype = "text"
+                                        ,shapedata = iEncodeTextData p s td
+                                        ,shapeeventData = Nothing
+                                        ,shapechildren = Nothing
+                                        }
+
 iEncode (D.Rotate deg s)        = js {shapedata = sd {rotateDeg = Just deg}}
                                 where 
                                     js = iEncode s
@@ -144,6 +150,15 @@ iEncodePoints ps
         where 
             eps a []              = a
             eps a ((x',y'):ps)    = eps (x':y':a) ps
+
+iEncodeTextData :: D.Point -> String -> D.TextData -> JSONShapeData
+iEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.italic = i, D.underline = u}) = result
+        where
+            pointData = iEncodePoint ps
+            text = pointData{text= Just $ T.pack $ s}
+            result = text{fontFamily= Just $ T.pack $ f, fontSize = Just si}
+
+
 
 iEncodeEventData :: Maybe JSONEventData -> D.EventData -> JSONEventData
 iEncodeEventData Nothing e     = iEncodeEventData (Just (JSONEventData{eventId = Nothing, listen = Just []})) e
