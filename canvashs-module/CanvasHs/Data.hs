@@ -38,8 +38,7 @@ instance Defaults EventData where
     defaults = EventData "" False False False False False False False
 
 -- | Defines textsize
-data FontSize = Pt Int | Px Int
-		deriving (Eq, Show)
+type FontSize = Int
 	
 -- | Ways to align text	
 data Alignment 
@@ -58,18 +57,22 @@ data TextData = TextData {
                     -- | The fontsize in Points or Pixels
                     size :: FontSize,
                     -- | Toggles bold.
+                    -- TODO: implement this
                     bold :: Bool,
                     -- | Toggles italic.
+                    -- TODO: implement this
                     italic :: Bool,
                     -- | Toggles underline.
+                    -- TODO: implement this
                     underline :: Bool,
                     -- | Specifies how to align this text.
+                    -- TODO: implement this
                     alignment :: Alignment
                 } deriving (Eq, Show)
 
 -- | Defines defaults for TextData
 instance Defaults TextData where
-    defaults = TextData "Arial" (Pt 12) False False False Center
+    defaults = TextData "Arial" 12 False False False Center
 
 -- | All drawable objects that the user can define (also includes some modifying objects like scale)
 data Shape 
