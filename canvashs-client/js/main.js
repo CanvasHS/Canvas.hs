@@ -103,6 +103,7 @@ function drawText(data) {
     return new Kinetic.Text(data);
 }
 function drawGroup(data) {
+    data.clip = [0, 0, data.width, data.height];
     return new Kinetic.Group(data);
 }
 function clickEventHandler(id, event) { mouseEvent("mouseclick", id, event); }
@@ -154,12 +155,6 @@ $(document).ready(function() {
         width: 900,
         height: 600
     });
-    var rect = drawRect({width: 900,
-        height: 600})
-    rect.on('click', clickEventHandler.bind(undefined, ""));
-    layer = new Kinetic.Layer();
-    layer.add(rect);
-    stage.add(layer);
 
     // When the connection is open, send some data to the server
     connection.onopen = function () {
