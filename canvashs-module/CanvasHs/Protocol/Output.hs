@@ -1,5 +1,6 @@
 ﻿{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module CanvasHs.Protocol.Output
 (   iEncode
@@ -8,6 +9,7 @@ module CanvasHs.Protocol.Output
 
 import GHC.Generics
 import Data.Aeson (ToJSON, toJSON, object, (.=))
+import Data.Aeson.TH
 import qualified Data.Text as T
 import Control.Applicative ((<$>))
 
@@ -15,10 +17,11 @@ import qualified CanvasHs.Data as D
 
 data JSONShape
     = JSONShape { 
-        shapeType      :: T.Text, 
-        shapeData      :: JSONShapeData, 
-        shapeEventData :: Maybe JSONEventData, 
-        shapeChildren  :: Maybe [JSONShape]
+        -- Keep these exactly this way, 'shape' is dropped in the ToJSON instance
+        shapetype      :: T.Text,
+        shapedata      :: JSONShapeData, 
+        shapeeventData :: Maybe JSONEventData, 
+        shapechildren  :: Maybe [JSONShape]
     } deriving (Show)
 
 data JSONShapeData
@@ -45,60 +48,60 @@ data JSONEventData
         listen         :: Maybe [T.Text]
     } deriving (Show, Generic)
 
-instance ToJSON JSONShape where
-    toJSON (JSONShape {shapeType = t, shapeData = d, shapeEventData = e, shapeChildren = cs})
-        = object ["type" .= t, "data" .= d, "eventData" .= e, "children" .= cs]
-instance ToJSON JSONShapeData
-instance ToJSON JSONEventData
+$(deriveJSON defaultOptions{omitNothingFields=True, fieldLabelModifier = drop 5} ''JSONShape)
+
+$(deriveJSON defaultOptions{omitNothingFields=True} ''JSONShapeData)
+
+$(deriveJSON defaultOptions{omitNothingFields=True} ''JSONEventData)
 
 -- | Interne encode, maakt van een Shape een JSONshape die dan naar Aeson kan
 --    Let op, de primitieven (alles wat in CanvasHs.Data.Shape geen Shape als veld heeft)
 --    Maken de daadwerkelijke JSONShape, alle andere Shapes passen deze hierdoor gebouwde
 --     JSONShape's aan.
 iEncode :: D.Shape -> JSONShape
-iEncode (D.Rect p w h)        = JSONShape {shapeType = "rect" 
-                                        ,shapeData = (iEncodePoint p) {width = Just w, height = Just h}
-                                        ,shapeEventData = Nothing
-                                        ,shapeChildren = Nothing
+iEncode (D.Rect p w h)        = JSONShape {shapetype = "rect" 
+                                        ,shapedata = (iEncodePoint p) {width = Just w, height = Just h}
+                                        ,shapeeventData = Nothing
+                                        ,shapechildren = Nothing
                                         }
-iEncode (D.Circle p r)        = JSONShape {shapeType = "circle"
-                                        ,shapeData = (iEncodePoint p) {radius = Just r}
-                                        ,shapeEventData = Nothing
-                                        ,shapeChildren = Nothing
+iEncode (D.Circle p r)        = JSONShape {shapetype = "circle"
+                                        ,shapedata = (iEncodePoint p) {radius = Just r}
+                                        ,shapeeventData = Nothing
+                                        ,shapechildren = Nothing
                                         }
 -- iEncode (Arc p r sa ea)    TODO: arc opnemen in het protocol!
-iEncode (D.Line ps)            = JSONShape {shapeType = "line"
-                                        ,shapeData = iEncodePoints ps
-                                        ,shapeEventData = Nothing
-                                        ,shapeChildren = Nothing
+iEncode (D.Line ps)            = JSONShape {shapetype = "line"
+                                        ,shapedata = iEncodePoints ps
+                                        ,shapeeventData = Nothing
+                                        ,shapechildren = Nothing
                                         }
-iEncode (D.Polygon ps)        = JSONShape {shapeType = "polygon"
-                                        ,shapeData = iEncodePoints ps
-                                        ,shapeEventData = Nothing
-                                        ,shapeChildren = Nothing
+iEncode (D.Polygon ps)        = JSONShape {shapetype = "polygon"
+                                        ,shapedata = iEncodePoints ps
+                                        ,shapeeventData = Nothing
+                                        ,shapechildren = Nothing
                                         }
 -- iEncode (D.Text p s td) TODO: moeite
-iEncode (D.Rotate deg s)        = js {shapeData = sd {rotateDeg = Just deg}}
+iEncode (D.Rotate deg s)        = js {shapedata = sd {rotateDeg = Just deg}}
                                 where 
                                     js = iEncode s
-                                    sd = shapeData js
-iEncode (D.Translate dx dy s) = js {shapeData = sd {x = (+dx) <$> (x sd), y = (+dy) <$> (y sd)}}
+                                    sd = shapedata js
+iEncode (D.Translate dx dy s) = js {shapedata = sd {x = (+dx) <$> (x sd), y = (+dy) <$> (y sd)}}
                                 where
                                     js = iEncode s
-                                    sd = shapeData js
+                                    sd = shapedata js
 
-iEncode (D.Scale dx dy s)        = js {shapeData = sd {scaleX = Just dx, scaleY = Just dy}}
+iEncode (D.Scale dx dy s)        = js {shapedata = sd {scaleX = Just dx, scaleY = Just dy}}
                                 where 
                                     js = iEncode s
-                                    sd = shapeData js
-iEncode (D.Event e s)            = js {shapeEventData = Just (iEncodeEventData (shapeEventData js) e)}
+                                    sd = shapedata js
+iEncode (D.Event e s)            = js {shapeeventData = Just (iEncodeEventData (shapeeventData js) e)}
                                 where
                                     js = iEncode s
 
-iEncode (D.Container w h ss)    = JSONShape {shapeType = "container"
-                                        ,shapeData = iEncodePoint (0,0)
-                                        ,shapeEventData = Nothing
-                                        ,shapeChildren = Just $ map iEncode ss
+iEncode (D.Container w h ss)    = JSONShape {shapetype = "container"
+                                        ,shapedata = iEncodePoint (0,0)
+                                        ,shapeeventData = Nothing
+                                        ,shapechildren = Just $ map iEncode ss
                                         }
 
 iEncodePoint :: D.Point -> JSONShapeData
