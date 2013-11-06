@@ -125,11 +125,29 @@ function mouseEvent(eventName, id, event) {
         }
     }));
 }
-function debugMessage(message) {
 
+function debugMessage(message) {
     var now = new Date(),
         now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
     $("#debug").prepend("<p><strong>["+now+"]</strong> "+message+"</p>")
+}
+
+var control = false;
+var shift = false;
+var alt = false;
+var superKey = false;
+        
+function keyEvent(event,key) {
+        connection.send(JSON.stringify({
+            "event":event,
+            "data":{
+                "key": key,
+                "control": control,
+                "alt": alt,
+                "shift": shift,
+                "super": superKey
+            }
+        }));
 }
 
 $(document).ready(function() {
@@ -154,8 +172,7 @@ $(document).ready(function() {
         width: 900,
         height: 600
     });
-    var rect = drawRect({width: 900,
-        height: 600})
+    var rect = drawRect({width: 900, height: 600});
     rect.on('click', clickEventHandler.bind(undefined, ""));
     layer = new Kinetic.Layer();
     layer.add(rect);
@@ -174,6 +191,40 @@ $(document).ready(function() {
     // Create new layer to draw on
     newDefaultLayer();
 
+    window.addEventListener('keydown', function(e) {
+        e.preventDefault();
+        if (e.keyCode === 16) {
+            shift = true;
+        } else if (e.keyCode === 17) {
+            control = true;
+        } else if (e.keyCode === 18) {
+            alt = true;
+        } else if (e.keyCode === 91) {
+            superKey = true;
+        } else {
+            var key = String.fromCharCode(e.keyCode);
+            keyEvent("keydown", key);
+//            console.log("Keydown: " + key + "\r\n shift: " + shift
+//                    + "\r\n control: " + control + "\r\n alt: " + alt + "\r\n super: " + superKey);
+        }
+    });
+    
+    window.addEventListener('keyup', function(e) {
+        e.preventDefault();
+        if (e.keyCode === 16) {
+            shift = false;
+        } else if (e.keyCode === 17) {
+            control = false;
+        } else if (e.keyCode === 18) {
+            alt = false;
+        } else if (e.keyCode === 91) {
+            superKey = false;
+        } else {
+            var key = String.fromCharCode(e.keyCode);
+            keyEvent("keyup", key);
+            console.log("Keyup: " + key);
+        }
+    });
 
 });
 
