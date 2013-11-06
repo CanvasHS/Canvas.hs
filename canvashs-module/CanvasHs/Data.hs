@@ -7,7 +7,7 @@ type Point = (Int, Int)
 type Path = [Point]
 
 -- | Convenience type for a RGBA color
-type Color = (Int, Int, Int, Int)
+type Color = (Int, Int, Int, Float)
 
 -- | A class that defines a function `defaults` that returns a default value
 class Defaults a where

@@ -1,4 +1,3 @@
-﻿{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 
@@ -26,9 +25,9 @@ data JSONShape
 
 data JSONShapeData
     = JSONShapeData { 
-        stroke         :: Maybe T.Text, 
+        stroke         :: Maybe JSONRGBAColor, 
         strokeWidth    :: Maybe Int, 
-        fill           :: Maybe T.Text, 
+        fill           :: Maybe JSONRGBAColor, 
         scaleX         :: Maybe Float, 
         scaleY         :: Maybe Float, 
         rotateDeg      :: Maybe Int, 
@@ -37,23 +36,33 @@ data JSONShapeData
         text           :: Maybe T.Text,
         points         :: Maybe [Int], 
         x              :: Maybe Int, 
-        y              :: Maybe Int, 
+        y              :: Maybe Int,
         width          :: Maybe Int, 
         height         :: Maybe Int, 
         radius         :: Maybe Int 
-    } deriving (Show, Generic)
+    } deriving (Show)
 
 data JSONEventData
     = JSONEventData { 
         eventId        :: Maybe T.Text, 
         listen         :: Maybe [T.Text]
-    } deriving (Show, Generic)
+    } deriving (Show)
+
+data JSONRGBAColor
+    = JSONRGBAColor {
+        colr :: Int,
+        colg :: Int,
+        colb :: Int,
+        cola :: Float
+    } deriving (Show)
 
 $(deriveJSON defaultOptions{omitNothingFields=True, fieldLabelModifier = drop 5} ''JSONShape)
 
 $(deriveJSON defaultOptions{omitNothingFields=True} ''JSONShapeData)
 
 $(deriveJSON defaultOptions{omitNothingFields=True} ''JSONEventData)
+
+$(deriveJSON defaultOptions{omitNothingFields=True, fieldLabelModifier = drop 3} ''JSONRGBAColor)
 
 -- | Interne encode, maakt van een Shape een JSONshape die dan naar Aeson kan
 --    Let op, de primitieven (alles wat in CanvasHs.Data.Shape geen Shape als veld heeft)
@@ -87,6 +96,16 @@ iEncode (D.Text p s td)       = JSONShape { shapetype = "text"
                                         ,shapechildren = Nothing
                                         }
 
+iEncode (D.Fill (r,g,b,a) s)  = js {shapedata = sd{fill = Just JSONRGBAColor{colr=r, colg=g, colb=b, cola=a} } }
+                                where
+                                    js = iEncode s
+                                    sd = shapedata js
+
+iEncode (D.Stroke (r,g,b,a) w s) = js {shapedata = sd {stroke = Just JSONRGBAColor{colr=r, colg=g, colb=b, cola=a}, strokeWidth = Just w } }
+                                where
+                                    js = iEncode s
+                                    sd = shapedata js
+
 iEncode (D.Rotate deg s)        = js {shapedata = sd {rotateDeg = Just deg}}
                                 where 
                                     js = iEncode s
@@ -115,7 +134,7 @@ iEncodePoint (x',y')
     = JSONShapeData { 
         stroke         = Nothing,
         strokeWidth    = Nothing, 
-        fill           = Just "black", 
+        fill           = Just JSONRGBAColor{colr=255, colg=255, colb=255, cola = 1.0}, 
         scaleX         = Nothing, 
         scaleY         = Nothing, 
         rotateDeg      = Nothing, 
@@ -135,7 +154,7 @@ iEncodePoints ps
     = JSONShapeData { 
         stroke         = Nothing,
         strokeWidth    = Nothing, 
-        fill           = Just "black", 
+        fill           = Just JSONRGBAColor{colr=255, colg=255, colb=255, cola = 1.0}, 
         scaleX         = Nothing, 
         scaleY         = Nothing, 
         rotateDeg      = Nothing, 
