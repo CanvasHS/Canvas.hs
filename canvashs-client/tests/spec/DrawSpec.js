@@ -1,7 +1,6 @@
-
-
-describe("Parse a elements", function() {
+describe("Parse elements", function() {
   	it("parses a rectangle", function() {
+  		// Parse rectangle and check output
   		var rectangle = parseFigureMessage({"type": "rect","data": {"id": "rect_b","x": 10,"y": 10,"width": 10,"height": 20,"stroke": "rgba(255,255,255,1)","strokeWidth": 2,"fill": "rgba(255,0,0,1)","scaleX": 1.5}});
   		expect(rectangle).toBeDefined();
   		expect(rectangle.attrs.height).toBeDefined();
@@ -94,6 +93,7 @@ describe("Draw elements", function() {
   		});
   	});
 	afterEach(function(){
+		// Remove the canvas elements used for testing and reset variables
 		$(canvas_wrapper).remove();
 		$(canvas_compare_wrapper).remove();
 		canvas = null;
