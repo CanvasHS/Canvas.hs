@@ -103,6 +103,7 @@ function drawText(data) {
     return new Kinetic.Text(data);
 }
 function drawGroup(data) {
+    data.clip = [0, 0, data.width, data.height];
     return new Kinetic.Group(data);
 }
 function clickEventHandler(id, event) { mouseEvent("mouseclick", id, event); }
@@ -125,11 +126,25 @@ function mouseEvent(eventName, id, event) {
         }
     }));
 }
-
 function debugMessage(message) {
+
     var now = new Date(),
         now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
     $("#debug").prepend("<p><strong>["+now+"]</strong> "+message+"</p>")
+}
+function initCanvas(canvas, width, height) {
+
+    canvas.css( "width", width+"px" );
+    canvas.css( "height", height+"px" );
+    canvas.css( "margin-top", "-"+height/2+"px" );
+    canvas.css( "margin-left", "-"+(width + $( "#debug" ).width())/2+"px" );
+    stage = new Kinetic.Stage({
+        container: 'canvas',
+        width: width,
+        height: height
+    });
+    // Create new layer to draw on
+    newDefaultLayer();
 }
 
 var control = false;
@@ -138,16 +153,16 @@ var alt = false;
 var superKey = false;
         
 function keyEvent(event,key) {
-        connection.send(JSON.stringify({
-            "event":event,
-            "data":{
-                "key": key,
-                "control": control,
-                "alt": alt,
-                "shift": shift,
-                "super": superKey
-            }
-        }));
+    connection.send(JSON.stringify({
+        "event":event,
+        "data":{
+            "key": key,
+            "control": control,
+            "alt": alt,
+            "shift": shift,
+            "super": superKey
+        }
+    }));
 }
 
 $(document).ready(function() {
@@ -155,28 +170,15 @@ $(document).ready(function() {
     var width = 900; // defined here because the container also needs these proportions 
     var height = 600;
 
+    // Init canvas
+    initCanvas($('#canvas'), width, height);
+
     $( "#wrapper" ).css( "min-width", width+"px" );
     $( "#wrapper" ).css( "height", $( window ).height()+"px" );
 
     $( window ).resize(function() { 
         $( "#wrapper" ).css( "height", $( window ).height()+"px" );
     });
-
-    $( "#canvas" ).css( "width", width+"px" );
-    $( "#canvas" ).css( "height", height+"px" );
-    $( "#canvas" ).css( "margin-top", "-"+height/2+"px" );
-    $( "#canvas" ).css( "margin-left", "-"+(width + $( "#debug" ).width())/2+"px" );
-
-    stage = new Kinetic.Stage({
-        container: 'canvas',
-        width: 900,
-        height: 600
-    });
-    var rect = drawRect({width: 900, height: 600});
-    rect.on('click', clickEventHandler.bind(undefined, ""));
-    layer = new Kinetic.Layer();
-    layer.add(rect);
-    stage.add(layer);
 
     // When the connection is open, send some data to the server
     connection.onopen = function () {
@@ -187,9 +189,6 @@ $(document).ready(function() {
 
     // Log messages from the server
     connection.onmessage = parseMessage;
-
-    // Create new layer to draw on
-    newDefaultLayer();
 
     window.addEventListener('keydown', function(e) {
         e.preventDefault();
@@ -222,9 +221,7 @@ $(document).ready(function() {
         } else {
             var key = String.fromCharCode(e.keyCode);
             keyEvent("keyup", key);
-            console.log("Keyup: " + key);
+//            console.log("Keyup: " + key);
         }
     });
-
 });
-

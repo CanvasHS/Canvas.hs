@@ -96,7 +96,7 @@ iEncode (D.Event e s)            = js {shapeEventData = Just (iEncodeEventData (
                                     js = iEncode s
 
 iEncode (D.Container w h ss)    = JSONShape {shapeType = "container"
-                                        ,shapeData = iEncodePoint (0,0)
+                                        ,shapeData = (iEncodePoint (0,0)) {width = Just w, height = Just h}
                                         ,shapeEventData = Nothing
                                         ,shapeChildren = Just $ map iEncode ss
                                         }
