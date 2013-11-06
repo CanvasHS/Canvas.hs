@@ -9,7 +9,9 @@ var open = false;
 function parseMessage(event) {
     console.log("received raw data:");
     console.log(event.data);
+    layerList[currentLayer].destroyChildren();
     placeFigure(parseFigureMessage(jQuery.parseJSON(event.data)));
+    layerList[currentLayer].batchDraw();
 }
 function connectionError(error) {
     console.log('WebSocket Error ');
@@ -53,7 +55,6 @@ function parseEventData(figure, message) {
 }
 function placeFigure(figure) {
     layerList[currentLayer].add(figure);
-    layerList[currentLayer].batchDraw();
     debugMessage("Drawing "+figure.className);
 }
 function makeFigure(message) {
