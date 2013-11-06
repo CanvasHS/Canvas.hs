@@ -132,11 +132,28 @@ function debugMessage(message) {
         now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
     $("#debug").prepend("<p><strong>["+now+"]</strong> "+message+"</p>")
 }
+function initCanvas(canvas, width, height) {
 
+    canvas.css( "width", width+"px" );
+    canvas.css( "height", height+"px" );
+    canvas.css( "margin-top", "-"+height/2+"px" );
+    canvas.css( "margin-left", "-"+(width + $( "#debug" ).width())/2+"px" );
+    stage = new Kinetic.Stage({
+        container: 'canvas',
+        width: 900,
+        height: 600
+    });
+    // Create new layer to draw on
+    newDefaultLayer();
+
+}
 $(document).ready(function() {
 
     var width = 900; // defined here because the container also needs these proportions 
     var height = 600;
+
+    // Init canvas
+    initCanvas($('#canvas'), width, height);
 
     $( "#wrapper" ).css( "min-width", width+"px" );
     $( "#wrapper" ).css( "height", $( window ).height()+"px" );
@@ -145,16 +162,6 @@ $(document).ready(function() {
         $( "#wrapper" ).css( "height", $( window ).height()+"px" );
     });
 
-    $( "#canvas" ).css( "width", width+"px" );
-    $( "#canvas" ).css( "height", height+"px" );
-    $( "#canvas" ).css( "margin-top", "-"+height/2+"px" );
-    $( "#canvas" ).css( "margin-left", "-"+(width + $( "#debug" ).width())/2+"px" );
-
-    stage = new Kinetic.Stage({
-        container: 'canvas',
-        width: 900,
-        height: 600
-    });
 
     // When the connection is open, send some data to the server
     connection.onopen = function () {
@@ -166,8 +173,6 @@ $(document).ready(function() {
     // Log messages from the server
     connection.onmessage = parseMessage;
 
-    // Create new layer to draw on
-    newDefaultLayer();
 
 
 });
