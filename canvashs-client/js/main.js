@@ -140,8 +140,8 @@ function initCanvas(canvas, width, height) {
     canvas.css( "margin-left", "-"+(width + $( "#debug" ).width())/2+"px" );
     stage = new Kinetic.Stage({
         container: 'canvas',
-        width: 900,
-        height: 600
+        width: width,
+        height: height
     });
     // Create new layer to draw on
     newDefaultLayer();
