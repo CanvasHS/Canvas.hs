@@ -27,10 +27,10 @@ data EventData = EventData {
                     mouseDoubleClick :: Bool,
                     -- | Toggles whether to react on mouseDrag.
                     mouseDrag :: Bool,
-                    -- | Toggles whether to react on mouseEnter.
-                    mouseEnter :: Bool,
-                    -- | Toggles whether to react on mouseLeave.
-                    mouseLeave :: Bool
+                    -- | Toggles whether to react on mouseOver
+                    mouseOver :: Bool,
+                    -- | Toggles whether to react on mouseOut.
+                    mouseOut :: Bool
                 } deriving (Eq, Show)
 
 -- | Defines defaults for EventData
@@ -125,10 +125,10 @@ data Event
     -- TODO: Kan je ook in het niets draggen?
     -- | A mousedrag event with start and end, both consisting of a Point an ID string
     | MouseDrag Point String Point String
-    -- | A mouseenter event, therefore both Point and an ID string are set.
-    | MouseEnter Point String
-    -- | A mouseleave event, therefore both Point and an ID string are set.
-    | MouseLeave Point String
+    -- | A mouseover event, therefore both Point and an ID string are set.
+    | MouseOver Point String
+    -- | A mouseout event, therefore both Point and an ID string are set.
+    | MouseOut Point String
     -- | A keydown event, consist of a keycharacter that was pressed and a list of modifiers that were active
     | KeyDown Char [Modifier]
     -- | A keyup event, consist of a keycharacter that was pressed and a list of modifiers that were active

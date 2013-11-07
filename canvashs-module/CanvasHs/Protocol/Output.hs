@@ -123,10 +123,11 @@ iEncode (D.Event e s)            = js {shapeeventData = Just (iEncodeEventData (
                                 where
                                     js = iEncode s
 
-iEncode (D.Container w h ss)    = JSONShape {shapetype = "container"
-                                        ,shapedata = iEncodePoint (0,0)
-                                        ,shapeeventData = Nothing
-                                        ,shapechildren = Just $ map iEncode ss
+
+iEncode (D.Container w h ss)    = JSONShape {shapeType = "container"
+                                        ,shapeData = (iEncodePoint (0,0)) {width = Just w, height = Just h}
+                                        ,shapeEventData = Nothing
+                                        ,shapeChildren = Just $ map iEncode ss
                                         }
 
 iEncodePoint :: D.Point -> JSONShapeData
@@ -193,5 +194,5 @@ iEncodeEventData (Just j) e = j {eventId = Just $ T.pack $ D.eventId e
                                                     ++ if D.mouseUp e then ["mouseup"] else []
                                                     ++ if D.mouseDoubleClick e then ["mousedoubleclick"] else []
                                                     ++ if D.mouseDrag e then ["mousedrag"] else []
-                                                    ++ if D.mouseEnter e then ["mouseenter"] else []
-                                                    ++ if D.mouseLeave e then ["mouseleave"] else []
+                                                    ++ if D.mouseOver e then ["mouseover"] else []
+                                                    ++ if D.mouseOut e then ["mouseout"] else []
