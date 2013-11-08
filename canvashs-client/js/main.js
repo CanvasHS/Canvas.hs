@@ -59,24 +59,36 @@ function placeFigure(figure) {
 }
 function makeFigure(message) {
     var figure;
+
+    data = message.data;
+
+    // both fill and stroke are in the form {"r": 255, "g": 255, "b": 255, ("a": 1.0)?}
+    if(data["fill"]){
+        data["fill"] = rgbaDictToColor(data["fill"]);
+    }
+
+    if(data["stroke"]){
+        data["stroke"] = rgbaDictToColor(data["stroke"]);
+    }
+
     switch (message.type) {
         case "line":
-            figure = drawLine(message.data);
+            figure = drawLine(data);
             break;
         case "polygon":
-            figure = drawPolygon(message.data);
+            figure = drawPolygon(data);
             break;
         case "circle":
-            figure = drawCircle(message.data);
+            figure = drawCircle(data);
             break;
         case "rect":
-            figure = drawRect(message.data);
+            figure = drawRect(data);
             break;
         case "text":
-            figure = drawText(message.data);
+            figure = drawText(data);
             break;
         case "container":
-            figure = drawGroup(message.data);
+            figure = drawGroup(data);
             message.children.forEach(function(child) {
                 figure.add(parseFigureMessage(child));
             });
@@ -86,6 +98,15 @@ function makeFigure(message) {
             figure = null;
     }
     return figure;
+}
+function rgbaDictToColor(dict){
+    var res = "";
+    if(dict["a"]){
+        res = "rgba({0},{1},{2},{3})".format(dict["r"], dict["g"], dict["b"], dict["a"]);
+    } else {
+        res = "rgb({0},{1},{2})".format(dict["r"], dict["g"], dict["b"]);
+    }
+    return res;
 }
 function drawLine(data) {
     return new Kinetic.Line(data);
