@@ -124,10 +124,10 @@ iEncode (D.Event e s)            = js {shapeeventData = Just (iEncodeEventData (
                                     js = iEncode s
 
 
-iEncode (D.Container w h ss)    = JSONShape {shapeType = "container"
-                                        ,shapeData = (iEncodePoint (0,0)) {width = Just w, height = Just h}
-                                        ,shapeEventData = Nothing
-                                        ,shapeChildren = Just $ map iEncode ss
+iEncode (D.Container w h ss)    = JSONShape {shapetype = "container"
+                                        ,shapedata = (iEncodePoint (0,0)) {width = Just w, height = Just h}
+                                        ,shapeeventData = Nothing
+                                        ,shapechildren = Just $ map iEncode ss
                                         }
 
 iEncodePoint :: D.Point -> JSONShapeData
@@ -135,7 +135,7 @@ iEncodePoint (x',y')
     = JSONShapeData { 
         stroke         = Nothing,
         strokeWidth    = Nothing, 
-        fill           = Just JSONRGBAColor{colr=255, colg=255, colb=255, cola = 1.0}, 
+        fill           = Just JSONRGBAColor{colr=0, colg=0, colb=0, cola = 1.0}, 
         scaleX         = Nothing, 
         scaleY         = Nothing, 
         rotateDeg      = Nothing, 
@@ -155,7 +155,7 @@ iEncodePoints ps
     = JSONShapeData { 
         stroke         = Nothing,
         strokeWidth    = Nothing, 
-        fill           = Just JSONRGBAColor{colr=255, colg=255, colb=255, cola = 1.0}, 
+        fill           = Just JSONRGBAColor{colr=0, colg=0, colb=0, cola = 1.0}, 
         scaleX         = Nothing, 
         scaleY         = Nothing, 
         rotateDeg      = Nothing, 
