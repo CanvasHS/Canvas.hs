@@ -1,23 +1,22 @@
 // Global variables
-var currentLayer = 0;
+var topLayerIdx = 0;
 var layerList = new Array();
 var stage = undefined;
 var connection = new WebSocket('ws://localhost:8080');
-var open = false;
 
 // Event handlers
 function connectionDataRecieved(event) {
 
     // Clear screen
-    layerList[currentLayer].destroyChildren();
+    layerList[topLayerIdx].destroyChildren();
 
     var dataObject = jQuery.parseJSON(event.data);
 
     var shape = parseShapeData(dataObject);
 
     // Draw on current layer
-    layerList[currentLayer].add(shape);
-    layerList[currentLayer].batchDraw();
+    layerList[topLayerIdx].add(shape);
+    layerList[topLayerIdx].batchDraw();
 }
 
 function connectionError(error) {
@@ -27,7 +26,7 @@ function connectionError(error) {
 
 function parseShapeData(data) {
 
-    var shape = kineticShapeFromData(data);
+    var shape = shapeFromData(data);
     enableEventHandlers(shape, data);
 
     return shape;
@@ -105,7 +104,9 @@ function keyEvent(event,key) {
  * Drawing figures
  */ 
 
-function kineticShapeFromData(message) {
+function shapeFromData(message) {
+
+
 
     var shape = null;
     var data = message.data;
@@ -119,21 +120,28 @@ function kineticShapeFromData(message) {
         data["stroke"] = rgbaDictToColor(data["stroke"]);
     }
 
+
+
     switch (message.type) {
         case "line":
             shape = new Kinetic.Line(data);
+            printDebugMessage("Drawing line (" + data.id + ") with points: " + data.points,0);
             break;
         case "polygon":
             shape = new Kinetic.Polygon(data);
+            printDebugMessage("Drawing polygon (" + data.id + ")",0);
             break;
         case "circle":
             shape = new Kinetic.Circle(data);
+            printDebugMessage("Drawing circle (" + data.id + ") with x:"+data.x+" y:"+data.y+" and radius:"+data.radius,0);
             break;
         case "rect":
             shape = new Kinetic.Rect(data);
+            printDebugMessage("Drawing rectangle (" + data.id + ") with x:"+data.x+" y:"+data.y+" width:"+data.width+" height:"+data.height,0);
             break;
         case "text":
             shape = new Kinetic.Text(data);
+            printDebugMessage("Drawing text (" + data.id + ") with x:"+data.x+" y:"+data.y+" text:"+data.text,0);
             break;
         case "container":
 
@@ -142,6 +150,8 @@ function kineticShapeFromData(message) {
             message.children.forEach(function(child) {
                 shape.add(parseShapeData(child));
             });
+
+            printDebugMessage("Drawing container (" + data.id + ")",0);
             break;
         default:
             printDebugMessage("Unrecognized JSON message received from server.",2);
@@ -216,9 +226,10 @@ function initCanvas(width, height) {
 
 
 function newDefaultLayer() {
-    currentLayer++;
-    layerList[currentLayer] = new Kinetic.Layer();
-    stage.add(layerList[currentLayer]);
+
+    topLayerIdx++;
+    layerList[topLayerIdx] = new Kinetic.Layer();
+    stage.add(layerList[topLayerIdx]);
 }
 
 /*
@@ -235,12 +246,11 @@ $(document).ready(function() {
 
     // When the connection is open, send some data to the server
     connection.onopen = function () {
+        printDebugMessage("Connection opened",0);
     };
-
     // Log errors
     connection.onerror = connectionError;
-
-    // Log messages from the server
+    // Callback for recieving data
     connection.onmessage = connectionDataRecieved;
 
     // Begin to listen for keys
