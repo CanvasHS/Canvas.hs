@@ -120,28 +120,30 @@ function shapeFromData(message) {
         data["stroke"] = rgbaDictToColor(data["stroke"]);
     }
 
-
+    // Debug message
+    var debugMessage = "Drawing " + message.type;
+    if(data.id)
+        dataMessage += "(" + data.id + ")"
 
     switch (message.type) {
         case "line":
             shape = new Kinetic.Line(data);
-            printDebugMessage("Drawing line (" + data.id + ") with points: " + data.points,0);
+            debugMessage += "with points: " + data.points;
             break;
         case "polygon":
             shape = new Kinetic.Polygon(data);
-            printDebugMessage("Drawing polygon (" + data.id + ")",0);
             break;
         case "circle":
             shape = new Kinetic.Circle(data);
-            printDebugMessage("Drawing circle (" + data.id + ") with x:"+data.x+" y:"+data.y+" and radius:"+data.radius,0);
+            debugMessage += "width x:"+data.x+" y:"+data.y+" and radius:"+data.radius;
             break;
         case "rect":
             shape = new Kinetic.Rect(data);
-            printDebugMessage("Drawing rectangle (" + data.id + ") with x:"+data.x+" y:"+data.y+" width:"+data.width+" height:"+data.height,0);
+            debugMessage += "width x:"+data.x+" y:"+data.y+" width:"+data.width+" height:"+data.height;
             break;
         case "text":
             shape = new Kinetic.Text(data);
-            printDebugMessage("Drawing text (" + data.id + ") with x:"+data.x+" y:"+data.y+" text:"+data.text,0);
+            debugMessage += "width x:"+data.x+" y:"+data.y+" text:"+data.text;
             break;
         case "container":
 
@@ -150,12 +152,15 @@ function shapeFromData(message) {
             message.children.forEach(function(child) {
                 shape.add(parseShapeData(child));
             });
-
-            printDebugMessage("Drawing container (" + data.id + ")",0);
             break;
         default:
+            debugMessage = null;
             printDebugMessage("Unrecognized JSON message received from server.",2);
     }
+
+    if(debugMessage)
+        printDebugMessage(debugMessage,0);
+
     return shape;
 }
 
