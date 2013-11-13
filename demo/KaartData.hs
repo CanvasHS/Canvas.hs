@@ -131,4 +131,6 @@ all_city = [
     (City "Eindhoven" (682,1184))]
 
 
-nederland = map (\x -> Fill (240, 237, 229, 1.0) $ Polygon x) [texel, vlieland, terschelling, ameland, schiermonnikoog, mainland, noord_beverland, schouwen_duivenland, zeeuws_vlaandern, goeree_overflakkee, flevoland]
+nederland = map (\x -> Rotate 22 $ Fill (240, 237, 229, 1.0) $ Polygon x) [texel, vlieland, terschelling, ameland, schiermonnikoog, mainland, noord_beverland, schouwen_duivenland, zeeuws_vlaandern, goeree_overflakkee, flevoland]
+
+steden = map (\(City naam (x, y)) -> Event defaults{eventId=naam,mouseOver=True, mouseOut=True} $ Fill (255, 128, 128, 1.0) $ Stroke (0, 0, 0, 1.0) 5 $ Circle (x,y) 15) all_city

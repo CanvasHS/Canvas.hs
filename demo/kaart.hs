@@ -18,13 +18,15 @@ main = installEventHandler handl emptyState
 
 -- we gebruiken een simpele Int als store (maar het zou ook een record oid kunnen zijn)
 handl :: State -> Event -> (State, Shape)
-handl st@State{zoom=zoom} StartEvent = (st, 
+
+handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} StartEvent = (st, 
     Container 900 600 
         [
             drawBackground,
-            Scale zoom zoom $ drawMap,
+            Translate xDiff yDiff $ Scale zoom zoom $ drawMap,
             drawControls zoom
         ])
+
 
 handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseClick (x,y) ev) = (newState,
     Container 900 600
@@ -38,13 +40,30 @@ handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseClick (x,y) ev) = (new
         (xNew, yNew) = (x + xDiff, y + yDiff) 
         newZoom = scaleFromEvent zoom ev
         newState = st{xDiff=xNew, yDiff=yNew, zoom=newZoom}
-  
+
+handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseOver (x,y) naam) = (st,
+    Container 900 600
+        [
+            drawBackground,
+            Translate xDiff yDiff $ Scale zoom zoom $ drawMap,
+            drawControls zoom,
+            Text (0, 0) naam defaults
+        ])
+
+handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseOut (x,y) naam) = (st,
+    Container 900 600
+        [
+            drawBackground,
+            Translate xDiff yDiff $ Scale zoom zoom $ drawMap,
+            drawControls zoom,
+            Text (500, 100) "Ik doe shit en ben daar mega gelukkig over" defaults{font="Cantarell", size=20}
+        ])
 
 drawBackground :: Shape
 drawBackground = Fill (135,206,235,1.0) $ Rect (0,0) 900 600
 
 drawMap :: Shape
-drawMap =  Container 1200 1536 (nederland)
+drawMap =  Container 1200 1536 ([Rect (0,0) 1200 1536] ++ nederland ++ steden)
     
 
 drawControls :: Float -> Shape
@@ -77,15 +96,6 @@ drawZoomControls zl =
     where
         zoomPerc = (zl - 0.4) / 0.6
         zoomY = round $ (1.0 - zoomPerc) * 64.0
-
-
-tfcom :: Shape -> String -> Shape
-tfcom s c = case c of
-            "up" -> (Translate 0 (-50) $ s)
-            "lt" -> (Translate (-50) 0 $ s)
-            "rt" -> (Translate 50 0 $ s)
-            "dn" -> (Translate 0 50 $ s)
-            _    -> error("dit kan niet")
 
 translateFromEvent :: String -> (Int, Int)
 translateFromEvent c = case c of
