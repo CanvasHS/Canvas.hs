@@ -1,5 +1,6 @@
 module KaartData where
 
+import Prelude
 import CanvasHs.Data
 
 -- Dit zijn polygonen die delen van nederland representeren

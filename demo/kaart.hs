@@ -1,5 +1,6 @@
 import CanvasHs
 
+import Prelude
 import CanvasHs.Data
 import Debug.Trace
 import KaartData
