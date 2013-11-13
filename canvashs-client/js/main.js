@@ -11,24 +11,26 @@ function connectionDataRecieved(event) {
     // Clear screen
     layerList[currentLayer].destroyChildren();
 
+    var dataObject = jQuery.parseJSON(event.data);
 
-    placeFigure(parseFigureMessage(jQuery.parseJSON(event.data)));
+    var shape = parseShapeData(dataObject);
 
     // Draw on current layer
+    layerList[currentLayer].add(shape);
     layerList[currentLayer].batchDraw();
 }
 
 function connectionError(error) {
 
-    debugMessage("WebSocket Error " + error);
+    printDebugMessage("WebSocket Error " + error);
 }
 
-function parseFigureMessage(message) {
+function parseShapeData(data) {
 
-    var figure = makeFigure(message);
-    console.log(message);
-    parseEventData(figure, message);
-    return figure;
+    var shape = kineticShapeFromData(data);
+    enableEventHandlers(shape, data);
+
+    return shape;
 }
 
 /*
@@ -39,7 +41,7 @@ var shift = false;
 var alt = false;
 var superKey = false;
 
-function parseEventData(figure, message) {   
+function enableEventHandlers(figure, message) {   
     if(message.eventData != undefined && message.eventData != null) {
         if(message.eventData.listen.indexOf("mouseclick") != -1) {
             figure.on('click', clickEventHandler.bind(undefined, message.eventData.eventId));
@@ -103,14 +105,10 @@ function keyEvent(event,key) {
  * Drawing figures
  */ 
 
-function placeFigure(figure) {
-    layerList[currentLayer].add(figure);
-}
+function kineticShapeFromData(message) {
 
-function makeFigure(message) {
-    var figure;
-
-    data = message.data;
+    var shape = null;
+    var data = message.data;
 
     // both fill and stroke are in the form {"r": 255, "g": 255, "b": 255, ("a": 1.0)?}
     if(data["fill"]){
@@ -123,33 +121,32 @@ function makeFigure(message) {
 
     switch (message.type) {
         case "line":
-            figure = new Kinetic.Line(data);
+            shape = new Kinetic.Line(data);
             break;
         case "polygon":
-            figure = new Kinetic.Polygon(data);
+            shape = new Kinetic.Polygon(data);
             break;
         case "circle":
-            figure = new Kinetic.Circle(data);
+            shape = new Kinetic.Circle(data);
             break;
         case "rect":
-            figure = new Kinetic.Rect(data);
+            shape = new Kinetic.Rect(data);
             break;
         case "text":
-            figure = new Kinetic.Text(data);
+            shape = new Kinetic.Text(data);
             break;
         case "container":
 
             data.clip = [0, 0, data.width, data.height];
-            figure = new Kinetic.Group(data);
+            shape = new Kinetic.Group(data);
             message.children.forEach(function(child) {
-                figure.add(parseFigureMessage(child));
+                shape.add(parseShapeData(child));
             });
             break;
         default:
-            window.alert("Unrecognized JSON message received from server.");
-            figure = null;
+            printDebugMessage("Unrecognized JSON message received from server.",2);
     }
-    return figure;
+    return shape;
 }
 
 function rgbaDictToColor(dict){
@@ -170,15 +167,15 @@ function rgbaDictToColor(dict){
  * Type 2 = error
  */
 
-function debugMessage(message, type) {
+function printDebugMessage(message, type) {
 
     if(type == 1)
     {
-        console.warning(message);
+        console.warn(message);
     }
     else if(type == 2)
     {
-        console.warning(message);
+        console.error(message);
     }
 
     var now = new Date(),
