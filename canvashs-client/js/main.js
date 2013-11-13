@@ -36,10 +36,6 @@ function parseShapeData(data) {
 /*
  * Sending Input events
  */
-var control = false;
-var shift = false;
-var alt = false;
-var superKey = false;
 
 function enableEventHandlers(figure, message) {   
     if(message.eventData != undefined && message.eventData != null) {
@@ -84,19 +80,6 @@ function mouseEvent(eventName, id, event) {
             "id": id,
             "x": event.pageX-canvasPos.left+575,
             "y": event.pageY-canvasPos.top+300
-        }
-    }));
-}
-
-function keyEvent(event,key) {
-    connection.send(JSON.stringify({
-        "event":event,
-        "data":{
-            "key": key,
-            "control": control,
-            "alt": alt,
-            "shift": shift,
-            "super": superKey
         }
     }));
 }
@@ -221,6 +204,22 @@ function newDefaultLayer() {
     stage.add(layerList[currentLayer]);
 }
 
+function sendKeyEvent(eventName, event) {
+    event.preventDefault();
+    var superKey = false;
+    var key = String.fromCharCode(event.keyCode);
+    connection.send(JSON.stringify({
+        "event":eventName,
+        "data":{
+            "key": key,
+            "control": event.ctrlKey,
+            "alt": event.altKey,
+            "shift": event.shiftKey,
+            "super": superKey
+        }
+    }));
+}
+
 /*
  * On document ready
  */
@@ -245,37 +244,10 @@ $(document).ready(function() {
 
     // Begin to listen for keys
     window.addEventListener('keydown', function(e) {
-        e.preventDefault();
-        if (e.keyCode === 16) {
-            shift = true;
-        } else if (e.keyCode === 17) {
-            control = true;
-        } else if (e.keyCode === 18) {
-            alt = true;
-        } else if (e.keyCode === 91) {
-            superKey = true;
-        } else {
-            var key = String.fromCharCode(e.keyCode);
-            keyEvent("keydown", key);
-//            console.log("Keydown: " + key + "\r\n shift: " + shift
-//                    + "\r\n control: " + control + "\r\n alt: " + alt + "\r\n super: " + superKey);
-        }
+        sendKeyEvent("keydown", e);
     });
     
     window.addEventListener('keyup', function(e) {
-        e.preventDefault();
-        if (e.keyCode === 16) {
-            shift = false;
-        } else if (e.keyCode === 17) {
-            control = false;
-        } else if (e.keyCode === 18) {
-            alt = false;
-        } else if (e.keyCode === 91) {
-            superKey = false;
-        } else {
-            var key = String.fromCharCode(e.keyCode);
-            keyEvent("keyup", key);
-//            console.log("Keyup: " + key);
-        }
+        sendKeyEvent("keyup", e);
     });
 });
