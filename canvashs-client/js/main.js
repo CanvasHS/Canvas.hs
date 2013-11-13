@@ -206,16 +206,14 @@ function newDefaultLayer() {
 
 function sendKeyEvent(eventName, event) {
     event.preventDefault();
-    var superKey = false;
     var key = String.fromCharCode(event.keyCode);
     connection.send(JSON.stringify({
         "event":eventName,
         "data":{
             "key": key,
-            "control": event.ctrlKey,
+            "control": event.ctrlKey || event.metaKey,
             "alt": event.altKey,
-            "shift": event.shiftKey,
-            "super": superKey
+            "shift": event.shiftKey
         }
     }));
 }
