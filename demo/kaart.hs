@@ -43,7 +43,7 @@ drawBackground :: Shape
 drawBackground = Fill (135,206,235,1.0) $ Rect (0,0) 900 600
 
 drawMap :: Shape
-drawMap =  Container 1200 1536 polys
+drawMap =  Container 1200 1536 (nederland)
     
 
 drawControls :: Float -> Shape
