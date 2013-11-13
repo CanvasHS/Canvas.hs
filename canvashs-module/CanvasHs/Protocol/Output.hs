@@ -30,7 +30,7 @@ data JSONShapeData
         fill           :: Maybe JSONRGBAColor, 
         scaleX         :: Maybe Float, 
         scaleY         :: Maybe Float, 
-        rotateDeg      :: Maybe Int, 
+        rotationDeg      :: Maybe Int, 
         fontSize       :: Maybe Int, 
         fontFamily     :: Maybe T.Text,
         text           :: Maybe T.Text,
@@ -106,7 +106,7 @@ iEncode (D.Stroke (r,g,b,a) w s) = js {shapedata = sd {stroke = Just JSONRGBACol
                                     js = iEncode s
                                     sd = shapedata js
 
-iEncode (D.Rotate deg s)        = js {shapedata = sd {rotateDeg = Just deg}}
+iEncode (D.Rotate deg s)        = js {shapedata = sd {rotationDeg = Just deg}}
                                 where 
                                     js = iEncode s
                                     sd = shapedata js
@@ -138,7 +138,7 @@ iEncodePoint (x',y')
         fill           = Just JSONRGBAColor{colr=255, colg=255, colb=255, cola = 1.0}, 
         scaleX         = Nothing, 
         scaleY         = Nothing, 
-        rotateDeg      = Nothing, 
+        rotationDeg      = Nothing, 
         fontSize       = Nothing, 
         fontFamily     = Nothing,
         text           = Nothing, 
@@ -158,7 +158,7 @@ iEncodePoints ps
         fill           = Just JSONRGBAColor{colr=255, colg=255, colb=255, cola = 1.0}, 
         scaleX         = Nothing, 
         scaleY         = Nothing, 
-        rotateDeg      = Nothing, 
+        rotationDeg      = Nothing, 
         fontSize       = Nothing, 
         fontFamily     = Nothing, 
         text           = Nothing,
