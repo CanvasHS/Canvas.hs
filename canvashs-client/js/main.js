@@ -193,7 +193,7 @@ function initCanvas(width, height) {
     canvas.css( "width", width+"px" );
     canvas.css( "height", height+"px" );
     canvas.css( "margin-top", "-"+height/2+"px" );
-    canvas.css( "margin-left", "-"+(width + $( "#debug" ).width())/2+"px" );
+    canvas.css( "margin-left", "-"+width/2+"px" );
 
     wrapper.css( "min-width", width+"px" );
     wrapper.css( "height", $( window ).height()+"px" );
@@ -245,6 +245,22 @@ $(document).ready(function() {
 
     // Init canvas
     initCanvas(width,height);
+
+    $("#debug").mouseup(function(){
+
+        if($(this).width() == 10)
+        {
+            $(this).animate({
+                width: 350
+            },300);
+        }
+        else
+        {
+            $(this).animate({
+                width: 10
+            },300);
+        }
+    });
 
     // When the connection is open, send some data to the server
     connection.onopen = function () {
