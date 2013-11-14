@@ -6,6 +6,10 @@ import Debug.Trace
 import KaartData
 import Buttons
 
+import Debug.Trace
+import Data.List
+import Data.Char
+
 data State = State {
     xDiff :: Int,
     yDiff :: Int,
@@ -21,71 +25,65 @@ main = installEventHandler handl emptyState
 -- we gebruiken een simpele Int als store (maar het zou ook een record oid kunnen zijn)
 handl :: State -> Event -> (State, Shape)
 
-handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} StartEvent = (st, 
-    Container 900 600 
-        [
-            drawBackground,
-            Translate xDiff yDiff $ Scale zoom zoom $ drawMap,
-            drawControls zoom
-        ])
+handl st StartEvent = (st, drawAll st)
+
+handl st (MouseClick (x,y) "search") = (newState, drawAll newState)
+    where
+        newState = st{searchHasFocus=True}
 
 
-handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom, searchHasFocus=searchHasFocus} (MouseClick (x,y) ev) = (newState,
-    Container 900 600
-        [
-            drawBackground,
-            (Translate xNew yNew $ Scale newZoom newZoom $ drawMap),
-            drawControls newZoom
-        ])
+handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseClick (x,y) ev) = (newState, drawAll newState)
     where
         (x, y) = translateFromEvent ev
-        (xNew, yNew) = (x + xDiff, y + yDiff) 
-        newFocus = (ev == "search")
+        (xNew, yNew) = (x + xDiff, y + yDiff)
         newZoom = scaleFromEvent zoom ev
-        newState = st{xDiff=xNew, yDiff=yNew, zoom=newZoom, searchHasFocus=newFocus}
+        newState = st{xDiff=xNew, yDiff=yNew, zoom=newZoom, searchHasFocus=False}
 
-handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseOver (x,y) naam) = (st,
+{-
+handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom,searchText = s} (MouseOver (x,y) naam) = (st,
     Container 900 600
         [
             drawBackground,
             Translate xDiff yDiff $ Scale zoom zoom $ drawMap,
-            drawControls zoom,
+            drawControls zoom s,
             Text (0, 0) naam defaults
         ])
 
-handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseOut (x,y) naam) = (st,
+handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom,searchText = s} (MouseOut (x,y) naam) = (st,
     Container 900 600
         [
             drawBackground,
             Translate xDiff yDiff $ Scale zoom zoom $ drawMap,
-            drawControls zoom,
+            drawControls zoom s,
             Text (500, 100) "Ik doe shit en ben daar mega gelukkig over" defaults{font="Cantarell", size=20}
         ])
+-}
+handl st@State{searchHasFocus = focus, searchText = s} (KeyDown a b) = trace [a] $ (newState, drawAll newState)
+    where
+        newS = if focus then (if (Shift `elem` b) then (s ++ [a]) else (s ++ [toLower a])) else s
+        newState = st{searchText=newS}
 
-handl st (KeyDown 'c' a) = (st, Container 900 600 [Text (500, 100) "hoi" defaults])
+handl st _ = (st, drawAll st)
+
+drawAll :: State -> Shape
+drawAll st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom, searchText=searchText, searchHasFocus=searchHasFocus} =
+    {-Event defaults{eventId="container",mouseClick=True} $ -} Container 900 600
+        [
+            drawBackground,
+            drawMap (xDiff, yDiff) zoom,
+            drawControls zoom searchHasFocus searchText
+        ]
 
 drawBackground :: Shape
 drawBackground = Fill (135,206,235,1.0) $ Rect (0,0) 900 600
 
-drawMap :: Shape
-drawMap =  Container 1200 1536 (nederland ++ steden)
+drawMap :: (Int, Int) -> Float -> Shape
+drawMap (xDiff, yDiff) zoom = Translate xDiff yDiff $ Scale zoom zoom $ Container 1200 1536 (nederland ++ steden)
 
-drawSearch :: Shape
-drawSearch = 
-    Event defaults{eventId="search", mouseClick=True} $ Translate 5 5 $ Container 300 45 $ [
-        Fill (255, 255, 255, 1.0) $ Rect (0,0) 300 45,
-        Translate 260 5 $ Container 35 35 $ [
-            Fill (128, 128, 128, 1.0) $ Circle (15, 15) 15,
-            Fill (128, 128, 128, 1.0) $ Polygon [(20, 25), (30, 35), (35, 30), (25, 20)],
-            Fill (255, 255, 255, 1.0) $ Circle (15, 15) 10
-        ]
-    ]
-        
-
-drawControls :: Float -> Shape
-drawControls zl =
+drawControls :: Float -> Bool -> String -> Shape
+drawControls zl hasFocus s =
     Container 900 600 [
-        drawSearch,
+        drawSearch hasFocus s,
         Translate (900 - 112) 16 $ Container 96 288 [
             drawMovementControls,
             Translate 32 128 $ drawZoomControls zl
@@ -115,6 +113,20 @@ drawZoomControls zl =
     where
         zoomPerc = (zl - 0.4) / 0.6
         zoomY = round $ (1.0 - zoomPerc) * 64.0
+
+drawSearch :: Bool -> String -> Shape
+drawSearch hasFocus s = 
+    Event defaults{eventId="search", mouseClick=True} $ Translate 5 5 $ Container 300 45 $ [
+        searchFill $ Rect (0,0) 300 45,
+        Text (5, 5) s defaults{font="Cantarell", size=35},
+        Translate 260 5 $ Container 35 35 $ [
+            Stroke (128, 128, 128, 1.0) 5 $ Fill (255, 255, 255, 0.1) $ Circle (15, 15) 10,
+            Fill (128, 128, 128, 1.0) $ Polygon [(20, 25), (30, 35), (35, 30), (25, 20)]
+            --Fill (255, 255, 255, 1.0) $ Circle (15, 15) 10
+        ]
+    ]
+    where
+        searchFill = if hasFocus then (Fill (255, 255, 255, 1.0)) else (Fill (255, 255, 255, 0.75))
 
 translateFromEvent :: String -> (Int, Int)
 translateFromEvent c = case c of
