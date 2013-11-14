@@ -153,19 +153,37 @@ function debugMessage(message) {
         now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
     $("#debug").prepend("<p><strong>["+now+"]</strong> "+message+"</p>")
 }
-function initCanvas(canvas, width, height) {
+
+function initCanvas() {
+
+    stage = new Kinetic.Stage({
+        container: 'canvas',
+        width: 900, // Default width and height
+        heigh: 600 // Can be changed with the resize canvas function
+    });
+    // Create new layer to draw on
+    newDefaultLayer();
+}
+
+function resizeCanvas(width, height) {
+
+    var canvas = $('#canvas');
+    var wrapper = $('#wrapper');
 
     canvas.css( "width", width+"px" );
     canvas.css( "height", height+"px" );
     canvas.css( "margin-top", "-"+height/2+"px" );
     canvas.css( "margin-left", "-"+(width + $( "#debug" ).width())/2+"px" );
-    stage = new Kinetic.Stage({
-        container: 'canvas',
-        width: width,
-        height: height
-    });
-    // Create new layer to draw on
-    newDefaultLayer();
+
+    wrapper.css( "min-width", width+"px" );
+    wrapper.css( "height", $( window ).height()+"px" );
+
+    // $( window ).resize(function() { 
+    //     wrapper.css( "height", $( window ).height()+"px" );
+    // });
+
+    stage.width = width;
+    stage.height = height;
 }
 
 var control = false;
@@ -192,14 +210,8 @@ $(document).ready(function() {
     var height = 600;
 
     // Init canvas
-    initCanvas($('#canvas'), width, height);
-
-    $( "#wrapper" ).css( "min-width", width+"px" );
-    $( "#wrapper" ).css( "height", $( window ).height()+"px" );
-
-    $( window ).resize(function() { 
-        $( "#wrapper" ).css( "height", $( window ).height()+"px" );
-    });
+    initCanvas();
+    resizeCanvas(width,height);
 
     // When the connection is open, send some data to the server
     connection.onopen = function () {
@@ -211,6 +223,7 @@ $(document).ready(function() {
     // Log messages from the server
     connection.onmessage = parseMessage;
 
+    // Begin to listen for keys
     window.addEventListener('keydown', function(e) {
         e.preventDefault();
         if (e.keyCode === 16) {
