@@ -93,7 +93,7 @@ describe("Draw elements", function() {
   	it("draws a circle", function() {
   		runs(function() {
   			// Draw in the Canvas.hs canvas
-	  		parseMessage({data:'{    "type": "circle",    "data": {        "id": "circle_nr_1",        "x": 20,        "y": 20,        "radius": 5,        "stroke": "rgba(225,255,215,1)",        "strokeWidth": 2,        "fill": "rgba(255,0,0,1)"    }}'});
+	  		parseMessage({data:'{    "type": "circle",    "data": {        "id": "circle_nr_1",        "x": 20,        "y": 20,        "radius": 5,        "stroke": {"r":225,"g":255,"b":215,"a":1},        "strokeWidth": 2,        "fill": {"r":255,"g":0,"b":0,"a":0}    }}'});
 	 		stage.batchDraw();
 	 		stage.draw();
 	 	});
@@ -119,7 +119,7 @@ describe("Draw elements", function() {
   	it("draws a text", function() {
   		runs(function() {
   			// Draw in the Canvas.hs canvas
-	  		parseMessage({data:'{    "type": "text",    "data": {        "id": "text",        "x": 25,        "y": 20,        "text": "Simple Text",        "fontSize": 30,        "fontFamily": "Helvetica",        "fill": "rgba(200,10,10,0.8)"    }}'});
+	  		parseMessage({data:'{    "type": "text",    "data": {        "id": "text",        "x": 25,        "y": 20,        "text": "Simple Text",        "fontSize": 30,        "fontFamily": "Helvetica",        "fill": {"r":200,"g":10,"b":10,"a":0.8}    }}'});
 	 		stage.batchDraw();
 	 		stage.draw();
 	 	});
