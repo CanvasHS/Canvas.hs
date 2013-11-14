@@ -34,6 +34,7 @@ data JSONShapeData
         fontSize       :: Maybe Int, 
         fontFamily     :: Maybe T.Text,
         text           :: Maybe T.Text,
+        align          :: Maybe T.Text,
         points         :: Maybe [Int], 
         x              :: Maybe Int, 
         y              :: Maybe Int,
@@ -124,10 +125,10 @@ iEncode (D.Event e s)            = js {shapeeventData = Just (iEncodeEventData (
                                     js = iEncode s
 
 
-iEncode (D.Container w h ss)    = JSONShape {shapeType = "container"
-                                        ,shapeData = (iEncodePoint (0,0)) {width = Just w, height = Just h}
-                                        ,shapeEventData = Nothing
-                                        ,shapeChildren = Just $ map iEncode ss
+iEncode (D.Container w h ss)    = JSONShape {shapetype = "container"
+                                        ,shapedata = (iEncodePoint (0,0)) {width = Just w, height = Just h}
+                                        ,shapeeventData = Nothing
+                                        ,shapechildren = Just $ map iEncode ss
                                         }
 
 iEncodePoint :: D.Point -> JSONShapeData
@@ -141,7 +142,8 @@ iEncodePoint (x',y')
         rotationDeg      = Nothing, 
         fontSize       = Nothing, 
         fontFamily     = Nothing,
-        text           = Nothing, 
+        text           = Nothing,
+        align          = Nothing,
         points         = Nothing,
         x              = Just x', 
         y              = Just y', 
@@ -158,10 +160,11 @@ iEncodePoints ps
         fill           = Just JSONRGBAColor{colr=255, colg=255, colb=255, cola = 1.0}, 
         scaleX         = Nothing, 
         scaleY         = Nothing, 
-        rotationDeg      = Nothing, 
+        rotationDeg    = Nothing, 
         fontSize       = Nothing, 
         fontFamily     = Nothing, 
         text           = Nothing,
+        align          = Nothing,
         points         = Just $ eps [] $ reverse ps,
         x              = Nothing, 
         y              = Nothing, 
@@ -174,11 +177,16 @@ iEncodePoints ps
             eps a ((x',y'):ps)    = eps (x':y':a) ps
 
 iEncodeTextData :: D.Point -> String -> D.TextData -> JSONShapeData
-iEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.italic = i, D.underline = u}) = result
+iEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.italic = i, D.alignment = a, D.underline = u}) = result
         where
             pointData = iEncodePoint ps
+            al = case a of 
+                        D.Start -> Just "left"
+                        D.Center -> Just "center"
+                        D.End -> Just "right"
+
             text = pointData{text= Just $ T.pack $ s}
-            result = text{fontFamily= Just $ T.pack $ f, fontSize = Just si}
+            result = text{fontFamily= Just $ T.pack $ f, fontSize = Just si, align = al}
 
 
 
