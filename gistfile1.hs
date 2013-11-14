@@ -12,9 +12,9 @@ handl :: Int -> Event -> (Int, Shape)
 --	])    -- Eerste image tekenen
 handl st StartEvent = (st, 
     Container 900 600 [
-        (Text (100,0) "Hello World" defaults{alignment=Start}),
-        (Text (100,10) "Hello World" defaults{alignment=Center}),
-        (Text (100,20) "Hello World" defaults{alignment=End})
+        (Text (100,100) "Hello World" defaults{alignment=Start}),
+        (Text (100,200) "Hello World" defaults{alignment=Center}),
+        (Text (100,300) "Hello World" defaults{alignment=End})
     ])
 
 handl st (MouseClick (x,y) "123") = (st, Container 20 10 [(Event defaults{eventId="123",mouseClick=True} (Circle (x, y) 34))])    -- Eerste image tekenen

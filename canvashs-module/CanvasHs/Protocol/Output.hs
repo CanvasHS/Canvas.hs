@@ -30,12 +30,13 @@ data JSONShapeData
         fill           :: Maybe JSONRGBAColor, 
         scaleX         :: Maybe Float, 
         scaleY         :: Maybe Float, 
-        rotationDeg      :: Maybe Int, 
+        rotationDeg    :: Maybe Int, 
         fontSize       :: Maybe Int, 
         fontFamily     :: Maybe T.Text,
         text           :: Maybe T.Text,
         align          :: Maybe T.Text,
-        points         :: Maybe [Int], 
+        points         :: Maybe [Int],
+        offset         :: Maybe [Int],
         x              :: Maybe Int, 
         y              :: Maybe Int,
         width          :: Maybe Int, 
@@ -120,9 +121,15 @@ iEncode (D.Scale dx dy s)        = js {shapedata = sd {scaleX = Just dx, scaleY 
                                 where 
                                     js = iEncode s
                                     sd = shapedata js
+
 iEncode (D.Event e s)            = js {shapeeventData = Just (iEncodeEventData (shapeeventData js) e)}
                                 where
                                     js = iEncode s
+
+iEncode (D.Offset x y s)         = js {shapedata = sd {offset = Just [x,y]}}
+                                where
+                                    js = iEncode s
+                                    sd = shapedata js
 
 
 iEncode (D.Container w h ss)    = JSONShape {shapetype = "container"
@@ -139,12 +146,13 @@ iEncodePoint (x',y')
         fill           = Just JSONRGBAColor{colr=255, colg=255, colb=255, cola = 1.0}, 
         scaleX         = Nothing, 
         scaleY         = Nothing, 
-        rotationDeg      = Nothing, 
+        rotationDeg    = Nothing, 
         fontSize       = Nothing, 
         fontFamily     = Nothing,
         text           = Nothing,
         align          = Nothing,
         points         = Nothing,
+        offset         = Nothing,
         x              = Just x', 
         y              = Just y', 
         width          = Nothing, 
@@ -166,13 +174,15 @@ iEncodePoints ps
         text           = Nothing,
         align          = Nothing,
         points         = Just $ eps [] $ reverse ps,
+        offset         = Nothing,
         x              = Nothing, 
         y              = Nothing, 
         width          = Nothing, 
         height         = Nothing, 
         radius         = Nothing 
     }
-        where 
+        where
+            -- Deze functie zet alle punten achter elkaar
             eps a []              = a
             eps a ((x',y'):ps)    = eps (x':y':a) ps
 
