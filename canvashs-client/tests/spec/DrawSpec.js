@@ -93,7 +93,7 @@ describe("Draw elements", function() {
   	it("draws a circle", function() {
   		runs(function() {
   			// Draw in the Canvas.hs canvas
-	  		parseMessage({data:'{    "type": "circle",    "data": {        "id": "circle_nr_1",        "x": 20,        "y": 20,        "radius": 5,        "stroke": {"r":225,"g":255,"b":215,"a":1},        "strokeWidth": 2,        "fill": {"r":255,"g":0,"b":0,"a":0}    }}'});
+	  		parseMessage({"data":'{    "type": "circle",    "data": {        "id": "circle_nr_1",        "x": 20,        "y": 20,        "radius": 5,        "stroke": {"r":225,"g":255,"b":215,"a":1},        "strokeWidth": 2,        "fill": {"r":255,"g":0,"b":0,"a":1}    }}'});
 	 		stage.batchDraw();
 	 		stage.draw();
 	 	});
@@ -116,10 +116,10 @@ describe("Draw elements", function() {
 	    	expect(canvas).toImageDiffEqual(canvas_compare);
   		});
   	});
-  	it("draws a text", function() {
+  	it("draws text", function() {
   		runs(function() {
   			// Draw in the Canvas.hs canvas
-	  		parseMessage({data:'{    "type": "text",    "data": {        "id": "text",        "x": 25,        "y": 20,        "text": "Simple Text",        "fontSize": 30,        "fontFamily": "Helvetica",        "fill": {"r":200,"g":10,"b":10,"a":0.8}    }}'});
+	  		parseMessage({"data":'{    "type": "text",    "data": {        "id": "text",        "x": 25,        "y": 20,        "text": "Simple Text",        "fontSize": 30,        "fontFamily": "Helvetica",        "fill": {"r":200,"g":10,"b":10,"a":0.8}    }}'});
 	 		stage.batchDraw();
 	 		stage.draw();
 	 	});
@@ -135,6 +135,50 @@ describe("Draw elements", function() {
 		        fill: 'rgba(200,10,10,0.8)'
 		      });
 	 		layer.add(text);
+	 		compare_stage.batchDraw();
+	 	});
+	    runs(function() {
+	    	// Compare the results
+	    	expect(canvas).toImageDiffEqual(canvas_compare);
+  		});
+  	});
+  	it("draws container", function() {
+  		runs(function() {
+  			// Draw in the Canvas.hs canvas
+	  		parseMessage({"data":'{    "type": "container",    "data": {        "id": "container_b",        "x": 10,        "y": 10,        "width": 500,        "height": 400,        "scaleX": 1,        "scaleY": 1,        "rotationDeg": 0    },    "children" : [        {            "type": "circle",            "data": {                "id": "circle_nr_1",                "x": 20,                "y": 20,                "radius": 5,                "stroke": {"r":255,"g":255,"b":255,"a":0},                "strokeWidth": 2,                "fill": {"r":255,"g":0,"b":0,"a":1}            }        },        {            "type": "polygon",            "data": {                "id": "polygon_nr_23",                "points": [73, 192, 73, 160, 340, 23, 500, 109, 499, 139, 342, 93],                "stroke": {"r":255,"g":255,"b":255,"a":1},                "strokeWidth": 2,                "fill": {"r":255,"g":0,"b":0,"a":1},                "rotationDeg": 0            }        }    ]}'});
+	 		stage.batchDraw();
+	 		stage.draw();
+	 	});
+  		runs(function() {
+  			// Draw in the comparison Canvas
+  			layer = compare_stage.getChildren().toArray()[0];
+	 		var group = new Kinetic.Group({
+		        x: 10,
+		        y: 10,
+		        width: 500,
+		        height: 400,
+		        scaleX: 1,
+		        scaleY: 1,
+		        rotationDeg: 0
+		      });
+	 		var circle = new Kinetic.Circle({
+	 			x: 20,
+	 			y: 20,
+	 			radius: 5,
+	 			stroke: "rgba(255,255,255,0)",
+                strokeWidth: 2,
+                fill: "rgba(255,0,0,1)"
+	 			});
+	 		var polygon = new Kinetic.Polygon({
+	 			points: [73, 192, 73, 160, 340, 23, 500, 109, 499, 139, 342, 93],
+                stroke: "rgba(255,255,255,1)",
+                strokeWidth: 2,
+                fill: "rgba(255,0,0,1)",
+                rotationDeg: 0
+	 			});
+	 		group.add(circle);
+	 		group.add(polygon);
+	 		layer.add(group);
 	 		compare_stage.batchDraw();
 	 	});
 	    runs(function() {
