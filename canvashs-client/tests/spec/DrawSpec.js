@@ -37,8 +37,31 @@ describe("Draw elements", function() {
 	 	compare_stage.add(layer);
 	    canvas_compare = $(canvas_compare_wrapper).find('canvas')[0]; // Get canvas element
 	});
+
+  	it("draws a line", function() {
+  		runs(function() {
+  			// Draw in the Canvas.hs canvas
+	  		parseMessage({data:'{    "type": "line",    "data": {        "id": "line_nr_23",        "points": [ 10, 0, 10, 10 ],        "stroke": "rgba(255,255,255,1)",        "strokeWidth": 2    }}'});
+	 		stage.batchDraw();
+	 		stage.draw();
+	 	});
+  		runs(function() {
+  			// Draw in the comparison Canvas
+  			layer = compare_stage.getChildren().toArray()[0];
+	 		var line = new Kinetic.Line({
+		        points: [10,0,10,10],
+		        stroke: 'rgba(255,255,255,1)',
+		        strokeWidth: 2
+		      });
+	 		layer.add(line);
+	 		compare_stage.batchDraw();
+	 	});
+	    runs(function() {
+	    	// Compare the results
+	    	expect(canvas).toImageDiffEqual(canvas_compare);
+  		});
+  	});
   	it("draws a rectangle", function() {
-  		console.log(canvas_compare);
   		runs(function() {
   			// Draw in the Canvas.hs canvas
 	  		parseMessage({data:'{"type": "rect","data": {"id": "rect_b","x": 10,"y": 12,"width": 10,"height": 20,"stroke": "rgba(255,255,255,1)","strokeWidth": 2,"fill": "rgba(255,0,0,1)","scaleX": 1.5}}'});
@@ -67,7 +90,6 @@ describe("Draw elements", function() {
   		});
   	});
   	it("draws a polygon", function() {
-  		console.log(canvas_compare);
   		runs(function() {
   			// Draw in the Canvas.hs canvas
 	  		parseMessage({data:'{    "type": "polygon",    "data": {        "id": "polygon_nr_23",        "points": [73, 192, 73, 160, 340, 23, 500, 109, 499, 139, 342, 93],        "stroke": "rgba(255,255,255,1)",        "strokeWidth": 2,        "fill": "rgba(255,100,100,1)",        "rotationDeg": 40    }}'});
@@ -85,6 +107,58 @@ describe("Draw elements", function() {
 		        strokeWidth: 2
 		      });
 	 		layer.add(poly);
+	 		compare_stage.batchDraw();
+	 	});
+	    runs(function() {
+	    	// Compare the results
+	    	expect(canvas).toImageDiffEqual(canvas_compare);
+  		});
+  	});
+  	it("draws a circle", function() {
+  		runs(function() {
+  			// Draw in the Canvas.hs canvas
+	  		parseMessage({data:'{    "type": "circle",    "data": {        "id": "circle_nr_1",        "x": 20,        "y": 20,        "radius": 5,        "stroke": "rgba(225,255,215,1)",        "strokeWidth": 2,        "fill": "rgba(255,0,0,1)"    }}'});
+	 		stage.batchDraw();
+	 		stage.draw();
+	 	});
+  		runs(function() {
+  			// Draw in the comparison Canvas
+  			layer = compare_stage.getChildren().toArray()[0];
+	 		var circle = new Kinetic.Circle({
+		        x: 20,
+		        y: 20,
+		        radius: 5,
+		        stroke: 'rgba(225,255,215,1)',
+		        strokeWidth: 2,
+		        fill: 'rgba(255,0,0,1)'
+		      });
+	 		layer.add(circle);
+	 		compare_stage.batchDraw();
+	 	});
+	    runs(function() {
+	    	// Compare the results
+	    	expect(canvas).toImageDiffEqual(canvas_compare);
+  		});
+  	});
+  	it("draws a text", function() {
+  		runs(function() {
+  			// Draw in the Canvas.hs canvas
+	  		parseMessage({data:'{    "type": "text",    "data": {        "id": "text",        "x": 25,        "y": 20,        "text": "Simple Text",        "fontSize": 30,        "fontFamily": "Helvetica",        "fill": "rgba(200,10,10,0.8)"    }}'});
+	 		stage.batchDraw();
+	 		stage.draw();
+	 	});
+  		runs(function() {
+  			// Draw in the comparison Canvas
+  			layer = compare_stage.getChildren().toArray()[0];
+	 		var text = new Kinetic.Text({
+		        x: 25,
+		        y: 20,
+		        text: "Simple Text",
+		        fontSize: 30,
+		        fontFamily: "Helvetica",
+		        fill: 'rgba(200,10,10,0.8)'
+		      });
+	 		layer.add(text);
 	 		compare_stage.batchDraw();
 	 	});
 	    runs(function() {
