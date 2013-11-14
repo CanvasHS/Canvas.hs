@@ -221,12 +221,12 @@ function newDefaultLayer() {
 }
 
 function sendKeyEvent(eventName, event) {
+    console.log(event);
     event.preventDefault();
-    var key = String.fromCharCode(event.keyCode);
     connection.send(JSON.stringify({
         "event":eventName,
         "data":{
-            "key": key,
+            "key": normalizeKeyCode(event),
             "control": event.ctrlKey || event.metaKey,
             "alt": event.altKey,
             "shift": event.shiftKey
