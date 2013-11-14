@@ -97,7 +97,7 @@ function makeFigure(message) {
 }
 function rgbaDictToColor(dict){
     var res = "";
-    if(dict["a"]){
+    if(dict["a"] != undefined){
         res = "rgba({0},{1},{2},{3})".format(dict["r"], dict["g"], dict["b"], dict["a"]);
     } else {
         res = "rgb({0},{1},{2})".format(dict["r"], dict["g"], dict["b"]);
