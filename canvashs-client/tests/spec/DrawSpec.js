@@ -1,7 +1,7 @@
 describe("Parse elements", function() {
   	it("parses a rectangle", function() {
   		// Parse rectangle and check output
-  		var rectangle = parseFigureMessage({"type": "rect","data": {"id": "rect_b","x": 10,"y": 10,"width": 10,"height": 20,"stroke": "rgba(255,255,255,1)","strokeWidth": 2,"fill": "rgba(255,0,0,1)","scaleX": 1.5}});
+  		var rectangle = parseShapeData({"type": "rect","data": {"id": "rect_b","x": 10,"y": 10,"width": 10,"height": 20,"stroke": {"r": 255,"g": 255,"b": 255,"a": 1 },"strokeWidth": 2,"fill": {"r":255,"g":0,"b":0,"a":1},"scaleX": 1.5}});
   		expect(rectangle).toBeDefined();
   		expect(rectangle.attrs.height).toBeDefined();
   		expect(rectangle.attrs.width).toBeDefined();
@@ -20,9 +20,9 @@ describe("Draw elements", function() {
     	this.addMatchers(imagediff.jasmine);
     	// Setup canvas of Canvas.Hs
 	    canvas_wrapper = document.createElement("div");
-	    canvas_wrapper.id='canvas';
+	    canvas_wrapper.id='canvasWrap';
 	    $(document.body).append(canvas_wrapper);
-	  	initCanvas($(canvas), 900, 600); // Init canvas
+	  	initCanvas($(canvas_wrapper), 900, 600); // Init canvas
 	    canvas = $(canvas_wrapper).find('canvas')[0]; // Get canvas element
 	    // Setup kinetic canvas to compare against
 	    canvas_compare_wrapper = document.createElement("div");
@@ -38,10 +38,9 @@ describe("Draw elements", function() {
 	    canvas_compare = $(canvas_compare_wrapper).find('canvas')[0]; // Get canvas element
 	});
   	it("draws a rectangle", function() {
-  		console.log(canvas_compare);
   		runs(function() {
   			// Draw in the Canvas.hs canvas
-	  		parseMessage({data:'{"type": "rect","data": {"id": "rect_b","x": 10,"y": 12,"width": 10,"height": 20,"stroke": "rgba(255,255,255,1)","strokeWidth": 2,"fill": "rgba(255,0,0,1)","scaleX": 1.5}}'});
+	  		connectionDataReceived({"data":'{"type": "rect","data": {"id": "rect_b","x": 10,"y": 12,"width": 10,"height": 20,"stroke": {"r":255,"g":255,"b":255,"a":1},"strokeWidth": 2,"fill": {"r":255,"g":0,"b":0,"a":1},"scaleX": 1.5}}'});
 	 		stage.batchDraw();
 	 		stage.draw();
 	 	});
@@ -67,10 +66,9 @@ describe("Draw elements", function() {
   		});
   	});
   	it("draws a polygon", function() {
-  		console.log(canvas_compare);
   		runs(function() {
   			// Draw in the Canvas.hs canvas
-	  		parseMessage({data:'{    "type": "polygon",    "data": {        "id": "polygon_nr_23",        "points": [73, 192, 73, 160, 340, 23, 500, 109, 499, 139, 342, 93],        "stroke": "rgba(255,255,255,1)",        "strokeWidth": 2,        "fill": "rgba(255,100,100,1)",        "rotationDeg": 40    }}'});
+	  		connectionDataReceived({"data":'{    "type": "polygon",    "data": {        "id": "polygon_nr_23",        "points": [73, 192, 73, 160, 340, 23, 500, 109, 499, 139, 342, 93],        "stroke": {"r":255,"g":255,"b":255,"a":1},        "strokeWidth": 2,        "fill": {"r":255,"g":100,"b":100,"a":1},        "rotationDeg": 40    }}'});
 	 		stage.batchDraw();
 	 		stage.draw();
 	 	});
@@ -102,7 +100,7 @@ describe("Draw elements", function() {
 		canvas_wrapper_compare = null;
 		compare_stage = null;
 		// Reset variables of Canvas.hs
-		var currentLayer = 0;
+		var topLayerIdx = 0;
 		var layerList = new Array();
 		var stage = undefined;
 		var connection = new WebSocket('ws://localhost:8080');
