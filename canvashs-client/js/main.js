@@ -5,7 +5,7 @@ var stage = undefined;
 var connection = new WebSocket('ws://localhost:8080');
 
 // Event handlers
-function connectionDataRecieved(event) {
+function connectionDataReceived(event) {
 
     // Clear screen
     layerList[topLayerIdx].destroyChildren();
@@ -92,6 +92,7 @@ function shapeFromData(message) {
 
 
     var shape = null;
+    var dataMessage = "";
     var data = message.data;
 
     // both fill and stroke are in the form {"r": 255, "g": 255, "b": 255, ("a": 1.0)?}
@@ -182,34 +183,33 @@ function printDebugMessage(message, type) {
 }
 
 /*
- * Canvast setup
+ * Canvas setup
  */
 
-function initCanvas(width, height) {
+function initCanvas(container, width, height) {
+    // Only init canvas when there is a container
+    if(container.exists()) {
+        container.css( "width", width+"px" );
+        container.css( "height", height+"px" );
+        container.css( "margin-top", "-"+height/2+"px" );
+        container.css( "margin-left", "-"+width/2+"px" );
 
-    var canvas = $('#canvas');
-    var wrapper = $('#wrapper');
 
-    canvas.css( "width", width+"px" );
-    canvas.css( "height", height+"px" );
-    canvas.css( "margin-top", "-"+height/2+"px" );
-    canvas.css( "margin-left", "-"+width/2+"px" );
+        stage = new Kinetic.Stage({
+            container: container.attr('id'),
+            width: width, // Default width and height
+            height: height // Can be changed with the resize canvas function
+        });
+
+        // Create new layer to draw on
+        newDefaultLayer();
+
+    }
+}
+function initWrapper(wrapper, width, height) {
 
     wrapper.css( "min-width", width+"px" );
     wrapper.css( "height", $( window ).height()+"px" );
-
-    // $( window ).resize(function() { 
-    //     wrapper.css( "height", $( window ).height()+"px" );
-    // });
-
-    stage = new Kinetic.Stage({
-        container: 'canvas',
-        width: width, // Default width and height
-        height: height // Can be changed with the resize canvas function
-    });
-
-    // Create new layer to draw on
-    newDefaultLayer();
 }
 
 
@@ -244,7 +244,8 @@ $(document).ready(function() {
     var height = 600;
 
     // Init canvas
-    initCanvas(width,height);
+    initCanvas($('#canvas'),width,height);
+    initWrapper($('#wrapper'),width,height);
 
     $("#debug").mouseup(function(){
 
@@ -269,7 +270,7 @@ $(document).ready(function() {
     // Log errors
     connection.onerror = connectionError;
     // Callback for recieving data
-    connection.onmessage = connectionDataRecieved;
+    connection.onmessage = connectionDataReceived;
 
     // Begin to listen for keys
     window.addEventListener('keydown', function(e) {

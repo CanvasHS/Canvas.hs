@@ -1,3 +1,8 @@
+// Extends jquery with exists method
+$.fn.exists = function () {
+    return this.length !== 0;
+}
+
 // Adds string format
 String.prototype.format = function() {
     var s = this,
