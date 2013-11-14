@@ -1,34 +1,42 @@
 // Global variables
-var currentLayer = 0;
+var topLayerIdx = 0;
 var layerList = new Array();
 var stage = undefined;
 var connection = new WebSocket('ws://localhost:8080');
-var open = false;
 
 // Event handlers
-function parseMessage(event) {
-    console.log("received raw data:");
-    console.log(event.data);
-    layerList[currentLayer].destroyChildren();
-    placeFigure(parseFigureMessage(jQuery.parseJSON(event.data)));
-    layerList[currentLayer].batchDraw();
+function connectionDataRecieved(event) {
+
+    // Clear screen
+    layerList[topLayerIdx].destroyChildren();
+
+    var dataObject = jQuery.parseJSON(event.data);
+
+    var shape = parseShapeData(dataObject);
+
+    // Draw on current layer
+    layerList[topLayerIdx].add(shape);
+    layerList[topLayerIdx].batchDraw();
 }
+
 function connectionError(error) {
-    console.log('WebSocket Error ');
-    console.log(error);
+
+    printDebugMessage("WebSocket Error " + error);
 }
-function parseFigureMessage(message) {
-    var figure = makeFigure(message);
-    console.log(message);
-    parseEventData(figure, message);
-    return figure;
+
+function parseShapeData(data) {
+
+    var shape = shapeFromData(data);
+    enableEventHandlers(shape, data);
+
+    return shape;
 }
-function newDefaultLayer() {
-    currentLayer++;
-    layerList[currentLayer] = new Kinetic.Layer();
-    stage.add(layerList[currentLayer]);
-}
-function parseEventData(figure, message) {   
+
+/*
+ * Sending Input events
+ */
+
+function enableEventHandlers(figure, message) {   
     if(message.eventData != undefined && message.eventData != null) {
         if(message.eventData.listen.indexOf("mouseclick") != -1) {
             figure.on('click', clickEventHandler.bind(undefined, message.eventData.eventId));
@@ -53,80 +61,7 @@ function parseEventData(figure, message) {
         }
     }
 }
-function placeFigure(figure) {
-    layerList[currentLayer].add(figure);
-    debugMessage("Drawing "+figure.className);
-}
-function makeFigure(message) {
-    var figure;
 
-    data = message.data;
-
-    // both fill and stroke are in the form {"r": 255, "g": 255, "b": 255, ("a": 1.0)?}
-    if(data["fill"]){
-        data["fill"] = rgbaDictToColor(data["fill"]);
-    }
-
-    if(data["stroke"]){
-        data["stroke"] = rgbaDictToColor(data["stroke"]);
-    }
-
-    switch (message.type) {
-        case "line":
-            figure = drawLine(data);
-            break;
-        case "polygon":
-            figure = drawPolygon(data);
-            break;
-        case "circle":
-            figure = drawCircle(data);
-            break;
-        case "rect":
-            figure = drawRect(data);
-            break;
-        case "text":
-            figure = drawText(data);
-            break;
-        case "container":
-            figure = drawGroup(data);
-            message.children.forEach(function(child) {
-                figure.add(parseFigureMessage(child));
-            });
-            break;
-        default:
-            window.alert("Unrecognized JSON message received from server.");
-            figure = null;
-    }
-    return figure;
-}
-function rgbaDictToColor(dict){
-    var res = "";
-    if(dict["a"]){
-        res = "rgba({0},{1},{2},{3})".format(dict["r"], dict["g"], dict["b"], dict["a"]);
-    } else {
-        res = "rgb({0},{1},{2})".format(dict["r"], dict["g"], dict["b"]);
-    }
-    return res;
-}
-function drawLine(data) {
-    return new Kinetic.Line(data);
-}
-function drawPolygon(data) {
-    return new Kinetic.Polygon(data);
-}
-function drawCircle(data) {
-    return new Kinetic.Circle(data);
-}
-function drawRect(data) {
-    return new Kinetic.Rect(data);
-}
-function drawText(data) {
-    return new Kinetic.Text(data);
-}
-function drawGroup(data) {
-    data.clip = [0, 0, data.width, data.height];
-    return new Kinetic.Group(data);
-}
 function clickEventHandler(id, event) { mouseEvent("mouseclick", id, event); }
 function mouseDownEventHandler(id, event) { mouseEvent("mousedown", id, event); }
 function mouseUpEventHandler(id, event) { mouseEvent("mouseup", id, event); }
@@ -147,25 +82,110 @@ function mouseEvent(eventName, id, event) {
         }
     }));
 }
-function debugMessage(message) {
+
+/*
+ * Drawing figures
+ */ 
+
+function shapeFromData(message) {
+
+
+
+    var shape = null;
+    var data = message.data;
+
+    // both fill and stroke are in the form {"r": 255, "g": 255, "b": 255, ("a": 1.0)?}
+    if(data["fill"]){
+        data["fill"] = rgbaDictToColor(data["fill"]);
+    }
+
+    if(data["stroke"]){
+        data["stroke"] = rgbaDictToColor(data["stroke"]);
+    }
+
+    // Debug message
+    var debugMessage = "Drawing " + message.type;
+    if(data.id)
+        dataMessage += "(" + data.id + ")"
+
+    switch (message.type) {
+        case "line":
+            shape = new Kinetic.Line(data);
+            debugMessage += "with points: " + data.points;
+            break;
+        case "polygon":
+            shape = new Kinetic.Polygon(data);
+            break;
+        case "circle":
+            shape = new Kinetic.Circle(data);
+            debugMessage += "width x:"+data.x+" y:"+data.y+" and radius:"+data.radius;
+            break;
+        case "rect":
+            shape = new Kinetic.Rect(data);
+            debugMessage += "width x:"+data.x+" y:"+data.y+" width:"+data.width+" height:"+data.height;
+            break;
+        case "text":
+            shape = new Kinetic.Text(data);
+            debugMessage += "width x:"+data.x+" y:"+data.y+" text:"+data.text;
+            break;
+        case "container":
+
+            data.clip = [0, 0, data.width, data.height];
+            shape = new Kinetic.Group(data);
+            message.children.forEach(function(child) {
+                shape.add(parseShapeData(child));
+            });
+            break;
+        default:
+            debugMessage = null;
+            printDebugMessage("Unrecognized JSON message received from server.",2);
+    }
+
+    if(debugMessage)
+        printDebugMessage(debugMessage,0);
+
+    return shape;
+}
+
+function rgbaDictToColor(dict){
+    var res = "";
+    if(dict["a"]){
+        res = "rgba({0},{1},{2},{3})".format(dict["r"], dict["g"], dict["b"], dict["a"]);
+    } else {
+        res = "rgb({0},{1},{2})".format(dict["r"], dict["g"], dict["b"]);
+    }
+    return res;
+}
+
+/*
+ * Visible debugger
+ * 
+ * Type 0 = message
+ * Type 1 = warning
+ * Type 2 = error
+ */
+
+function printDebugMessage(message, type) {
+
+    if(type == 1)
+    {
+        console.warn(message);
+    }
+    else if(type == 2)
+    {
+        console.error(message);
+    }
 
     var now = new Date(),
         now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
     $("#debug").prepend("<p><strong>["+now+"]</strong> "+message+"</p>")
 }
 
-function initCanvas() {
+/*
+ * Canvast setup
+ */
 
-    stage = new Kinetic.Stage({
-        container: 'canvas',
-        width: 900, // Default width and height
-        heigh: 600 // Can be changed with the resize canvas function
-    });
-    // Create new layer to draw on
-    newDefaultLayer();
-}
-
-function resizeCanvas(width, height) {
+function initCanvas(width, height) {
 
     var canvas = $('#canvas');
     var wrapper = $('#wrapper');
@@ -173,7 +193,7 @@ function resizeCanvas(width, height) {
     canvas.css( "width", width+"px" );
     canvas.css( "height", height+"px" );
     canvas.css( "margin-top", "-"+height/2+"px" );
-    canvas.css( "margin-left", "-"+(width + $( "#debug" ).width())/2+"px" );
+    canvas.css( "margin-left", "-"+width/2+"px" );
 
     wrapper.css( "min-width", width+"px" );
     wrapper.css( "height", $( window ).height()+"px" );
@@ -182,27 +202,41 @@ function resizeCanvas(width, height) {
     //     wrapper.css( "height", $( window ).height()+"px" );
     // });
 
-    stage.width = width;
-    stage.height = height;
+    stage = new Kinetic.Stage({
+        container: 'canvas',
+        width: width, // Default width and height
+        height: height // Can be changed with the resize canvas function
+    });
+
+    // Create new layer to draw on
+    newDefaultLayer();
 }
 
-var control = false;
-var shift = false;
-var alt = false;
-var superKey = false;
-        
-function keyEvent(event,key) {
+
+function newDefaultLayer() {
+
+    topLayerIdx++;
+    layerList[topLayerIdx] = new Kinetic.Layer();
+    stage.add(layerList[topLayerIdx]);
+}
+
+function sendKeyEvent(eventName, event) {
+    console.log(event);
+    event.preventDefault();
     connection.send(JSON.stringify({
-        "event":event,
+        "event":eventName,
         "data":{
-            "key": key,
-            "control": control,
-            "alt": alt,
-            "shift": shift,
-            "super": superKey
+            "key": normalizeKeyCode(event),
+            "control": event.ctrlKey || event.metaKey,
+            "alt": event.altKey,
+            "shift": event.shiftKey
         }
     }));
 }
+
+/*
+ * On document ready
+ */
 
 $(document).ready(function() {
 
@@ -210,52 +244,39 @@ $(document).ready(function() {
     var height = 600;
 
     // Init canvas
-    initCanvas();
-    resizeCanvas(width,height);
+    initCanvas(width,height);
+
+    $("#debug").mouseup(function(){
+
+        if($(this).width() == 10)
+        {
+            $(this).animate({
+                width: 350
+            },300);
+        }
+        else
+        {
+            $(this).animate({
+                width: 10
+            },300);
+        }
+    });
 
     // When the connection is open, send some data to the server
     connection.onopen = function () {
+        printDebugMessage("Connection opened",0);
     };
-
     // Log errors
     connection.onerror = connectionError;
-
-    // Log messages from the server
-    connection.onmessage = parseMessage;
+    // Callback for recieving data
+    connection.onmessage = connectionDataRecieved;
 
     // Begin to listen for keys
     window.addEventListener('keydown', function(e) {
-        e.preventDefault();
-        if (e.keyCode === 16) {
-            shift = true;
-        } else if (e.keyCode === 17) {
-            control = true;
-        } else if (e.keyCode === 18) {
-            alt = true;
-        } else if (e.keyCode === 91) {
-            superKey = true;
-        } else {
-            var key = String.fromCharCode(e.keyCode);
-            keyEvent("keydown", key);
-//            console.log("Keydown: " + key + "\r\n shift: " + shift
-//                    + "\r\n control: " + control + "\r\n alt: " + alt + "\r\n super: " + superKey);
-        }
+        sendKeyEvent("keydown", e);
     });
     
     window.addEventListener('keyup', function(e) {
-        e.preventDefault();
-        if (e.keyCode === 16) {
-            shift = false;
-        } else if (e.keyCode === 17) {
-            control = false;
-        } else if (e.keyCode === 18) {
-            alt = false;
-        } else if (e.keyCode === 91) {
-            superKey = false;
-        } else {
-            var key = String.fromCharCode(e.keyCode);
-            keyEvent("keyup", key);
-//            console.log("Keyup: " + key);
-        }
+        sendKeyEvent("keyup", e);
     });
 });
