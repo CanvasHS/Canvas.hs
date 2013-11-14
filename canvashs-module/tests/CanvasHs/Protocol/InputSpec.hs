@@ -49,18 +49,18 @@ spec = do
             it "can decode *arbitrary* mouseup event" $ do
                 JSONString eid <- arbitrary
                 property $ \x y -> (decode $ pack $ buildMousePF "mouseup" x y eid) == (MouseUp (x, y) eid)
-        describe "mouseenter event" $ do
-            it "can decode a mouseenter event" $ do
-                (decode $ pack $ buildMousePF "mouseenter" 150 200 "myAwesomeShape") `shouldBe` (MouseEnter (150, 200) "myAwesomeShape")
-            it "can decode *arbitrary* mouseenter event" $ do
+        describe "mouseover event" $ do
+            it "can decode a mouseover event" $ do
+                (decode $ pack $ buildMousePF "mouseover" 150 200 "myAwesomeShape") `shouldBe` (MouseOver (150, 200) "myAwesomeShape")
+            it "can decode *arbitrary* mouseover event" $ do
                 JSONString eid <- arbitrary
-                property $ \x y -> (decode $ pack $ buildMousePF "mouseenter" x y eid) == (MouseEnter (x, y) eid)
-        describe "mouseleave event" $ do
-            it "can decode a mouseleave event" $ do
-                (decode $ pack $ buildMousePF "mouseleave" 150 200 "myAwesomeShape") `shouldBe` (MouseLeave (150, 200) "myAwesomeShape")
-            it "can decode *arbitrary* mouseleave event" $ do
+                property $ \x y -> (decode $ pack $ buildMousePF "mouseover" x y eid) == (MouseOver (x, y) eid)
+        describe "mouseout event" $ do
+            it "can decode a mouseout event" $ do
+                (decode $ pack $ buildMousePF "mouseout" 150 200 "myAwesomeShape") `shouldBe` (MouseOut (150, 200) "myAwesomeShape")
+            it "can decode *arbitrary* mouseout event" $ do
                 JSONString eid <- arbitrary
-                property $ \x y -> (decode $ pack $ buildMousePF "mouseleave" x y eid) == (MouseLeave (x, y) eid)
+                property $ \x y -> (decode $ pack $ buildMousePF "mouseout" x y eid) == (MouseOut (x, y) eid)
         describe "keydown event" $ do
             it "can decode a keydown event" $ do
                 (decode $ pack $ buildKeyPF "keydown" 'c' True True True True) `shouldBe` (KeyDown 'c' [Ctrl, Alt, Shift, Super])
@@ -81,20 +81,20 @@ spec = do
                 property $ \control alt shift super -> (decode $ pack $ buildKeyPF "keyup" key control alt shift super) == (KeyUp key $ makeModifiers control alt shift super)
         describe "scroll event" $ do
             it "can decode a scroll event" $ do
-                (decode $ pack $ "{\"event\":\"scroll\", \"eventData\":{\"xdelta\": 10, \"ydelta\": 10}}") `shouldBe` (Scroll 10 10)
+                (decode $ pack $ "{\"event\":\"scroll\", \"data\":{\"xdelta\": 10, \"ydelta\": 10}}") `shouldBe` (Scroll 10 10)
             it "can decond an *arbitrary* scroll event" $ do
-                property $ \xdiff ydiff -> (decode $ pack $ "{\"event\":\"scroll\", \"eventData\":{\"xdelta\":" ++ (show xdiff) ++ ", \"ydelta\": " ++ (show ydiff) ++ "}}") `shouldBe` (Scroll xdiff ydiff)
+                property $ \xdiff ydiff -> (decode $ pack $ "{\"event\":\"scroll\", \"data\":{\"xdelta\":" ++ (show xdiff) ++ ", \"ydelta\": " ++ (show ydiff) ++ "}}") `shouldBe` (Scroll xdiff ydiff)
 
 
 -- | Convenience function for building json mouse event strings
 buildMousePF :: String -> Int -> Int -> String -> String
 buildMousePF event x y eid = 
-    printf "{\"event\":\"%s\", \"eventData\":{\"id\": \"%s\", \"x\": %d , \"y\": %d }}" event eid x y
+    printf "{\"event\":\"%s\", \"data\":{\"id\": \"%s\", \"x\": %d , \"y\": %d }}" event eid x y
 
 -- | Convenience function for building json key event strings
 buildKeyPF :: String -> Char -> Bool -> Bool -> Bool -> Bool -> String
 buildKeyPF event key control alt shift super =
-    printf "{\"event\":\"%s\", \"eventData\":{\"key\": \"%c\", \"control\": %s, \"alt\": %s, \"shift\": %s, \"super\": %s}}" event key (if control then "true" else "false") (if alt then "true" else "false") (if shift then "true" else "false") (if super then "true" else "false")
+    printf "{\"event\":\"%s\", \"data\":{\"key\": \"%c\", \"control\": %s, \"alt\": %s, \"shift\": %s, \"super\": %s}}" event key (if control then "true" else "false") (if alt then "true" else "false") (if shift then "true" else "false") (if super then "true" else "false")
 
 -- | This function is exactly what is used to construct the modifiers array
 -- | but it is not exported from the import module and therefore it is copied here
