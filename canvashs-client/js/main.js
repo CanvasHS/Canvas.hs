@@ -59,6 +59,14 @@ function placeFigure(figure) {
 }
 function makeFigure(message) {
     var figure;
+    // both fill and stroke are in the form {"r": 255, "g": 255, "b": 255, ("a": 1.0)?}
+    if(message.data["fill"]){
+        message.data["fill"] = rgbaDictToColor(message.data["fill"]);
+    }
+
+    if(message.data["stroke"]){
+        message.data["stroke"] = rgbaDictToColor(message.data["stroke"]);
+    }
     switch (message.type) {
         case "line":
             figure = drawLine(message.data);
@@ -86,6 +94,15 @@ function makeFigure(message) {
             figure = null;
     }
     return figure;
+}
+function rgbaDictToColor(dict){
+    var res = "";
+    if(dict["a"]){
+        res = "rgba({0},{1},{2},{3})".format(dict["r"], dict["g"], dict["b"], dict["a"]);
+    } else {
+        res = "rgb({0},{1},{2})".format(dict["r"], dict["g"], dict["b"]);
+    }
+    return res;
 }
 function drawLine(data) {
     return new Kinetic.Line(data);
