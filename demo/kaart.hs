@@ -78,7 +78,7 @@ drawBackground :: Shape
 drawBackground = Fill (135,206,235,1.0) $ Rect (0,0) 900 600
 
 drawMap :: (Int, Int) -> Float -> Shape
-drawMap (xDiff, yDiff) zoom = Translate xDiff yDiff $ Scale zoom zoom $ Container 1200 1536 (nederland ++ steden ++ drawCityPopup "Am")
+drawMap (xDiff, yDiff) zoom = Translate (450 + xDiff) (300 + yDiff) $ Scale zoom zoom $ Offset 600 768 $ Container 1200 1536 (nederland ++ steden ++ drawCityPopup "Am")
 
 drawControls :: Float -> Bool -> String -> Shape
 drawControls zl hasFocus s =
