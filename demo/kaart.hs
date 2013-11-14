@@ -9,10 +9,12 @@ import Buttons
 data State = State {
     xDiff :: Int,
     yDiff :: Int,
-    zoom :: Float
+    zoom :: Float,
+    searchHasFocus :: Bool,
+    searchText :: String
 }
 
-emptyState = State 0 0 0.4
+emptyState = State 0 0 0.4 False ""
 
 main = installEventHandler handl emptyState
 
@@ -28,7 +30,7 @@ handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} StartEvent = (st,
         ])
 
 
-handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseClick (x,y) ev) = (newState,
+handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom, searchHasFocus=searchHasFocus} (MouseClick (x,y) ev) = (newState,
     Container 900 600
         [
             drawBackground,
@@ -38,8 +40,9 @@ handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseClick (x,y) ev) = (new
     where
         (x, y) = translateFromEvent ev
         (xNew, yNew) = (x + xDiff, y + yDiff) 
+        newFocus = (ev == "search")
         newZoom = scaleFromEvent zoom ev
-        newState = st{xDiff=xNew, yDiff=yNew, zoom=newZoom}
+        newState = st{xDiff=xNew, yDiff=yNew, zoom=newZoom, searchHasFocus=newFocus}
 
 handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseOver (x,y) naam) = (st,
     Container 900 600
@@ -59,18 +62,34 @@ handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseOut (x,y) naam) = (st,
             Text (500, 100) "Ik doe shit en ben daar mega gelukkig over" defaults{font="Cantarell", size=20}
         ])
 
+handl st (KeyDown 'c' a) = (st, Container 900 600 [Text (500, 100) "hoi" defaults])
+
 drawBackground :: Shape
 drawBackground = Fill (135,206,235,1.0) $ Rect (0,0) 900 600
 
 drawMap :: Shape
-drawMap =  Container 1200 1536 ([Rect (0,0) 1200 1536] ++ nederland ++ steden)
-    
+drawMap =  Container 1200 1536 (nederland ++ steden)
+
+drawSearch :: Shape
+drawSearch = 
+    Event defaults{eventId="search", mouseClick=True} $ Translate 5 5 $ Container 300 45 $ [
+        Fill (255, 255, 255, 1.0) $ Rect (0,0) 300 45,
+        Translate 260 5 $ Container 35 35 $ [
+            Fill (128, 128, 128, 1.0) $ Circle (15, 15) 15,
+            Fill (128, 128, 128, 1.0) $ Polygon [(20, 25), (30, 35), (35, 30), (25, 20)],
+            Fill (255, 255, 255, 1.0) $ Circle (15, 15) 10
+        ]
+    ]
+        
 
 drawControls :: Float -> Shape
 drawControls zl =
-    Translate (900 - 112) 16 $ Container 96 288 [
-        drawMovementControls,
-        Translate 32 128 $ drawZoomControls zl
+    Container 900 600 [
+        drawSearch,
+        Translate (900 - 112) 16 $ Container 96 288 [
+            drawMovementControls,
+            Translate 32 128 $ drawZoomControls zl
+        ]
     ]
 
 drawMovementControls :: Shape
