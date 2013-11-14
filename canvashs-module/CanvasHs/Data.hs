@@ -111,7 +111,7 @@ data Shape
 
 -- | Keymodifiers that can be enabled in a keyboard event
 data Modifier 
-    = Shift | Ctrl | Alt | Super
+    = Shift | Ctrl | Alt
     deriving(Eq, Show)
 
 -- | The events the user can expect to get as input
