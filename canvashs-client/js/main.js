@@ -77,26 +77,52 @@ function mouseDragEventHandler(id, event) { mouseEvent("mousedrag", id, event); 
 function mouseEvent(eventName, id, event) {
     // Compensate for the position of the canvas
     var canvasPos = $("#canvas").position();
-    console.log(event);
+    var x = event.pageX-canvasPos.left+575; // Fix me
+    var y = event.pageY-canvasPos.top+300; // Fix me
+
+    printDebugMessage("Event "+eventName+" on <a data-sid=\"" + id + "\" class=\"debugSelector\">" + id + "</a> (x:"+x+" y:"+y+")",0);
+
     connection.send(JSON.stringify({
         "event":eventName,
         "data":{
             "id": id,
-            "x": event.pageX-canvasPos.left+575,
-            "y": event.pageY-canvasPos.top+300
+            "x": x, 
+            "y": y
         }
     }));
 }
+
 function sendKeyEvent(eventName, event) {
-    console.log(event);
-    event.preventDefault();
+    
+    var key = normalizeKeyCode(event);
+    var ctrl = event.ctrlKey || event.metaKey;
+    var alt = event.altKey;
+    var shift = event.shiftKey;
+
+    printDebugMessage("KeyEvent "+key+" "+eventName+" (ctrl:"+ctrl+" alt:"+alt+" shift:"+shift+")",0);
+
+    event.preventDefault(); // Prevent browser default behavior to block ctrl-c for example
+
     connection.send(JSON.stringify({
         "event":eventName,
         "data":{
-            "key": normalizeKeyCode(event),
-            "control": event.ctrlKey || event.metaKey,
-            "alt": event.altKey,
-            "shift": event.shiftKey
+            "key": key,
+            "control": ctrl,
+            "alt": alt,
+            "shift": shift
+        }
+    }));
+}
+
+function sendScrollEvent(deltaX,deltaY) {
+
+    printDebugMessage("ScrollEvent (deltaX:"+deltaX+" deltaY:"+deltaY+")",0);
+
+    connection.send(JSON.stringify({
+        "event":"scroll",
+        "data":{
+            "xdelta": deltaX,
+            "ydelta": deltaY
         }
     }));
 }
@@ -249,7 +275,6 @@ function newDefaultLayer() {
 /*
  * On document ready
  */
-
 $(document).ready(function() {
 
     var width = 900; // defined here because the container also needs these proportions 
@@ -259,6 +284,13 @@ $(document).ready(function() {
     initCanvas($('#canvas'),width,height);
     initWrapper($('#wrapper'),width,height);
 
+    // Start listening for scroll events using mousewheel.js
+    $('#canvas').mousewheel(function(event) {
+        sendScrollEvent(event.deltaX,event.deltaY);
+        return false; // Prevent browser default behavior
+    });
+
+    // For flashing certain shapes while debugging
     $("#debug").delegate( ".debugSelector", "click", function() {
         debugCanClose = false;
         var sid = $(this).data("sid"); // The shape id in an extended data attribute
@@ -289,6 +321,7 @@ $(document).ready(function() {
 
     });
 
+    // For hiding the debug console
     $("#debug").click(function(){
         if(debugCanClose) {
             if($(this).width() == 20)
