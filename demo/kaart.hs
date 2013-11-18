@@ -67,7 +67,7 @@ handl st _ = (st, drawAll st)
 
 drawAll :: State -> Shape
 drawAll st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom, searchText=searchText, searchHasFocus=searchHasFocus} =
-    {-Event defaults{eventId="container",mouseClick=True} $ -} Container 900 600
+    Container 900 600
         [
             drawBackground,
             drawMap (xDiff, yDiff) zoom,
@@ -78,7 +78,7 @@ drawBackground :: Shape
 drawBackground = Fill (135,206,235,1.0) $ Rect (0,0) 900 600
 
 drawMap :: (Int, Int) -> Float -> Shape
-drawMap (xDiff, yDiff) zoom = Translate xDiff yDiff $ Scale zoom zoom $ Container 1200 1536 (nederland ++ steden)
+drawMap (xDiff, yDiff) zoom = Translate (450 + xDiff) (300 + yDiff) $ Scale zoom zoom $ Offset 600 768 $ Container 1200 1536 (nederland ++ steden ++ drawCityPopup "Am")
 
 drawControls :: Float -> Bool -> String -> Shape
 drawControls zl hasFocus s =
@@ -127,6 +127,19 @@ drawSearch hasFocus s =
     ]
     where
         searchFill = if hasFocus then (Fill (255, 255, 255, 1.0)) else (Fill (255, 255, 255, 0.75))
+
+drawCityPopup :: String -> [Shape]
+drawCityPopup name = (map (\(n, (x, y)) ->
+            Translate (x - 50)  (y-30) $ Container 100 30 [
+                Stroke (0, 0, 0, 1.0) 1 $ Fill (255, 255, 255, 1.0) $ Polygon [(0,0), (100,0), (100, 20), (60,20), (50,30), (40, 20), (0,20)],
+                Text (50, 2) n defaults{font="Cantarell", alignment=Center, size=15}
+            ]) cities)
+    where
+        popup = Stroke (0, 0, 0, 1.0) 1 $ Fill (255, 255, 255, 1.0) $ Polygon [(0,0), (100,0), (100, 20), (60,20), (50,30), (40, 20), (0,20)]
+        cities = trace (show $ findCities name) $ findCities name
+
+findCities :: String -> [(String, (Int, Int))]
+findCities name = filter (\(curr, (x,y)) -> (isInfixOf name curr)) all_city
 
 translateFromEvent :: String -> (Int, Int)
 translateFromEvent c = case c of
