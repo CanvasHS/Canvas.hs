@@ -104,12 +104,14 @@ data Shape
           The eventdata contains booleans for the events that the shape is interested in.
     -}
     | Event EventData Shape
+    -- | Overrides normal rotationpoint or scalepoint with one specified
+    | Offset Int Int Shape
     -- | A container. Has width and height and a list of shapes in this container.
     | Container Int Int [Shape]
 
 -- | Keymodifiers that can be enabled in a keyboard event
 data Modifier 
-    = Shift | Ctrl | Alt | Super
+    = Shift | Ctrl | Alt
     deriving(Eq, Show)
 
 -- | The events the user can expect to get as input
