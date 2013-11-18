@@ -4,6 +4,11 @@ var layerList = new Array();
 var stage = undefined;
 var connection = new WebSocket('ws://localhost:8080');
 
+var generadedShapeIdIdx = 0;
+var debugTween;
+var debugAnnimatingShapes = [];
+var debugCanClose = true;
+
 // Event handlers
 function connectionDataReceived(event) {
 
@@ -89,10 +94,8 @@ function mouseEvent(eventName, id, event) {
 
 function shapeFromData(message) {
 
-
-
     var shape = null;
-    var dataMessage = "";
+    var debugMessage = "";
     var data = message.data;
 
     // both fill and stroke are in the form {"r": 255, "g": 255, "b": 255, ("a": 1.0)?}
@@ -105,9 +108,12 @@ function shapeFromData(message) {
     }
 
     // Debug message
-    var debugMessage = "Drawing " + message.type;
-    if(data.id)
-        dataMessage += "(" + data.id + ")"
+    if(!data["id"]) {
+        data["id"] = "sid" + generadedShapeIdIdx;
+        generadedShapeIdIdx++;
+    }
+
+    debugMessage = "Drawing <a data-sid=\"" + data["id"] + "\" class=\"debugSelector\">" + message.type + " (" + data["id"] + ")</a> ";
 
     switch (message.type) {
         case "line":
@@ -168,6 +174,9 @@ function rgbaDictToColor(dict){
 
 function printDebugMessage(message, type) {
 
+    var now = new Date(),
+        now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
+
     if(type == 1)
     {
         console.warn(message);
@@ -176,9 +185,12 @@ function printDebugMessage(message, type) {
     {
         console.error(message);
     }
+    else
+    {
+        console.log(message);
+    }
 
-    var now = new Date(),
-        now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
+    
     $("#debug").prepend("<p><strong>["+now+"]</strong> "+message+"</p>")
 }
 
@@ -247,19 +259,50 @@ $(document).ready(function() {
     initCanvas($('#canvas'),width,height);
     initWrapper($('#wrapper'),width,height);
 
-    $("#debug").mouseup(function(){
+    $("#debug").delegate( ".debugSelector", "click", function() {
+        debugCanClose = false;
+        var sid = $(this).data("sid"); // The shape id in an extended data attribute
 
-        if($(this).width() == 10)
-        {
-            $(this).animate({
-                width: 350
-            },300);
+        var shape = stage.find('#' + sid)[0];
+        var alreadyAnnimatingIdx = $.inArray(shape, debugAnnimatingShapes);
+
+        if(alreadyAnnimatingIdx == -1)
+        { 
+            debugAnnimatingShapes.push(shape);
+
+            var fill = shape.getFill();
+
+            shape.setFill("red");
+            layerList[topLayerIdx].draw();
+
+            var interval = setInterval(function(){
+
+                shape.setFill(fill);
+                layerList[topLayerIdx].draw();
+
+
+                clearInterval(interval);
+                debugAnnimatingShapes.splice( alreadyAnnimatingIdx ,1 );
+                debugCanClose = true;
+            },250);
         }
-        else
-        {
-            $(this).animate({
-                width: 10
-            },300);
+
+    });
+
+    $("#debug").click(function(){
+        if(debugCanClose) {
+            if($(this).width() == 20)
+            {
+                $(this).animate({
+                    width: 350
+                },300);
+            }
+            else
+            {
+                $(this).animate({
+                    width: 20
+                },300);
+            }
         }
     });
 

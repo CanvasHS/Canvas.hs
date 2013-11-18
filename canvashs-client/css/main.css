@@ -37,6 +37,12 @@
     font-family: monospace;
 }
 
+.debugSelector {
+
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 
 body {
     background: #eee;
