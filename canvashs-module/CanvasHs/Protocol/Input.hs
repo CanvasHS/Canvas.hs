@@ -23,7 +23,6 @@ data JSONEventData = JSONEventData {
         control :: Maybe Bool,
         alt :: Maybe Bool,
         shift :: Maybe Bool,
-        super :: Maybe Bool,
         xdelta :: Maybe Integer,
         ydelta :: Maybe Integer
     } deriving(Eq, Show)
@@ -43,7 +42,6 @@ instance FromJSON JSONEventData where
                             v .:? "control" <*>
                             v .:? "alt"     <*>
                             v .:? "shift"   <*>
-                            v .:? "super"   <*>
                             v .:? "xdelta"  <*>
                             v .:? "ydelta"
     parseJSON _ = error "A toplevel JSON should be an object"
@@ -86,16 +84,16 @@ makeEvent "mouseout"
          = MouseOut (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
 
 makeEvent "keydown"
-    (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh, super = Just su})
-        = KeyDown ((unpack $ k) !! 0) (makeModifiers c a sh su)
+    (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh})
+        = KeyDown ((unpack $ k) !! 0) (makeModifiers c a sh)
 
 makeEvent "keyclick"
-    (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh, super = Just su})
-        = KeyClick ((unpack $ k) !! 0) (makeModifiers c a sh su)
+    (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh})
+        = KeyClick ((unpack $ k) !! 0) (makeModifiers c a sh)
 
 makeEvent "keyup"
-    (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh, super = Just su})
-        = KeyUp ((unpack $ k) !! 0) (makeModifiers c a sh su)
+    (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh})
+        = KeyUp ((unpack $ k) !! 0) (makeModifiers c a sh)
 
 makeEvent "scroll"
     (JSONEventData{xdelta = Just x, ydelta = Just y})
@@ -103,9 +101,8 @@ makeEvent "scroll"
 
 makeEvent _ _ = error "JSON did not match any event"
 
-makeModifiers :: Bool -> Bool -> Bool -> Bool -> [Modifier]
-makeModifiers ctrl alt shift super = 
+makeModifiers :: Bool -> Bool -> Bool -> [Modifier]
+makeModifiers ctrl alt shift = 
     (if ctrl then [Ctrl] else []) ++ 
     (if alt then [Alt] else []) ++
-    (if shift then [Shift] else []) ++
-    (if super then [Super] else [])
+    (if shift then [Shift] else [])
