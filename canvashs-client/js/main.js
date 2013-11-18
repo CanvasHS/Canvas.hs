@@ -41,28 +41,28 @@ function parseShapeData(data) {
  * Sending Input events
  */
 
-function enableEventHandlers(figure, message) {   
+function enableEventHandlers(shape, message) {   
     if(message.eventData != undefined && message.eventData != null) {
         if(message.eventData.listen.indexOf("mouseclick") != -1) {
-            figure.on('click', clickEventHandler.bind(undefined, message.eventData.eventId));
+            shape.on('click', clickEventHandler.bind(undefined, message.eventData.eventId));
         }
         if(message.eventData.listen.indexOf("mousedown") != -1) {
-            figure.on('mousedown', mouseDownEventHandler.bind(undefined, message.eventData.eventId));
+            shape.on('mousedown', mouseDownEventHandler.bind(undefined, message.eventData.eventId));
         }
         if(message.eventData.listen.indexOf("mouseup") != -1) {
-            figure.on('mouseup', mouseUpEventHandler.bind(undefined, message.eventData.eventId));
+            shape.on('mouseup', mouseUpEventHandler.bind(undefined, message.eventData.eventId));
         }
         if(message.eventData.listen.indexOf("mouseover") != -1) {
-            figure.on('mouseover', mouseOverEventHandler.bind(undefined, message.eventData.eventId));
+            shape.on('mouseover', mouseOverEventHandler.bind(undefined, message.eventData.eventId));
         }
         if(message.eventData.listen.indexOf("mousemove") != -1) {
-            figure.on('mousemove', mouseMoveEventHandler.bind(undefined, message.eventData.eventId));
+            shape.on('mousemove', mouseMoveEventHandler.bind(undefined, message.eventData.eventId));
         }
         if(message.eventData.listen.indexOf("mouseout") != -1) {
-            figure.on('mouseout', mouseOutEventHandler.bind(undefined, message.eventData.eventId));
+            shape.on('mouseout', mouseOutEventHandler.bind(undefined, message.eventData.eventId));
         }
         if(message.eventData.listen.indexOf("mousedrag") != -1) {
-            figure.on('mousedrag', mouseDragEventHandler.bind(undefined, message.eventData.eventId));
+            shape.on('mousedrag', mouseDragEventHandler.bind(undefined, message.eventData.eventId));
         }
     }
 }
@@ -87,9 +87,22 @@ function mouseEvent(eventName, id, event) {
         }
     }));
 }
+function sendKeyEvent(eventName, event) {
+    console.log(event);
+    event.preventDefault();
+    connection.send(JSON.stringify({
+        "event":eventName,
+        "data":{
+            "key": normalizeKeyCode(event),
+            "control": event.ctrlKey || event.metaKey,
+            "alt": event.altKey,
+            "shift": event.shiftKey
+        }
+    }));
+}
 
 /*
- * Drawing figures
+ * Drawing shapes
  */ 
 
 function shapeFromData(message) {
@@ -106,7 +119,6 @@ function shapeFromData(message) {
     if(data["stroke"]){
         data["stroke"] = rgbaDictToColor(data["stroke"]);
     }
-
     // Debug message
     if(!data["id"]) {
         data["id"] = "sid" + generadedShapeIdIdx;
@@ -115,6 +127,7 @@ function shapeFromData(message) {
 
     debugMessage = "Drawing <a data-sid=\"" + data["id"] + "\" class=\"debugSelector\">" + message.type + " (" + data["id"] + ")</a> ";
 
+    // Init shape based on type
     switch (message.type) {
         case "line":
             shape = new Kinetic.Line(data);
@@ -200,6 +213,7 @@ function printDebugMessage(message, type) {
 
 function initCanvas(container, width, height) {
     // Only init canvas when there is a container
+    // Container is provided for testing purposes and extesibility
     if(container.exists()) {
         container.css( "width", width+"px" );
         container.css( "height", height+"px" );
@@ -230,20 +244,6 @@ function newDefaultLayer() {
     topLayerIdx++;
     layerList[topLayerIdx] = new Kinetic.Layer();
     stage.add(layerList[topLayerIdx]);
-}
-
-function sendKeyEvent(eventName, event) {
-    console.log(event);
-    event.preventDefault();
-    connection.send(JSON.stringify({
-        "event":eventName,
-        "data":{
-            "key": normalizeKeyCode(event),
-            "control": event.ctrlKey || event.metaKey,
-            "alt": event.altKey,
-            "shift": event.shiftKey
-        }
-    }));
 }
 
 /*
@@ -316,11 +316,7 @@ $(document).ready(function() {
     connection.onmessage = connectionDataReceived;
 
     // Begin to listen for keys
-    window.addEventListener('keydown', function(e) {
-        sendKeyEvent("keydown", e);
-    });
+    window.addEventListener('keydown', sendKeyEvent.bind(this,'keydown'));
     
-    window.addEventListener('keyup', function(e) {
-        sendKeyEvent("keyup", e);
-    });
+    window.addEventListener('keyup', sendKeyEvent.bind(this,'keyup'));
 });
