@@ -63,22 +63,22 @@ spec = do
                 property $ \x y -> (decode $ pack $ buildMousePF "mouseout" x y eid) == (MouseOut (x, y) eid)
         describe "keydown event" $ do
             it "can decode a keydown event" $ do
-                (decode $ pack $ buildKeyPF "keydown" 'c' True True True True) `shouldBe` (KeyDown 'c' [Ctrl, Alt, Shift, Super])
+                (decode $ pack $ buildKeyPF "keydown" 'c' True True True) `shouldBe` (KeyDown 'c' [Ctrl, Alt, Shift])
             it "can decode *arbitrary* keydown event" $ do
                 JSONChar key <- arbitrary
-                property $ \control alt shift super -> (decode $ pack $ buildKeyPF "keydown" key control alt shift super) == (KeyDown key $ makeModifiers control alt shift super)
+                property $ \control alt shift -> (decode $ pack $ buildKeyPF "keydown" key control alt shift) == (KeyDown key $ makeModifiers control alt shift)
         describe "keyclick event" $ do
             it "can decode a keyclick event" $ do
-                (decode $ pack $ buildKeyPF "keyclick" 'c' True True True True) `shouldBe` (KeyClick 'c' [Ctrl, Alt, Shift, Super])
+                (decode $ pack $ buildKeyPF "keyclick" 'c' True True True) `shouldBe` (KeyClick 'c' [Ctrl, Alt, Shift])
             it "can decode *arbitrary* keyclick event" $ do
                 JSONChar key <- arbitrary
-                property $ \control alt shift super -> (decode $ pack $ buildKeyPF "keyclick" key control alt shift super) == (KeyClick key $ makeModifiers control alt shift super)
+                property $ \control alt shift -> (decode $ pack $ buildKeyPF "keyclick" key control alt shift) == (KeyClick key $ makeModifiers control alt shift)
         describe "keyup event" $ do
             it "can decode a keyup event" $ do
-                (decode $ pack $ buildKeyPF "keyup" 'c' True True True True) `shouldBe` (KeyUp 'c' [Ctrl, Alt, Shift, Super])
+                (decode $ pack $ buildKeyPF "keyup" 'c' True True True) `shouldBe` (KeyUp 'c' [Ctrl, Alt, Shift])
             it "can decode *arbitrary* keyup event" $ do
                 JSONChar key <- arbitrary
-                property $ \control alt shift super -> (decode $ pack $ buildKeyPF "keyup" key control alt shift super) == (KeyUp key $ makeModifiers control alt shift super)
+                property $ \control alt shift -> (decode $ pack $ buildKeyPF "keyup" key control alt shift) == (KeyUp key $ makeModifiers control alt shift)
         describe "scroll event" $ do
             it "can decode a scroll event" $ do
                 (decode $ pack $ "{\"event\":\"scroll\", \"data\":{\"xdelta\": 10, \"ydelta\": 10}}") `shouldBe` (Scroll 10 10)
@@ -92,15 +92,14 @@ buildMousePF event x y eid =
     printf "{\"event\":\"%s\", \"data\":{\"id\": \"%s\", \"x\": %d , \"y\": %d }}" event eid x y
 
 -- | Convenience function for building json key event strings
-buildKeyPF :: String -> Char -> Bool -> Bool -> Bool -> Bool -> String
-buildKeyPF event key control alt shift super =
-    printf "{\"event\":\"%s\", \"data\":{\"key\": \"%c\", \"control\": %s, \"alt\": %s, \"shift\": %s, \"super\": %s}}" event key (if control then "true" else "false") (if alt then "true" else "false") (if shift then "true" else "false") (if super then "true" else "false")
+buildKeyPF :: String -> Char -> Bool -> Bool -> Bool -> String
+buildKeyPF event key control alt shift =
+    printf "{\"event\":\"%s\", \"data\":{\"key\": \"%c\", \"control\": %s, \"alt\": %s, \"shift\": %s}}" event key (if control then "true" else "false") (if alt then "true" else "false") (if shift then "true" else "false")
 
 -- | This function is exactly what is used to construct the modifiers array
 -- | but it is not exported from the import module and therefore it is copied here
-makeModifiers :: Bool -> Bool -> Bool -> Bool -> [Modifier]
-makeModifiers ctrl alt shift super = 
+makeModifiers :: Bool -> Bool -> Bool -> [Modifier]
+makeModifiers ctrl alt shift = 
     (if ctrl then [Ctrl] else []) ++ 
     (if alt then [Alt] else []) ++
-    (if shift then [Shift] else []) ++
-    (if super then [Super] else [])
+    (if shift then [Shift] else [])
