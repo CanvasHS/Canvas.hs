@@ -218,3 +218,4 @@ iEncodeEventData (Just j) e = j {eventId = Just $ T.pack $ D.eventId e
                                                     ++ if D.mouseDrag e then ["mousedrag"] else []
                                                     ++ if D.mouseOver e then ["mouseover"] else []
                                                     ++ if D.mouseOut e then ["mouseout"] else []
+                                                    ++ if D.scroll e then ["scroll"] else []
