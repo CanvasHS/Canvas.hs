@@ -30,12 +30,14 @@ data EventData = EventData {
                     -- | Toggles whether to react on mouseOver
                     mouseOver :: Bool,
                     -- | Toggles whether to react on mouseOut.
-                    mouseOut :: Bool
+                    mouseOut :: Bool,
+                    -- | Toggles whether to react on scrollevents.
+                    scroll :: Bool
                 } deriving (Eq, Show)
 
 -- | Defines defaults for EventData
 instance Defaults EventData where
-    defaults = EventData "" False False False False False False False
+    defaults = EventData "" False False False False False False False False
 
 -- | Defines textsize
 type FontSize = Int
