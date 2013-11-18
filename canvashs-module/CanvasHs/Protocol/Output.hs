@@ -30,7 +30,7 @@ data JSONShapeData
         fill           :: Maybe JSONRGBAColor, 
         scaleX         :: Maybe Float, 
         scaleY         :: Maybe Float, 
-        rotationDeg      :: Maybe Int, 
+        rotationDeg    :: Maybe Int, 
         fontSize       :: Maybe Int, 
         fontFamily     :: Maybe T.Text,
         text           :: Maybe T.Text,
