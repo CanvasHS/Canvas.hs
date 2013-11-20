@@ -101,6 +101,8 @@ function mouseDragStartEventHandler(id, event) {
     canvas.on('mouseout', mouseDragEndHandler);
     canvas.on('mouseup', mouseDragEndHandler);
     canvas.on('mousemove', mouseDragHandler);
+    // Cancel event bubbling
+    event.cancelBubble = true;
 }
 function mouseDragEndEventHandler(id, event) {
     canvas.off('mouseout', mouseDragEndHandler);
@@ -109,6 +111,8 @@ function mouseDragEndEventHandler(id, event) {
     mouseDragId = undefined;
     mouseDragEndHandler = undefined;
     mouseDragHandler = undefined;
+    // Cancel event bubbling
+    event.cancelBubble = true;
 }
 function mouseDragEventHandler(id, event) {
     // Compensate for the position of the canvas
@@ -133,6 +137,8 @@ function mouseDragEventHandler(id, event) {
             "y2": y2
         }
     }));
+    // Cancel event bubbling
+    event.cancelBubble = true;
 }
 function mouseEvent(eventName, id, event) {
     // Compensate for the position of the canvas
@@ -150,6 +156,8 @@ function mouseEvent(eventName, id, event) {
             "y": y
         }
     }));
+    // Cancel event bubbling
+    event.cancelBubble = true;
 }
 
 function sendKeyEvent(eventName, event) {
@@ -220,7 +228,6 @@ function shapeFromData(message) {
             debugMessage += "with points: " + data.points;
             break;
         case "polygon":
-            data.draggable = true;
             shape = new Kinetic.Polygon(data);
             break;
         case "circle":
