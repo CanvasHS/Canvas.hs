@@ -220,7 +220,6 @@ function shapeFromData(message) {
             debugMessage += "with points: " + data.points;
             break;
         case "polygon":
-            data.draggable = true;
             shape = new Kinetic.Polygon(data);
             break;
         case "circle":
