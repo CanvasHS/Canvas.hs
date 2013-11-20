@@ -20,8 +20,19 @@ function connectionDataReceived(event) {
 }
 
 function connectionError(error) {
-
     printDebugMessage("WebSocket Error " + error);
+}
+
+function connectionClosed(error) {
+    printDebugMessage("Connection closed " + error);
+    console.log(error);
+    $("#control-wrapper").addClass('display');
+    $("#control-window").addClass('display');
+    $("#control-window").html("<div class=\"control-content\"><p><strong>Connection lost</strong><br /><!--Retrying in 3... <a>reconnect</a>--></p></div>");
+}
+
+function fullScreen(container) {
+    $("body").addClass('fullscreen');
 }
 
 function parseShapeData(data) {
@@ -268,6 +279,8 @@ $(document).ready(function() {
     };
     // Log errors
     connection.onerror = connectionError;
+    // Indicate disconnected connection
+    connection.onclose = connectionClosed;
     // Callback for recieving data
     connection.onmessage = connectionDataReceived;
 
