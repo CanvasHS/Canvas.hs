@@ -72,7 +72,7 @@ function enableEventHandlers(shape, message) {
         }
         if(message.eventData.listen.indexOf("mousedrag") != -1) {
             mouseDragFound = mouseDragFound || message.eventData["eventId"]==mouseDragId; // Used to disable mousedrag when no longer this event is requested
-            shape.on('mousedown', mouseDragStartEventHandler.bind(undefined, message.eventData.eventId, shape));
+            shape.on('mousedown', mouseDragStartEventHandler.bind(undefined, message.eventData.eventId));
         }
     }
 }
@@ -87,10 +87,17 @@ var mouseDragId = undefined;
 var mouseDragEndHandler = undefined;
 var mouseDragHandler = undefined;
 var mouseDragFound = true;
+var prevMousePosX = 0;
+var prevMousePosY = 0;
 function mouseDragStartEventHandler(id, event) {
     mouseDragEndHandler = mouseDragEndEventHandler.bind(undefined, id);
     mouseDragHandler = mouseDragEventHandler.bind(undefined, id);
     mouseDragId = id; // Used to disable mousedrag when mousedrag is no longer attached to the shape
+    // Compensate for the position of the canvas
+    var canvasPos = $("#canvas").position();
+    prevMousePosX = event.pageX-canvasPos.left+450;
+    prevMousePosY = event.pageY-canvasPos.top+300;
+    
     canvas.on('mouseout', mouseDragEndHandler);
     canvas.on('mouseup', mouseDragEndHandler);
     canvas.on('mousemove', mouseDragHandler);
@@ -106,24 +113,24 @@ function mouseDragEndEventHandler(id, event) {
 function mouseDragEventHandler(id, event) {
     // Compensate for the position of the canvas
     var canvasPos = $("#canvas").position();
-    var x = event.pageX-canvasPos.left+450;
-    var y = event.pageY-canvasPos.top+300;
-    var x1 = x; // Fix me
-    var x2 = x; // Fix me
-    var y1 = y;
-    var y2 = y;
+    var x1 = prevMousePosX; // Fix me
+    var x2 = event.pageX-canvasPos.left+450;
+    prevMousePosX = x2;
+    var y1 = prevMousePosY; // Fix me
+    var y2 = event.pageY-canvasPos.top+300;
+    prevMousePosY = y2;
 
-    printDebugMessage("Event mousedrag on <a data-sid=\"" + id + "\" class=\"debugSelector\">" + id + "</a> (x:"+x+" y:"+y+")",0);
+    printDebugMessage("Event mousedrag on <a data-sid=\"" + id + "\" class=\"debugSelector\">" + id + "</a> from (x1:"+x1+" y1:"+y1+") to (x2:"+x2+" y2:"+y2+")" ,0);
 
     connection.send(JSON.stringify({
         "event":"mousedrag",
         "data":{
             "id1": id,
-            "x1": x, 
-            "y1": y,
+            "x1": x1, 
+            "y1": y1,
             "id2": id,
-            "x2": x, 
-            "y2": y
+            "x2": x2, 
+            "y2": y2
         }
     }));
 }
@@ -215,8 +222,6 @@ function shapeFromData(message) {
         case "polygon":
             data.draggable = true;
             shape = new Kinetic.Polygon(data);
-            shape.on('dragstart', mouseDragStartEventHandler.bind(undefined, "DragStartTestPolygon"));
-            shape.on('dragend', mouseDragEndEventHandler.bind(undefined, "DragEndTestPolygon"));
             break;
         case "circle":
             shape = new Kinetic.Circle(data);
