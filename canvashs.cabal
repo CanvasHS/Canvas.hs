@@ -8,7 +8,8 @@ Cabal-version:       >=1.2
 data-files:          canvashs-client/*.html,
                      canvashs-client/js/*.js,
                      canvashs-client/js/*.map,
-                     canvashs-client/css/*.css
+                     canvashs-client/css/*.css,
+                     canvashs-client/images/*.jpg
 
 Library
   build-depends: 	base >= 4,
