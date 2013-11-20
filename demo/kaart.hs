@@ -31,13 +31,19 @@ handl st (MouseClick (x,y) "search") = (newState, drawAll newState)
     where
         newState = st{searchHasFocus=True}
 
-
 handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseClick (x,y) ev) = (newState, drawAll newState)
     where
         (x, y) = translateFromEvent ev
         (xNew, yNew) = (x + xDiff, y + yDiff)
         newZoom = scaleFromEvent zoom ev
         newState = st{xDiff=xNew, yDiff=yNew, zoom=newZoom, searchHasFocus=False}
+
+
+handl st@State{xDiff=xDiff, yDiff=yDiff} (MouseDrag (x1, y1) "rootcontainer" (x2, y2) _) = (newState, drawAll newState)
+    where
+        (xDiff, yDiff) = (x2 - x1, y2 - y1)
+        (xNew, yNew) = (xDiff + xDiff, yDiff + yDiff)
+        newState = st{xDiff=xNew, yDiff=yNew}
 
 {-
 handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom,searchText = s} (MouseOver (x,y) naam) = (st,
@@ -78,7 +84,7 @@ drawBackground :: Shape
 drawBackground = Fill (135,206,235,1.0) $ Rect (0,0) 900 600
 
 drawMap :: (Int, Int) -> Float -> Shape
-drawMap (xDiff, yDiff) zoom = Translate (450 + xDiff) (300 + yDiff) $ Scale zoom zoom $ Offset 600 768 $ Container 1200 1536 (nederland ++ steden ++ drawCityPopup "Am")
+drawMap (xDiff, yDiff) zoom = Translate (450 + xDiff) (300 + yDiff) $ Scale zoom zoom $ Offset 600 768 $ Event defaults{eventId="rootcontainer", mouseClick=True, mouseDrag=True} $ Container 1200 1536 (nederland ++ steden ++ drawCityPopup "Am")
 
 drawControls :: Float -> Bool -> String -> Shape
 drawControls zl hasFocus s =
