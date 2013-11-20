@@ -62,7 +62,8 @@ function enableEventHandlers(shape, message) {
             shape.on('mouseout', mouseOutEventHandler.bind(undefined, message.eventData.eventId));
         }
         if(message.eventData.listen.indexOf("mousedrag") != -1) {
-            shape.on('mousedrag', mouseDragEventHandler.bind(undefined, message.eventData.eventId));
+            shape.on('mousedown', mouseDragStartEventHandler.bind(undefined, message.eventData.eventId));
+            shape.on('mouseup', mouseDragEndEventHandler.bind(undefined, message.eventData.eventId));
         }
     }
 }
@@ -74,6 +75,12 @@ function mouseOverEventHandler(id, event) { mouseEvent("mouseover", id, event); 
 function mouseOutEventHandler(id, event) { mouseEvent("mouseout", id, event); }
 function mouseMoveEventHandler(id, event) { mouseEvent("mousemove", id, event); }
 function mouseDragEventHandler(id, event) { mouseEvent("mousedrag", id, event); }
+function mouseDragStartEventHandler(id, event) {
+    shape.on('mousemove', mouseDragEventHandler.bind(undefined, message.eventData.eventId));
+}
+function mouseDragEndEventHandler(id, event) {
+    shape.off('mousemove', mouseDragEventHandler.bind(undefined, message.eventData.eventId));
+}
 function mouseEvent(eventName, id, event) {
     // Compensate for the position of the canvas
     var canvasPos = $("#canvas").position();
@@ -160,7 +167,10 @@ function shapeFromData(message) {
             debugMessage += "with points: " + data.points;
             break;
         case "polygon":
+            data.draggable = true;
             shape = new Kinetic.Polygon(data);
+            shape.on('dragstart', mouseDragStartEventHandler.bind(undefined, "DragStartTestPolygon"));
+            shape.on('dragend', mouseDragEndEventHandler.bind(undefined, "DragEndTestPolygon"));
             break;
         case "circle":
             shape = new Kinetic.Circle(data);
