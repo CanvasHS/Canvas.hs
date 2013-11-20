@@ -3,6 +3,7 @@ var topLayerIdx = 0;
 var layerList = new Array();
 var stage = undefined;
 var connection = new WebSocket('ws://localhost:8080');
+var canvas = undefined;
 
 var generadedShapeIdIdx = 0;
 var debugTween;
@@ -12,12 +13,20 @@ var debugCanClose = true;
 // Event handlers
 function connectionDataReceived(event) {
 
+    // Reset mousedrag
+    mouseDragFound = false;
+    
     // Clear screen
     layerList[topLayerIdx].destroyChildren();
 
     var dataObject = jQuery.parseJSON(event.data);
 
     var shape = parseShapeData(dataObject);
+
+    // Disable mousedrag if event is no longer attached to the shape
+    if(!mouseDragFound && mouseDragId!=undefined) {
+        mouseDragEndEventHandler(mouseDragId,undefined);
+    }
 
     // Draw on current layer
     layerList[topLayerIdx].add(shape);
@@ -62,8 +71,8 @@ function enableEventHandlers(shape, message) {
             shape.on('mouseout', mouseOutEventHandler.bind(undefined, message.eventData.eventId));
         }
         if(message.eventData.listen.indexOf("mousedrag") != -1) {
-            shape.on('mousedown', mouseDragStartEventHandler.bind(undefined, message.eventData.eventId));
-            shape.on('mouseup', mouseDragEndEventHandler.bind(undefined, message.eventData.eventId));
+            mouseDragFound = mouseDragFound || message.eventData["eventId"]==mouseDragId; // Used to disable mousedrag when no longer this event is requested
+            shape.on('mousedown', mouseDragStartEventHandler.bind(undefined, message.eventData.eventId, shape));
         }
     }
 }
@@ -74,17 +83,54 @@ function mouseUpEventHandler(id, event) { mouseEvent("mouseup", id, event); }
 function mouseOverEventHandler(id, event) { mouseEvent("mouseover", id, event); }
 function mouseOutEventHandler(id, event) { mouseEvent("mouseout", id, event); }
 function mouseMoveEventHandler(id, event) { mouseEvent("mousemove", id, event); }
-function mouseDragEventHandler(id, event) { mouseEvent("mousedrag", id, event); }
+var mouseDragId = undefined;
+var mouseDragEndHandler = undefined;
+var mouseDragHandler = undefined;
+var mouseDragFound = true;
 function mouseDragStartEventHandler(id, event) {
-    shape.on('mousemove', mouseDragEventHandler.bind(undefined, message.eventData.eventId));
+    mouseDragEndHandler = mouseDragEndEventHandler.bind(undefined, id);
+    mouseDragHandler = mouseDragEventHandler.bind(undefined, id);
+    mouseDragId = id; // Used to disable mousedrag when mousedrag is no longer attached to the shape
+    canvas.on('mouseout', mouseDragEndHandler);
+    canvas.on('mouseup', mouseDragEndHandler);
+    canvas.on('mousemove', mouseDragHandler);
 }
 function mouseDragEndEventHandler(id, event) {
-    shape.off('mousemove', mouseDragEventHandler.bind(undefined, message.eventData.eventId));
+    canvas.off('mouseout', mouseDragEndHandler);
+    canvas.off('mouseup', mouseDragEndHandler);
+    canvas.off('mousemove', mouseDragHandler);
+    mouseDragId = undefined;
+    mouseDragEndHandler = undefined;
+    mouseDragHandler = undefined;
+}
+function mouseDragEventHandler(id, event) {
+    // Compensate for the position of the canvas
+    var canvasPos = $("#canvas").position();
+    var x = event.pageX-canvasPos.left+450;
+    var y = event.pageY-canvasPos.top+300;
+    var x1 = x; // Fix me
+    var x2 = x; // Fix me
+    var y1 = y;
+    var y2 = y;
+
+    printDebugMessage("Event mousedrag on <a data-sid=\"" + id + "\" class=\"debugSelector\">" + id + "</a> (x:"+x+" y:"+y+")",0);
+
+    connection.send(JSON.stringify({
+        "event":"mousedrag",
+        "data":{
+            "id1": id,
+            "x1": x, 
+            "y1": y,
+            "id2": id,
+            "x2": x, 
+            "y2": y
+        }
+    }));
 }
 function mouseEvent(eventName, id, event) {
     // Compensate for the position of the canvas
     var canvasPos = $("#canvas").position();
-    var x = event.pageX-canvasPos.left+575; // Fix me
+    var x = event.pageX-canvasPos.left+450; // Fix me
     var y = event.pageY-canvasPos.top+300; // Fix me
 
     printDebugMessage("Event "+eventName+" on <a data-sid=\"" + id + "\" class=\"debugSelector\">" + id + "</a> (x:"+x+" y:"+y+")",0);
@@ -294,8 +340,10 @@ $(document).ready(function() {
     initCanvas($('#canvas'),width,height);
     initWrapper($('#wrapper'),width,height);
 
+    canvas = $("#canvas canvas");
+
     // Start listening for scroll events using mousewheel.js
-    $('#canvas').mousewheel(function(event) {
+    canvas.mousewheel(function(event) {
         sendScrollEvent(event.deltaX,event.deltaY);
         return false; // Prevent browser default behavior
     });
