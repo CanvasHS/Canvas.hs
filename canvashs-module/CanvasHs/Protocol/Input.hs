@@ -85,15 +85,15 @@ makeEvent "mouseout"
 
 makeEvent "keydown"
     (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh})
-        = KeyDown ((unpack $ k) !! 0) (makeModifiers c a sh)
+        = KeyDown (unpack $ k) (makeModifiers c a sh)
 
 makeEvent "keyclick"
     (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh})
-        = KeyClick ((unpack $ k) !! 0) (makeModifiers c a sh)
+        = KeyClick (unpack $ k) (makeModifiers c a sh)
 
 makeEvent "keyup"
     (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh})
-        = KeyUp ((unpack $ k) !! 0) (makeModifiers c a sh)
+        = KeyUp (unpack $ k) (makeModifiers c a sh)
 
 makeEvent "scroll"
     (JSONEventData{xdelta = Just x, ydelta = Just y})

@@ -211,11 +211,11 @@ iEncodeEventData (Just j) e = j {eventId = Just $ T.pack $ D.eventId e
                                 }
                                 where
                                     mklisten e =     [] 
-                                                    ++ if D.mouseDown e then ["mousedown"] else []
-                                                    ++ if D.mouseClick e then ["mouseclick"] else []
-                                                    ++ if D.mouseUp e then ["mouseup"] else []
-                                                    ++ if D.mouseDoubleClick e then ["mousedoubleclick"] else []
-                                                    ++ if D.mouseDrag e then ["mousedrag"] else []
-                                                    ++ if D.mouseOver e then ["mouseover"] else []
-                                                    ++ if D.mouseOut e then ["mouseout"] else []
-                                                    ++ if D.scroll e then ["scroll"] else []
+                                                    ++ (if D.mouseDown e then ["mousedown"] else [])
+                                                    ++ (if D.mouseClick e then ["mouseclick"] else [])
+                                                    ++ (if D.mouseUp e then ["mouseup"] else [])
+                                                    ++ (if D.mouseDoubleClick e then ["mousedoubleclick"] else [])
+                                                    ++ (if D.mouseDrag e then ["mousedrag"] else [])
+                                                    ++ (if D.mouseOver e then ["mouseover"] else [])
+                                                    ++ (if D.mouseOut e then ["mouseout"] else [])
+                                                    ++ (if D.scroll e then ["scroll"] else [])

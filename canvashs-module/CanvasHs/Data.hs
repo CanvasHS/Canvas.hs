@@ -134,11 +134,11 @@ data Event
     -- | A mouseout event, therefore both Point and an ID string are set.
     | MouseOut Point String
     -- | A keydown event, consist of a keycharacter that was pressed and a list of modifiers that were active
-    | KeyDown Char [Modifier]
+    | KeyDown String [Modifier]
     -- | A keyup event, consist of a keycharacter that was pressed and a list of modifiers that were active
-    | KeyUp Char [Modifier]
+    | KeyUp String [Modifier]
     -- | A keyclick event, consist of a keycharacter that was pressed and a list of modifiers that were active
-    | KeyClick Char [Modifier]
+    | KeyClick String [Modifier]
     -- | A scroll event consisting of a xdiff and a ydiff
     | Scroll Int Int
 	-- | Start event is thrown when the server is started to notify user
