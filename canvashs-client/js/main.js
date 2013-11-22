@@ -97,7 +97,7 @@ var mouseDragFound = true;
 var enableDragHandler = true;
 var prevMousePosX = 0;
 var prevMousePosY = 0;
-var mouseMoveRateLimit = 100; // The mousemove interval limit
+var mouseMoveRateLimit = 90; // The mousemove interval limit
 function mouseDragStartEventHandler(id, event) {
     mouseDragEndHandler = mouseDragEndEventHandler.bind(undefined, id);
     mouseDragHandler = mouseDragEventHandler.bind(undefined, id);
@@ -125,9 +125,9 @@ function mouseDragEndEventHandler(id, event) {
     mouseDragId = undefined;
     mouseDragEndHandler = undefined;
     mouseDragHandler = undefined;
-    if(mouseMoveRateLimit != undefined) {
-        clearInterval(mouseMoveRateLimit);
-        mouseMoveRateLimit = undefined;
+    if(dragEventRateLimiter != undefined) {
+        clearInterval(dragEventRateLimiter);
+        dragEventRateLimiter = undefined;
     }
     // Cancel event bubbling
     event.cancelBubble = true;
