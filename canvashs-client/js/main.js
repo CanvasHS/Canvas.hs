@@ -51,10 +51,14 @@ function parseShapeData(data) {
  * Sending Input events
  */
 
+
 function enableEventHandlers(shape, message) {   
     if(message.eventData != undefined && message.eventData != null) {
         if(message.eventData.listen.indexOf("mouseclick") != -1) {
             shape.on('click', clickEventHandler.bind(undefined, message.eventData.eventId));
+        }
+        if(message.eventData.listen.indexOf("mousedoubleclick") != -1) {
+            shape.on('dblclick', doubleClickEventHandler.bind(undefined, message.eventData.eventId));
         }
         if(message.eventData.listen.indexOf("mousedown") != -1) {
             shape.on('mousedown', mouseDownEventHandler.bind(undefined, message.eventData.eventId));
@@ -79,6 +83,7 @@ function enableEventHandlers(shape, message) {
 }
 
 function clickEventHandler(id, event) { mouseEvent("mouseclick", id, event); }
+function doubleClickEventHandler(id, event) { mouseEvent("mousedoubleclick", id, event); }
 function mouseDownEventHandler(id, event) { mouseEvent("mousedown", id, event); }
 function mouseUpEventHandler(id, event) { mouseEvent("mouseup", id, event); }
 function mouseOverEventHandler(id, event) { mouseEvent("mouseover", id, event); }
