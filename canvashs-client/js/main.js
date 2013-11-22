@@ -6,6 +6,7 @@ var connection = new WebSocket('ws://localhost:8080');
 var canvas = undefined;
 
 var generadedShapeIdIdx = 0;
+var debugOn = false;
 var debugTween;
 var debugAnnimatingShapes = [];
 var debugCanClose = true;
@@ -214,7 +215,7 @@ function shapeFromData(message) {
         data["stroke"] = rgbaDictToColor(data["stroke"]);
     }
     // Debug message
-    if(!data["id"]) {
+    if(!data["id"] && debugOn) {
         data["id"] = "sid" + generadedShapeIdIdx;
         generadedShapeIdIdx++;
     }
@@ -271,35 +272,103 @@ function rgbaDictToColor(dict){
     return res;
 }
 
+
 /*
- * Visible debugger
- * 
- * Type 0 = message
- * Type 1 = warning
- * Type 2 = error
- */
+* Visible debugger
+* 
+* Type 0 = message
+* Type 1 = warning
+* Type 2 = error
+*/
 
 function printDebugMessage(message, type) {
+    if(debugOn) {
+        var now = new Date(),
+            now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
 
-    var now = new Date(),
-        now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
+        if(type == 1)
+        {
+            console.warn(message);
+        }
+        else if(type == 2)
+        {
+            console.error(message);
+        }
+        else
+        {
+            console.log(message);
+        }
 
-    if(type == 1)
-    {
-        console.warn(message);
-    }
-    else if(type == 2)
-    {
-        console.error(message);
-    }
-    else
-    {
-        console.log(message);
-    }
+        
+        $("#debug").prepend("<p><strong>["+now+"]</strong> "+message+"</p>");
 
-    
-    $("#debug").prepend("<p><strong>["+now+"]</strong> "+message+"</p>")
+    }
 }
+
+var hideDebugConsole = function(){
+        if(debugCanClose) {
+            if($(this).width() == 20)
+            {
+                $(this).animate({
+                    width: 350
+                },300);
+            }
+            else
+            {
+                $(this).animate({
+                    width: 20
+                },300);
+            }
+        }
+    };
+// For flashing certain shapes while debugging
+var debugSelector = function () {
+    debugCanClose = false;
+    var sid = $(this).data("sid"); // The shape id in an extended data attribute
+
+    var shape = stage.find('#' + sid)[0];
+    var alreadyAnnimatingIdx = $.inArray(shape, debugAnnimatingShapes);
+
+    if(alreadyAnnimatingIdx == -1)
+    { 
+        debugAnnimatingShapes.push(shape);
+
+        var fill = shape.getFill();
+
+        shape.setFill("red");
+        layerList[topLayerIdx].draw();
+
+        var interval = setInterval(function(){
+
+            shape.setFill(fill);
+            layerList[topLayerIdx].draw();
+
+
+            clearInterval(interval);
+            debugAnnimatingShapes.splice( alreadyAnnimatingIdx ,1 );
+            debugCanClose = true;
+        },250);
+    }
+};
+function initDebug() {
+    // Enable debug
+    debugOn = true;
+    // Debug selector for flashing shapes
+    $("#debug").delegate( ".debugSelector", "click", debugSelector);
+    // For hiding the debug console
+    $("#debug").click(hideDebugConsole);
+    $("#debug").show();
+}
+function debugOff() {
+    debugOn = false;
+    // Remove debug selector
+    $("#debug").undelegate( ".debugSelector", "click", debugSelector);
+    // Remove click event for hiding the console
+    $("#debug").off('click',hideDebugConsole);
+    // Clear debug screen and hide
+    $("#debug").hide().html("");
+}
+
 
 /*
  * Canvas setup
@@ -360,54 +429,15 @@ $(document).ready(function() {
         return false; // Prevent browser default behavior
     });
 
-    // For flashing certain shapes while debugging
-    $("#debug").delegate( ".debugSelector", "click", function() {
-        debugCanClose = false;
-        var sid = $(this).data("sid"); // The shape id in an extended data attribute
+    
+    if(debugOn) {
+        initDebug();
+    }
+    else {
+        debugOff();
+    }
 
-        var shape = stage.find('#' + sid)[0];
-        var alreadyAnnimatingIdx = $.inArray(shape, debugAnnimatingShapes);
-
-        if(alreadyAnnimatingIdx == -1)
-        { 
-            debugAnnimatingShapes.push(shape);
-
-            var fill = shape.getFill();
-
-            shape.setFill("red");
-            layerList[topLayerIdx].draw();
-
-            var interval = setInterval(function(){
-
-                shape.setFill(fill);
-                layerList[topLayerIdx].draw();
-
-
-                clearInterval(interval);
-                debugAnnimatingShapes.splice( alreadyAnnimatingIdx ,1 );
-                debugCanClose = true;
-            },250);
-        }
-
-    });
-
-    // For hiding the debug console
-    $("#debug").click(function(){
-        if(debugCanClose) {
-            if($(this).width() == 20)
-            {
-                $(this).animate({
-                    width: 350
-                },300);
-            }
-            else
-            {
-                $(this).animate({
-                    width: 20
-                },300);
-            }
-        }
-    });
+    
 
     // When the connection is open, send some data to the server
     connection.onopen = function () {
