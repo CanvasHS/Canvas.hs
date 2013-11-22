@@ -146,7 +146,7 @@ iEncodePoint (x',y')
     = JSONShapeData { 
         stroke         = Nothing,
         strokeWidth    = Nothing, 
-        fill           = Just JSONRGBAColor{colr=255, colg=255, colb=255, cola = 1.0}, 
+        fill           = Just JSONRGBAColor{colr=0, colg=0, colb=0, cola = 1.0}, 
         scaleX         = Nothing, 
         scaleY         = Nothing, 
         rotationDeg    = Nothing, 
@@ -168,7 +168,7 @@ iEncodePoints ps
     = JSONShapeData { 
         stroke         = Nothing,
         strokeWidth    = Nothing, 
-        fill           = Just JSONRGBAColor{colr=255, colg=255, colb=255, cola = 1.0}, 
+        fill           = Just JSONRGBAColor{colr=0, colg=0, colb=0, cola = 1.0}, 
         scaleX         = Nothing, 
         scaleY         = Nothing, 
         rotationDeg    = Nothing, 
