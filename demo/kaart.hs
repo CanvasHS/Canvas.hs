@@ -2,11 +2,9 @@ import CanvasHs
 
 import Prelude
 import CanvasHs.Data
-import Debug.Trace
 import KaartData
 import Buttons
 
-import Debug.Trace
 import Data.List
 import Data.Char
 
@@ -63,7 +61,7 @@ handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom,searchText = s} (MouseOut (x,
             Text (500, 100) "Ik doe shit en ben daar mega gelukkig over" defaults{font="Cantarell", size=20}
         ])
 -}
-handl st@State{searchHasFocus = focus, searchText = s} (KeyDown a b) = trace a $ (newState, drawAll newState)
+handl st@State{searchHasFocus = focus, searchText = s} (KeyDown a b) = (newState, drawAll newState)
     where
         newS = if focus then updateS else s
         updateS | a == "backspace" = take (length s-1) s
@@ -144,7 +142,7 @@ drawCityPopup name = (map (\(n, (x, y)) ->
             ]) cities)
     where
         popup = Stroke (0, 0, 0, 1.0) 1 $ Fill (255, 255, 255, 1.0) $ Polygon [(0,0), (100,0), (100, 20), (60,20), (50,30), (40, 20), (0,20)]
-        cities = trace (show $ findCities name) $ findCities name
+        cities = findCities name
 
 findCities :: String -> [(String, (Int, Int))]
 findCities name = filter (\(curr, (x,y)) -> (isInfixOf name curr)) all_city
