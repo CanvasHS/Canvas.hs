@@ -30,6 +30,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
+    margin: 0px;
 }
 #control-wrapper {
     top: 0px;
