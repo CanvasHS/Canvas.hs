@@ -3,6 +3,8 @@ var topLayerIdx = 0;
 var layerList = new Array();
 var stage = undefined;
 var connection = new WebSocket('ws://localhost:8080');
+var canvasConstWidth = 900; // Do not change after starting
+var canvasConstHeight = 600;
 
 // Event handlers
 function connectionDataReceived(event) {
@@ -33,16 +35,60 @@ function connectionClosed(error) {
 
 function fullScreen(container) {
     $("body").addClass('fullscreen');
-    $("#canvas,#canvas div").css('width','100%');
-    $("#canvas,#canvas div").css('height','100%');
-    $("#canvas,#canvas div").css('margin','0px');
+    setFluidProportions($("#canvas,#canvas div"));
+    $(window).resize(resize);
+    resize(); // Resize to set correct offset
 }
-function resize() {
+function fullScreenOff(container) {
+    $("body").removeClass('fullscreen');
+    // Animate the kinetic container
+    $("#canvas div").animate({
+        width: canvasConstWidth+'px',
+        height: canvasConstHeight+'px'},300);
+    setFixedProportions($("#canvas"), canvasConstWidth, canvasConstHeight);
+    resize(); // Resizes the canvas
+}
+function setFluidProportions(container) {
+    // Animate to fluid width and height
+    container.animate({
+        top: "0",
+        left: "0",
+        width: '100%',
+        height: '100%',
+        marginTop: "0px",
+        marginLeft: "0px"
+    },{duration: 300,step:resize});
+}
+function setFixedProportions(container,width,height) {
+    // Animate to fixed width and height
+    container.animate({
+        top: "50%",
+        left: "50%",
+        width: width+'px',
+        height: height+'px',
+        marginTop: "-"+height/2+"px",
+        marginLeft: "-"+width/2+"px"
+    },{duration: 300,step:resize});
+}
+function resetOffset() {
+    // Reset offset of the current layer, this makes sure the layer is in the center of the screen
+    if(layerList[topLayerIdx]!=undefined) {
+        layerList[topLayerIdx].setPosition(
+            Math.round(($("#canvas canvas").attr("width")*1-canvasConstWidth)/2),
+            Math.round(($("#canvas canvas").attr("height")*1-canvasConstHeight)/2)
+        );
+
+        stage.batchDraw(); // Redraw Canvas
+    }
+    
+}
+function resize(event) {
     $("#canvas canvas").attr("width",$("#canvas").outerWidth());
     $("#canvas canvas").attr("height",$("#canvas").outerHeight());
     $("#canvas canvas").css("width",$("#canvas").outerWidth()+"px");
     $("#canvas canvas").css("height",$("#canvas").outerHeight()+"px");
-    stage.batchDraw(); // Redraw Canvas
+    //Reset offset
+    resetOffset();
 }
 
 function parseShapeData(data) {
@@ -92,14 +138,13 @@ function mouseMoveEventHandler(id, event) { mouseEvent("mousemove", id, event); 
 function mouseDragEventHandler(id, event) { mouseEvent("mousedrag", id, event); }
 function mouseEvent(eventName, id, event) {
     // Compensate for the position of the canvas
-    var canvasPos = $("#canvas").position();
     console.log(event);
     connection.send(JSON.stringify({
         "event":eventName,
         "data":{
             "id": id,
-            "x": event.pageX-canvasPos.left+575,
-            "y": event.pageY-canvasPos.top+300
+            "x": realX(event.pageX),
+            "y": realY(event.pageY)
         }
     }));
 }
@@ -115,6 +160,14 @@ function sendKeyEvent(eventName, event) {
             "shift": event.shiftKey
         }
     }));
+}
+function realX(x) {
+    var canvasPos = $("#canvas").position();
+    return x-canvasPos.left-parseInt($("#canvas").css("margin-left"))-layerList[topLayerIdx].getX();
+}
+function realY(y) {
+    var canvasPos = $("#canvas").position();
+    return y-canvasPos.top-parseInt($("#canvas").css("margin-top"))-layerList[topLayerIdx].getY();
 }
 
 /*
@@ -223,10 +276,7 @@ function initCanvas(container, width, height) {
     // Only init canvas when there is a container
     // Container is provided for testing purposes and extesibility
     if(container.exists()) {
-        container.css( "width", width+"px" );
-        container.css( "height", height+"px" );
-        container.css( "margin-top", "-"+height/2+"px" );
-        container.css( "margin-left", "-"+width/2+"px" );
+        setFixedProportions(container,width,height);
 
 
         stage = new Kinetic.Stage({
@@ -238,14 +288,12 @@ function initCanvas(container, width, height) {
         // Create new layer to draw on
         newDefaultLayer();
 
-        fullScreen();
-        resize();
     }
 }
 function initWrapper(wrapper, width, height) {
 
     wrapper.css( "min-width", width+"px" );
-    wrapper.css( "height", $( window ).height()+"px" );
+    wrapper.css( "min-height", height+"px" );
 }
 
 
@@ -262,8 +310,8 @@ function newDefaultLayer() {
 
 $(document).ready(function() {
 
-    var width = 900; // defined here because the container also needs these proportions 
-    var height = 600;
+    var width = canvasConstWidth; // defined here because the container also needs these proportions 
+    var height = canvasConstHeight;
 
     // Init canvas
     initCanvas($('#canvas'),width,height);
