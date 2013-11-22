@@ -33,6 +33,16 @@ function connectionClosed(error) {
 
 function fullScreen(container) {
     $("body").addClass('fullscreen');
+    $("#canvas,#canvas div").css('width','100%');
+    $("#canvas,#canvas div").css('height','100%');
+    $("#canvas,#canvas div").css('margin','0px');
+}
+function resize() {
+    $("#canvas canvas").attr("width",$("#canvas").outerWidth());
+    $("#canvas canvas").attr("height",$("#canvas").outerHeight());
+    $("#canvas canvas").css("width",$("#canvas").outerWidth()+"px");
+    $("#canvas canvas").css("height",$("#canvas").outerHeight()+"px");
+    stage.batchDraw(); // Redraw Canvas
 }
 
 function parseShapeData(data) {
@@ -228,6 +238,8 @@ function initCanvas(container, width, height) {
         // Create new layer to draw on
         newDefaultLayer();
 
+        fullScreen();
+        resize();
     }
 }
 function initWrapper(wrapper, width, height) {
