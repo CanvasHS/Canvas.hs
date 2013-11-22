@@ -63,22 +63,22 @@ spec = do
                 property $ \x y -> (decode $ pack $ buildMousePF "mouseout" x y eid) == (MouseOut (x, y) eid)
         describe "keydown event" $ do
             it "can decode a keydown event" $ do
-                (decode $ pack $ buildKeyPF "keydown" 'c' True True True) `shouldBe` (KeyDown 'c' [Ctrl, Alt, Shift])
+                (decode $ pack $ buildKeyPF "keydown" 'c' True True True) `shouldBe` (KeyDown "c" [Ctrl, Alt, Shift])
             it "can decode *arbitrary* keydown event" $ do
                 JSONChar key <- arbitrary
-                property $ \control alt shift -> (decode $ pack $ buildKeyPF "keydown" key control alt shift) == (KeyDown key $ makeModifiers control alt shift)
+                property $ \control alt shift -> (decode $ pack $ buildKeyPF "keydown" key control alt shift) == (KeyDown (key:[]) $ makeModifiers control alt shift)
         describe "keyclick event" $ do
             it "can decode a keyclick event" $ do
-                (decode $ pack $ buildKeyPF "keyclick" 'c' True True True) `shouldBe` (KeyClick 'c' [Ctrl, Alt, Shift])
+                (decode $ pack $ buildKeyPF "keyclick" 'c' True True True) `shouldBe` (KeyClick "c" [Ctrl, Alt, Shift])
             it "can decode *arbitrary* keyclick event" $ do
                 JSONChar key <- arbitrary
-                property $ \control alt shift -> (decode $ pack $ buildKeyPF "keyclick" key control alt shift) == (KeyClick key $ makeModifiers control alt shift)
+                property $ \control alt shift -> (decode $ pack $ buildKeyPF "keyclick" key control alt shift) == (KeyClick (key:[]) $ makeModifiers control alt shift)
         describe "keyup event" $ do
             it "can decode a keyup event" $ do
-                (decode $ pack $ buildKeyPF "keyup" 'c' True True True) `shouldBe` (KeyUp 'c' [Ctrl, Alt, Shift])
+                (decode $ pack $ buildKeyPF "keyup" 'c' True True True) `shouldBe` (KeyUp "c" [Ctrl, Alt, Shift])
             it "can decode *arbitrary* keyup event" $ do
                 JSONChar key <- arbitrary
-                property $ \control alt shift -> (decode $ pack $ buildKeyPF "keyup" key control alt shift) == (KeyUp key $ makeModifiers control alt shift)
+                property $ \control alt shift -> (decode $ pack $ buildKeyPF "keyup" key control alt shift) == (KeyUp (key:[]) $ makeModifiers control alt shift)
         describe "scroll event" $ do
             it "can decode a scroll event" $ do
                 (decode $ pack $ "{\"event\":\"scroll\", \"data\":{\"xdelta\": 10, \"ydelta\": 10}}") `shouldBe` (Scroll 10 10)
