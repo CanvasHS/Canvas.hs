@@ -7,7 +7,7 @@ type Point = (Int, Int)
 type Path = [Point]
 
 -- | Convenience type for a RGBA color
-type Color = (Int, Int, Int, Int)
+type Color = (Int, Int, Int, Float)
 
 -- | A class that defines a function `defaults` that returns a default value
 class Defaults a where
@@ -27,19 +27,20 @@ data EventData = EventData {
                     mouseDoubleClick :: Bool,
                     -- | Toggles whether to react on mouseDrag.
                     mouseDrag :: Bool,
-                    -- | Toggles whether to react on mouseEnter.
-                    mouseEnter :: Bool,
-                    -- | Toggles whether to react on mouseLeave.
-                    mouseLeave :: Bool
+                    -- | Toggles whether to react on mouseOver
+                    mouseOver :: Bool,
+                    -- | Toggles whether to react on mouseOut.
+                    mouseOut :: Bool,
+                    -- | Toggles whether to react on scrollevents.
+                    scroll :: Bool
                 } deriving (Eq, Show)
 
 -- | Defines defaults for EventData
 instance Defaults EventData where
-    defaults = EventData "" False False False False False False False
+    defaults = EventData "" False False False False False False False False
 
 -- | Defines textsize
-data FontSize = Pt Int | Px Int
-		deriving (Eq, Show)
+type FontSize = Int
 	
 -- | Ways to align text	
 data Alignment 
@@ -58,18 +59,22 @@ data TextData = TextData {
                     -- | The fontsize in Points or Pixels
                     size :: FontSize,
                     -- | Toggles bold.
+                    -- TODO: implement this
                     bold :: Bool,
                     -- | Toggles italic.
+                    -- TODO: implement this
                     italic :: Bool,
                     -- | Toggles underline.
+                    -- TODO: implement this
                     underline :: Bool,
                     -- | Specifies how to align this text.
+                    -- TODO: implement this
                     alignment :: Alignment
                 } deriving (Eq, Show)
 
 -- | Defines defaults for TextData
 instance Defaults TextData where
-    defaults = TextData "Arial" (Pt 12) False False False Center
+    defaults = TextData "Arial" 12 False False False Center
 
 -- | All drawable objects that the user can define (also includes some modifying objects like scale)
 data Shape 
@@ -101,12 +106,14 @@ data Shape
           The eventdata contains booleans for the events that the shape is interested in.
     -}
     | Event EventData Shape
+    -- | Overrides normal rotationpoint or scalepoint with one specified
+    | Offset Int Int Shape
     -- | A container. Has width and height and a list of shapes in this container.
     | Container Int Int [Shape]
 
 -- | Keymodifiers that can be enabled in a keyboard event
 data Modifier 
-    = Shift | Ctrl | Alt | Super
+    = Shift | Ctrl | Alt
     deriving(Eq, Show)
 
 -- | The events the user can expect to get as input
@@ -122,16 +129,16 @@ data Event
     -- TODO: Kan je ook in het niets draggen?
     -- | A mousedrag event with start and end, both consisting of a Point an ID string
     | MouseDrag Point String Point String
-    -- | A mouseenter event, therefore both Point and an ID string are set.
-    | MouseEnter Point String
-    -- | A mouseleave event, therefore both Point and an ID string are set.
-    | MouseLeave Point String
+    -- | A mouseover event, therefore both Point and an ID string are set.
+    | MouseOver Point String
+    -- | A mouseout event, therefore both Point and an ID string are set.
+    | MouseOut Point String
     -- | A keydown event, consist of a keycharacter that was pressed and a list of modifiers that were active
-    | KeyDown Char [Modifier]
+    | KeyDown String [Modifier]
     -- | A keyup event, consist of a keycharacter that was pressed and a list of modifiers that were active
-    | KeyUp Char [Modifier]
+    | KeyUp String [Modifier]
     -- | A keyclick event, consist of a keycharacter that was pressed and a list of modifiers that were active
-    | KeyClick Char [Modifier]
+    | KeyClick String [Modifier]
     -- | A scroll event consisting of a xdiff and a ydiff
     | Scroll Int Int
 	-- | Start event is thrown when the server is started to notify user
