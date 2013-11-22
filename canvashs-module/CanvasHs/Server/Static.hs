@@ -11,20 +11,28 @@ import qualified Network.Wai as WAI
 import Network.HTTP.Types (status200)
 import qualified Data.Text as T
 import qualified Blaze.ByteString.Builder as BL (copyByteString)
-import qualified Data.ByteString.UTF8 as BU
+import qualified Data.ByteString as BS
 
 -- Files to be ignored
 ignoreFiles :: [String]
 ignoreFiles = ["..","."]
 
 -- Serve static files
-httpget :: [([String], String)] -> WAI.Application
-httpget files req = return $ do WAI.ResponseBuilder status200 [("Content-Type", encoding)] $ BL.copyByteString $ BU.fromString page
+httpget :: [([String], BS.ByteString)] -> WAI.Application
+httpget files req = return $ do WAI.ResponseBuilder status200 [("Content-Type", encoding)] $ BL.copyByteString page
                     where
                         (encoding, page) | (WAI.pathInfo req) == [] = ("text/html", snd $ files !! 0)
                                          | file == Nothing = ("text/html", "Error 404")
+                                         | hasExtension "css" = ("text/css", (fromJust file))
+                                         | hasExtension "html" = ("text/html", (fromJust file))
+                                         | hasExtension "jpg" = ("image/jpg", (fromJust file))
+                                         | hasExtension "png" = ("image/png", (fromJust file))
+                                         | hasExtension "js" = ("text/javascript", (fromJust file))
                                          | otherwise = ("", (fromJust file))
-                        file = lookup (map T.unpack $ WAI.pathInfo req) files
+                        file = lookup request files
+                        request = map T.unpack $ WAI.pathInfo req
+                        hasExtension extension = (takeLast (length extension) $ last $ request) == extension
+                        takeLast n xs = (reverse . (take n) . reverse) xs
                 
 -- Get directory names in a directory path
 getDirectories :: String -> IO [FilePath]
@@ -36,11 +44,11 @@ getDirectories path = do
     return [ (path++"/")++(filesAndDirectories !! i) | i <- [0..(length filesAndDirectories-1)], directoryExists !! i ]
 
 -- Get files in a directory
-getDirectoryFiles :: String -> IO [([String], String)]
+getDirectoryFiles :: String -> IO [([String], BS.ByteString)]
 getDirectoryFiles path = do
     dirPath <- getDataFileName path
     filesAndDirectories <- getDirectoryContents dirPath >>= \x -> return (filter (not.(`elem` ignoreFiles)) x)
     filesExist <- mapM doesFileExist (map ((dirPath++"/")++) filesAndDirectories)
     existingFiles <- return $ [ (filesAndDirectories !! i) | i <- [0..(length filesAndDirectories-1)], filesExist !! i ]
-    files <- mapM readFile (map ((dirPath++"/")++) existingFiles)
+    files <- mapM BS.readFile (map ((dirPath++"/")++) existingFiles)
     return $ zip (map ((delete "canvashs-client").(splitOn "/").((path++"/")++)) existingFiles) files
