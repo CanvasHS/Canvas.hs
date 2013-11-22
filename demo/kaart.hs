@@ -63,9 +63,12 @@ handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom,searchText = s} (MouseOut (x,
             Text (500, 100) "Ik doe shit en ben daar mega gelukkig over" defaults{font="Cantarell", size=20}
         ])
 -}
-handl st@State{searchHasFocus = focus, searchText = s} (KeyDown a b) = trace [a] $ (newState, drawAll newState)
+handl st@State{searchHasFocus = focus, searchText = s} (KeyDown a b) = trace a $ (newState, drawAll newState)
     where
-        newS = if focus then (if (Shift `elem` b) then (s ++ [a]) else (s ++ [toLower a])) else s
+        newS = if focus then updateS else s
+        updateS | a == "backspace" = take (length s-1) s
+                | a `elem` ["shift","enter","delete","control","alt"] = s
+                | otherwise = (s ++ a)
         newState = st{searchText=newS}
 
 handl st _ = (st, drawAll st)
