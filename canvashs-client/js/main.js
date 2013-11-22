@@ -92,9 +92,12 @@ function mouseMoveEventHandler(id, event) { mouseEvent("mousemove", id, event); 
 var mouseDragId = undefined;
 var mouseDragEndHandler = undefined;
 var mouseDragHandler = undefined;
+var dragEventRateLimiter = undefined;
 var mouseDragFound = true;
+var enableDragHandler = true;
 var prevMousePosX = 0;
 var prevMousePosY = 0;
+var mouseMoveRateLimit = 100; // The mousemove interval limit
 function mouseDragStartEventHandler(id, event) {
     mouseDragEndHandler = mouseDragEndEventHandler.bind(undefined, id);
     mouseDragHandler = mouseDragEventHandler.bind(undefined, id);
@@ -107,6 +110,11 @@ function mouseDragStartEventHandler(id, event) {
     canvas.on('mouseout', mouseDragEndHandler);
     canvas.on('mouseup', mouseDragEndHandler);
     canvas.on('mousemove', mouseDragHandler);
+    // Limit mousemoves from firing by a specified interval
+    dragEventRateLimiter = true;
+    dragEventRateLimiter = window.setInterval(function(){
+        enableDragHandler = true;
+    }, mouseMoveRateLimit);
     // Cancel event bubbling
     event.cancelBubble = true;
 }
@@ -117,32 +125,40 @@ function mouseDragEndEventHandler(id, event) {
     mouseDragId = undefined;
     mouseDragEndHandler = undefined;
     mouseDragHandler = undefined;
+    if(mouseMoveRateLimit != undefined) {
+        clearInterval(mouseMoveRateLimit);
+        mouseMoveRateLimit = undefined;
+    }
     // Cancel event bubbling
     event.cancelBubble = true;
 }
 function mouseDragEventHandler(id, event) {
-    // Compensate for the position of the canvas
-    var canvasPos = $("#canvas").position();
-    var x1 = prevMousePosX; // Fix me
-    var x2 = event.pageX-canvasPos.left+450;
-    prevMousePosX = x2;
-    var y1 = prevMousePosY; // Fix me
-    var y2 = event.pageY-canvasPos.top+300;
-    prevMousePosY = y2;
+    if (enableDragHandler) {
+        // Compensate for the position of the canvas
+        var canvasPos = $("#canvas").position();
+        var x1 = prevMousePosX; // Fix me
+        var x2 = event.pageX-canvasPos.left+450;
+        prevMousePosX = x2;
+        var y1 = prevMousePosY; // Fix me
+        var y2 = event.pageY-canvasPos.top+300;
+        prevMousePosY = y2;
 
-    printDebugMessage("Event mousedrag on <a data-sid=\"" + id + "\" class=\"debugSelector\">" + id + "</a> from (x1:"+x1+" y1:"+y1+") to (x2:"+x2+" y2:"+y2+")" ,0);
+        printDebugMessage("Event mousedrag on <a data-sid=\"" + id + "\" class=\"debugSelector\">" + id + "</a> from (x1:"+x1+" y1:"+y1+") to (x2:"+x2+" y2:"+y2+")" ,0);
 
-    connection.send(JSON.stringify({
-        "event":"mousedrag",
-        "data":{
-            "id1": id,
-            "x1": x1, 
-            "y1": y1,
-            "id2": id,
-            "x2": x2, 
-            "y2": y2
-        }
-    }));
+        connection.send(JSON.stringify({
+            "event":"mousedrag",
+            "data":{
+                "id1": id,
+                "x1": x1, 
+                "y1": y1,
+                "id2": id,
+                "x2": x2, 
+                "y2": y2
+            }
+        }));
+        // Wait for the next interval before firing again
+        enableDragHandler = false;
+    }
     // Cancel event bubbling
     event.cancelBubble = true;
 }
