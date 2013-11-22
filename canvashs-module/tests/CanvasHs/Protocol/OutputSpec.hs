@@ -33,15 +33,15 @@ spec = do
     describe "Protocol.encode" $ do
         describe "encode basic shapes" $ do
             it "can encode proper Rectangles" $ do
-                shapeDec (Rect (1,2) 3 4) `shouldBe` textDec "{\"type\": \"rect\", \"data\": {\"x\": 1, \"y\": 2, \"width\": 3, \"height\": 4, \"fill\": {\"r\":255,\"g\":255,\"b\":255,\"a\":1.0}}}"
+                shapeDec (Rect (1,2) 3 4) `shouldBe` textDec "{\"type\": \"rect\", \"data\": {\"x\": 1, \"y\": 2, \"width\": 3, \"height\": 4, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}}}"
             it "can encode proper Circles" $ do
-                shapeDec (Circle (1,2) 3) `shouldBe` textDec "{\"type\": \"circle\", \"data\": {\"x\": 1, \"y\": 2, \"radius\": 3, \"fill\": {\"r\":255,\"g\":255,\"b\":255,\"a\":1.0}}}"
+                shapeDec (Circle (1,2) 3) `shouldBe` textDec "{\"type\": \"circle\", \"data\": {\"x\": 1, \"y\": 2, \"radius\": 3, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}}}"
             it "can encode proper Arcs" $ do
                 pendingWith "Arcs not yet implemented"
             it "can encode proper Lines" $ do
-                shapeDec (Line [(1,2),(3,4),(5,6),(7,8)]) `shouldBe` textDec "{\"type\": \"line\", \"data\": {\"points\": [1,2,3,4,5,6,7,8], \"fill\": {\"r\":255,\"g\":255,\"b\":255,\"a\":1.0}}}"
+                shapeDec (Line [(1,2),(3,4),(5,6),(7,8)]) `shouldBe` textDec "{\"type\": \"line\", \"data\": {\"points\": [1,2,3,4,5,6,7,8], \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}}}"
             it "can encode proper Polygons" $ do
-                shapeDec (Polygon [(1,2),(3,4),(5,6),(7,8)]) `shouldBe` textDec "{\"type\": \"polygon\", \"data\": {\"points\": [1,2,3,4,5,6,7,8], \"fill\": {\"r\":255,\"g\":255,\"b\":255,\"a\":1.0}}}"   
+                shapeDec (Polygon [(1,2),(3,4),(5,6),(7,8)]) `shouldBe` textDec "{\"type\": \"polygon\", \"data\": {\"points\": [1,2,3,4,5,6,7,8], \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}}}"   
 {-        describe "encode Text" $ do
             it "can encode simple text objects" $ do
                 -- -}
