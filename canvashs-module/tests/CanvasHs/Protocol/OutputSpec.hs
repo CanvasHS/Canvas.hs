@@ -85,11 +85,30 @@ spec = do
                 shapeDec (Offset 5 6 (Rect (1,2) 3 4)) `shouldBe` textDec "{\"type\": \"rect\", \"data\": {\"x\": 1, \"y\": 2, \"width\": 3, \"height\": 4, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}, \"offset\": [5,6]}}"
             it "can set offset on a container" $ do
                 shapeDec (Offset 5 6 (Container 1 2 [(Circle (3,4) 5)])) `shouldBe` textDec "{\"type\": \"container\", \"data\": {\"x\": 0, \"y\": 0, \"width\": 1, \"height\": 2, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}, \"offset\": [5,6]}, \"children\": [{\"type\": \"circle\", \"data\": {\"x\": 3, \"y\": 4, \"radius\": 5, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}}}]}"
-            
-         -- TODO: Text, Event   
-            
-            
-            
+        describe "Text" $ do
+            it "can encode simple text" $ do
+                shapeDec (Text (1,2) "CanvasHS" defaults) `shouldBe` textDec "{\"type\": \"text\", \"data\": {\"x\": 1, \"y\": 2, \"fontFamily\": \"Arial\", \"text\": \"CanvasHS\", \"fontSize\": 12, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}, \"align\": \"center\"}}"
+            it "can encode with different font family" $ do
+                shapeDec (Text (1,2) "CanvasHS" defaults{font="comic sans ms"}) `shouldBe` textDec "{\"type\": \"text\", \"data\": {\"x\": 1, \"y\": 2, \"fontFamily\": \"comic sans ms\", \"text\": \"CanvasHS\", \"fontSize\": 12, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}, \"align\": \"center\"}}"
+            it "can encode with different font size" $ do
+                shapeDec (Text (1,2) "CanvasHS" defaults{size=10}) `shouldBe` textDec "{\"type\": \"text\", \"data\": {\"x\": 1, \"y\": 2, \"fontFamily\": \"Arial\", \"text\": \"CanvasHS\", \"fontSize\": 10, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}, \"align\": \"center\"}}"
+            it "can encode with start alignment" $ do
+                shapeDec (Text (1,2) "CanvasHS" defaults{alignment=Start}) `shouldBe` textDec "{\"type\": \"text\", \"data\": {\"x\": 1, \"y\": 2, \"fontFamily\": \"Arial\", \"text\": \"CanvasHS\", \"fontSize\": 12, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}, \"align\": \"left\"}}"
+            it "can encode with center alignment" $ do
+                shapeDec (Text (1,2) "CanvasHS" defaults{alignment=Center}) `shouldBe` textDec "{\"type\": \"text\", \"data\": {\"x\": 1, \"y\": 2, \"fontFamily\": \"Arial\", \"text\": \"CanvasHS\", \"fontSize\": 12, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}, \"align\": \"center\"}}"
+            it "can encode with end alignment" $ do
+                shapeDec (Text (1,2) "CanvasHS" defaults{alignment=End}) `shouldBe` textDec "{\"type\": \"text\", \"data\": {\"x\": 1, \"y\": 2, \"fontFamily\": \"Arial\", \"text\": \"CanvasHS\", \"fontSize\": 12, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}, \"align\": \"right\"}}"
+            it "can encode combine all properties" $ do
+                shapeDec (Text (1,2) "CanvasHS" defaults{font="comic sans ms", size=10, alignment=End}) `shouldBe` textDec "{\"type\": \"text\", \"data\": {\"x\": 1, \"y\": 2, \"fontFamily\": \"comic sans ms\", \"text\": \"CanvasHS\", \"fontSize\": 10, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}, \"align\": \"right\"}}"
+            it "can encode underline, bold and italics" $ do
+                pendingWith "To be implemented"
+        describe "Events" $ do
+            it "can add an event to a shape" $ do
+                shapeDec (Event defaults{eventId="circle1", mouseClick=True} (Circle (1,2) 3)) `shouldBe` textDec "{\"type\": \"circle\", \"data\": {\"x\": 1, \"y\": 2, \"radius\": 3, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}}, \"eventData\": {\"eventId\": \"circle1\", \"listen\": [\"mouseclick\"]}}"
+            it "can add multiple events to a shape" $ do
+                shapeDec (Event defaults{eventId="circle1", mouseDown=True, mouseClick=True, mouseUp=True, mouseDoubleClick=True, mouseDrag=True, mouseOver=True, mouseOut=True, scroll=True} (Circle (1,2) 3)) `shouldBe` textDec "{\"type\": \"circle\", \"data\": {\"x\": 1, \"y\": 2, \"radius\": 3, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}}, \"eventData\": {\"eventId\": \"circle1\", \"listen\": [\"mousedown\", \"mouseclick\", \"mouseup\", \"mousedoubleclick\", \"mousedrag\", \"mouseover\", \"mouseout\", \"scroll\"]}}"
+            it "can add events to a container" $ do
+                shapeDec (Event defaults{eventId="container1", mouseClick=True, mouseDrag=True} (Container 1 2 [(Circle (3,4) 5)])) `shouldBe` textDec "{\"type\": \"container\", \"data\": {\"x\": 0, \"y\": 0, \"width\": 1, \"height\": 2, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}}, \"eventData\": {\"eventId\": \"container1\", \"listen\": [\"mouseclick\", \"mousedrag\"]}, \"children\": [{\"type\": \"circle\", \"data\": {\"x\": 3, \"y\": 4, \"radius\": 5, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}}}]}"
             
 ---------------------- HELPERS ----------------------
 
