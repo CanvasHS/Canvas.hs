@@ -1,5 +1,7 @@
 module CanvasHs.Data where
 
+import qualified Data.ByteString as BS
+
 -- | Convenience type for a point (x, y)
 type Point = (Int, Int)
 
@@ -111,6 +113,24 @@ data Shape
     -- | A container. Has width and height and a list of shapes in this container.
     | Container Int Int [Shape]
 
+-- | All actions which can be preformed by CanvasHS, such as file manipulation and the usage of timers     
+data Action 
+    -- | Loads a file as string. Has a filepath to load from
+    = LoadFileString String
+    -- | Saves a file as string. Has a filepath to save to, and a String of the file contents. When the file already has contents it will be overwritten
+    | SaveFileString String String
+    -- | Loads a file in binary mode. Has a filepath to load from
+    | LoadFileBinary String
+    -- | Saves a file in binary mode. Has a filepath to save to, and a ByteString of the file contents. When the file already has contents it will be overwritten
+    | SaveFileBinary String BS.ByteString
+    -- | Starts a repeating Timer. Has a timeout in ms and a String identifying the Timer.
+    | Timer Int String
+    
+-- | Output is the output type of the handler function. Is has a possible shape and 
+-- | and a list of possible actions. When no shape is provided the canvas should 
+-- | not be affected
+type Output = (Maybe Shape, Maybe [Action])
+    
 -- | Keymodifiers that can be enabled in a keyboard event
 data Modifier 
     = Shift | Ctrl | Alt
@@ -143,4 +163,10 @@ data Event
     | Scroll Int Int
 	-- | Start event is thrown when the server is started to notify user
 	| StartEvent
+    -- | When a file requested using the LoadFileString Action has been loaded. Has a filepath and file contents as String
+    | FileLoadedString String String
+    -- | When a file requested using the LoadFileString Action has been loaded. Has a filepath and file contents as ByteString
+    | FileLoadedBinary String BS.ByteString
+    -- | Tick event from a Timer. Has a string identifying the Timer
+    | Tick String
     deriving(Eq, Show)
