@@ -71,79 +71,82 @@ $(deriveJSON defaultOptions{omitNothingFields=True, fieldLabelModifier = drop 3}
 --    Maken de daadwerkelijke JSONShape, alle andere Shapes passen deze hierdoor gebouwde
 --     JSONShape's aan.
 iEncode :: D.Shape -> JSONShape
-iEncode (D.Rect p w h)        = JSONShape {shapetype = "rect" 
-                                        ,shapedata = (iEncodePoint p) {width = Just w, height = Just h}
-                                        ,shapeeventData = Nothing
-                                        ,shapechildren = Nothing
-                                        }
-iEncode (D.Circle p r)        = JSONShape {shapetype = "circle"
-                                        ,shapedata = (iEncodePoint p) {radius = Just r}
-                                        ,shapeeventData = Nothing
-                                        ,shapechildren = Nothing
-                                        }
+iEncode (D.Rect p w h)          = JSONShape {shapetype = "rect" 
+                                            ,shapedata = (iEncodePoint p) {width = Just w, height = Just h}
+                                            ,shapeeventData = Nothing
+                                            ,shapechildren = Nothing
+                                            }
+iEncode (D.Circle p r)          = JSONShape {shapetype = "circle"
+                                            ,shapedata = (iEncodePoint p) {radius = Just r}
+                                            ,shapeeventData = Nothing
+                                            ,shapechildren = Nothing
+                                            }
 -- iEncode (Arc p r sa ea)    TODO: arc opnemen in het protocol!
-iEncode (D.Line ps)            = JSONShape {shapetype = "line"
-                                        ,shapedata = iEncodePoints ps
-                                        ,shapeeventData = Nothing
-                                        ,shapechildren = Nothing
-                                        }
-iEncode (D.Polygon ps)        = JSONShape {shapetype = "polygon"
-                                        ,shapedata = iEncodePoints ps
-                                        ,shapeeventData = Nothing
-                                        ,shapechildren = Nothing
-                                        }
-iEncode (D.Text p s td)       = JSONShape { shapetype = "text"
-                                        ,shapedata = iEncodeTextData p s td
-                                        ,shapeeventData = Nothing
-                                        ,shapechildren = Nothing
-                                        }
+iEncode (D.Line ps)             = JSONShape {shapetype = "line"
+                                            ,shapedata = iEncodePoints ps
+                                            ,shapeeventData = Nothing
+                                            ,shapechildren = Nothing
+                                            }
+iEncode (D.Polygon ps)          = JSONShape {shapetype = "polygon"
+                                            ,shapedata = iEncodePoints ps
+                                            ,shapeeventData = Nothing
+                                            ,shapechildren = Nothing
+                                            }
+iEncode (D.Text p s td)         = JSONShape { shapetype = "text"
+                                            ,shapedata = iEncodeTextData p s td
+                                            ,shapeeventData = Nothing
+                                            ,shapechildren = Nothing
+                                            }
 
-iEncode (D.Fill (r,g,b,a) s)  = js {shapedata = sd{fill = Just JSONRGBAColor{colr=r, colg=g, colb=b, cola=a} } }
+iEncode (D.Fill (r,g,b,a) s)    = updateSD $ recurFill $ iEncode s
                                 where
-                                    js = iEncode s
-                                    sd = shapedata js
+                                    recurFill :: JSONShape -> JSONShape
+                                    recurFill js = js{shapechildren = (map updateSD) <$> shapechildren js}
+                                    updateSD :: JSONShape -> JSONShape --could be in lambda but that decreases readability
+                                    updateSD js = recurFill $ js{shapedata = (shapedata js){fill = Just JSONRGBAColor{colr=r, colg=g, colb=b, cola=a}}}  
 
-iEncode (D.Stroke (r,g,b,a) w s) = js {shapedata = sd {stroke = Just JSONRGBAColor{colr=r, colg=g, colb=b, cola=a}, strokeWidth = Just w } }
+iEncode (D.Stroke (r,g,b,a) w s)= updateSD $ recurStroke $ iEncode s
                                 where
-                                    js = iEncode s
-                                    sd = shapedata js
+                                    recurStroke :: JSONShape -> JSONShape
+                                    recurStroke js = js{shapechildren = (map updateSD) <$> shapechildren js}
+                                    updateSD :: JSONShape -> JSONShape --could be in lambda but that decreases readability
+                                    updateSD js = recurStroke $ js{shapedata = (shapedata js){stroke = Just JSONRGBAColor{colr=r, colg=g, colb=b, cola=a}, strokeWidth = Just w}}                                    
 
 iEncode (D.Rotate deg s)        = js {shapedata = sd {rotationDeg = Just deg}}
                                 where 
                                     js = iEncode s
                                     sd = shapedata js
-iEncode (D.Translate dx dy s) = js {shapedata = sd {x = (+dx) <$> (x sd), y = (+dy) <$> (y sd)}}
+iEncode (D.Translate dx dy s)   = js {shapedata = sd {x = (+dx) <$> (x sd), y = (+dy) <$> (y sd)}}
                                 where
                                     js = iEncode s
                                     sd = shapedata js
 
-iEncode (D.Scale dx dy s)        = js {shapedata = sd {scaleX = Just dx, scaleY = Just dy}}
+iEncode (D.Scale dx dy s)       = js {shapedata = sd {scaleX = Just dx, scaleY = Just dy}}
                                 where 
                                     js = iEncode s
                                     sd = shapedata js
 
-iEncode (D.Event e s)            = js {shapeeventData = Just (iEncodeEventData (shapeeventData js) e)}
+iEncode (D.Event e s)           = js {shapeeventData = Just (iEncodeEventData (shapeeventData js) e)}
                                 where
                                     js = iEncode s
 
-iEncode (D.Offset x y s)         = js {shapedata = sd {offset = Just [x,y]}}
+iEncode (D.Offset x y s)        = js {shapedata = sd {offset = Just [x,y]}}
                                 where
                                     js = iEncode s
                                     sd = shapedata js
 
-
 iEncode (D.Container w h ss)    = JSONShape {shapetype = "container"
-                                        ,shapedata = (iEncodePoint (0,0)) {width = Just w, height = Just h}
-                                        ,shapeeventData = Nothing
-                                        ,shapechildren = Just $ map iEncode ss
-                                        }
+                                            ,shapedata = (iEncodePoint (0,0)) {width = Just w, height = Just h}
+                                            ,shapeeventData = Nothing
+                                            ,shapechildren = Just $ map iEncode ss
+                                            }
 
 iEncodePoint :: D.Point -> JSONShapeData
 iEncodePoint (x',y')    
     = JSONShapeData { 
         stroke         = Nothing,
         strokeWidth    = Nothing, 
-        fill           = Just JSONRGBAColor{colr=255, colg=255, colb=255, cola = 1.0}, 
+        fill           = Just JSONRGBAColor{colr=0, colg=0, colb=0, cola = 1.0}, 
         scaleX         = Nothing, 
         scaleY         = Nothing, 
         rotationDeg    = Nothing, 
@@ -165,7 +168,7 @@ iEncodePoints ps
     = JSONShapeData { 
         stroke         = Nothing,
         strokeWidth    = Nothing, 
-        fill           = Just JSONRGBAColor{colr=255, colg=255, colb=255, cola = 1.0}, 
+        fill           = Just JSONRGBAColor{colr=0, colg=0, colb=0, cola = 1.0}, 
         scaleX         = Nothing, 
         scaleY         = Nothing, 
         rotationDeg    = Nothing, 
@@ -183,6 +186,7 @@ iEncodePoints ps
     }
         where
             -- Deze functie zet alle punten achter elkaar
+            eps :: [Int] -> [(Int, Int)] -> [Int]
             eps a []              = a
             eps a ((x',y'):ps)    = eps (x':y':a) ps
 
@@ -207,10 +211,11 @@ iEncodeEventData (Just j) e = j {eventId = Just $ T.pack $ D.eventId e
                                 }
                                 where
                                     mklisten e =     [] 
-                                                    ++ if D.mouseDown e then ["mousedown"] else []
-                                                    ++ if D.mouseClick e then ["mouseclick"] else []
-                                                    ++ if D.mouseUp e then ["mouseup"] else []
-                                                    ++ if D.mouseDoubleClick e then ["mousedoubleclick"] else []
-                                                    ++ if D.mouseDrag e then ["mousedrag"] else []
-                                                    ++ if D.mouseOver e then ["mouseover"] else []
-                                                    ++ if D.mouseOut e then ["mouseout"] else []
+                                                    ++ (if D.mouseDown e then ["mousedown"] else [])
+                                                    ++ (if D.mouseClick e then ["mouseclick"] else [])
+                                                    ++ (if D.mouseUp e then ["mouseup"] else [])
+                                                    ++ (if D.mouseDoubleClick e then ["mousedoubleclick"] else [])
+                                                    ++ (if D.mouseDrag e then ["mousedrag"] else [])
+                                                    ++ (if D.mouseOver e then ["mouseover"] else [])
+                                                    ++ (if D.mouseOut e then ["mouseout"] else [])
+                                                    ++ (if D.scroll e then ["scroll"] else [])
