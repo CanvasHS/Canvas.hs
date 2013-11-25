@@ -16,7 +16,7 @@ body {
     min-height: 600px;
     overflow: hidden;
 }
-.fullscreen #wrapper {
+.fullwindow #wrapper {
     width: 100%;
 }
 #canvas {
@@ -29,7 +29,7 @@ body {
     left: 50%;
     position: absolute;
 }
-.fullscreen #canvas {
+.fullwindow #canvas {
     border: 0px solid #FFFFFF;
     top: 0;
     left: 0;

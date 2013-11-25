@@ -33,14 +33,14 @@ function connectionClosed(error) {
     $("#control-window").html("<div class=\"control-content\"><p><strong>Connection lost</strong><br /><!--Retrying in 3... <a>reconnect</a>--></p></div>");
 }
 
-function fullScreen(container) {
-    $("body").addClass('fullscreen');
+function fullWindow(container) {
+    $("body").addClass('fullwindow');
     setFluidProportions($("#canvas,#canvas div"));
     $(window).resize(resize);
     resize(); // Resize to set correct offset
 }
-function fullScreenOff(container) {
-    $("body").removeClass('fullscreen');
+function fullWindowOff(container) {
+    $("body").removeClass('fullwindow');
     // Animate the kinetic container
     $("#canvas div").animate({
         width: canvasConstWidth+'px',
