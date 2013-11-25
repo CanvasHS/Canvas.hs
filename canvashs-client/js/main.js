@@ -32,7 +32,15 @@ function connectionClosed(error) {
     $("#control-window").addClass('display');
     $("#control-window").html("<div class=\"control-content\"><p><strong>Connection lost</strong><br /><!--Retrying in 3... <a>reconnect</a>--></p></div>");
 }
-
+function fullScreen() {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+    } else if (document.documentElement.mozRequestFullScreen) {
+      document.documentElement.mozRequestFullScreen();
+    } else if (document.documentElement.webkitRequestFullscreen) {
+      document.documentElement.webkitRequestFullscreen();
+    }
+}
 function fullWindow(container) {
     $("body").addClass('fullwindow');
     setFluidProportions($("#canvas,#canvas div"));
