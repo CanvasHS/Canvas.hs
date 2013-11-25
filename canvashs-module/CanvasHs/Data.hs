@@ -121,8 +121,6 @@ data BlockingAction
     | LoadFileBinary String    
     -- | Uploads a file from the js/canvas to haskell.
     | Upload
-    -- | Starts a repeating Timer. Has a timeout in ms and a String identifying the Timer. Will trigger the first Tick immediately
-    | Timer Int String
     
 -- | Actions which don't trigger events such as SaveFile, Download, Debug
 data Action
@@ -130,11 +128,14 @@ data Action
     = SaveFileString String String
      -- | Saves a file in binary mode. Has a filepath to save to, and a ByteString of the file contents. When the file already has contents it will be overwritten
     | SaveFileBinary String BS.ByteString
+    -- | Starts a repeating Timer. Has a timeout in ms and a String identifying the Timer.
+    | Timer Int String
     -- | Turns the debug console on or off. Has a Bool, True means show, False means hide
     | Debug Bool
     
--- | RemoteOutput is output consisting of a shape to draw 
-type RemoteOutput = (Maybe Shape, Maybe [Action])
+-- | RemoteOutput is output consisting of a shape to draw and a list of actions, an empty list implies no action
+-- | have to be taken
+type RemoteOutput = (Maybe Shape, [Action])
 
 -- | Output is the return type of the handler. It is either a BlockingAction or RemoteOutput
 -- | It can't have both a BlockingAction and a Shape to draw, because the BlockingAction will 

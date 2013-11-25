@@ -15,10 +15,14 @@ import CanvasHs.Launch
 import CanvasHs.Protocol
 
 import qualified Data.Text as T
-
 import Data.IORef (IORef, newIORef, atomicModifyIORef, readIORef)
 import Control.Monad.Trans (liftIO, lift)
 import System.IO (readFile, writeFile)
+import qualified Data.ByteString as BS (readFile, writeFile)
+import Data.Maybe (catMaybes)
+import Control.Concurrent.Timer
+import Control.Concurrent.Suspend (msDelay)
+import Control.Applicative ((<$>))
 
 -- | type of the user handler, accepts a state and an Event and produces a tuple of the new State and an Output
 type Callback a = (a -> Event -> (a, Output))
@@ -54,14 +58,30 @@ handleEvent st e    = do
                             (newState, output) = (callback curState) (extState curState) e
                         atomicModifyIORef st (\_ -> (curState{extState=newState}, ())) --update de state
                         case output of 
-                               (R o)            -> return $ Just $ encode o
-                               (Block Upload)   -> return Nothing -- TODO: Special case
-                               (Block a)        -> doAction a >>= (handleEvent st)
-
+                               (R (s,a))    -> (doActions st a) >>= (\a' -> return $ Just $ encode (s,a'))
+                               (Block a)    -> doBlockingAction a >>= (handleEvent st)
+                               
+-- | handles non blocking actions. The result will be a list of non blocking actions which were not handled by haskell
+-- | and should be sent to the javascript
+doActions :: IORef (State a) -> [Action] -> IO [Action]
+doActions st [] = return []
+doActions st xs =  (sequence $ map doAction xs) >>= (return . catMaybes)
+                    --the above line, sequence: [IO Maybe Action] -> IO [Maybe Action], catMaybes: [Maybe Action] -> [Action] (discards Nothings)
+                where
+                    doAction :: Action -> IO (Maybe Action)
+                    doAction (SaveFileString p c)   = writeFile p c >> return Nothing
+                    doAction (SaveFileBinary p c)   = BS.writeFile p c >> return Nothing
+                    doAction (Timer ms id)          = repeatedTimer (handleEvent st (Tick id) >> return ()) (msDelay $ fromIntegral ms) >> return Nothing
+                    -- Other actions fall through and are encoded by encode
+                    doAction a                      = return $ Just a
+                    
+                               
 -- | handles blocking actions. The actions are executed and the corresponding Event is returned
-doAction :: BlockingAction -> IO (Event)
-doAction (LoadFileString p) = readFile p >>= (\c -> return (FileLoadedString p c))
-doAction _ = return StartEvent
+doBlockingAction :: BlockingAction -> IO (Event)
+doBlockingAction (LoadFileString p) = readFile p >>= (\c -> return (FileLoadedString p c))
+doBlockingAction (LoadFileBinary p) = BS.readFile p >>= (\c -> return (FileLoadedBinary p c))
+-- TODO: Upload
+doBlockingAction _ = return StartEvent
 
                                    
                                    
