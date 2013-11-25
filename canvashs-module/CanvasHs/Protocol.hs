@@ -28,7 +28,7 @@ import Data.Maybe (fromMaybe)
 	@ensure \result is een valide JSON-object
 -}
 encode :: RemoteOutput -> T.Text
-encode o = (T.pack . BU.toString . Aeson.encode . iEncode . (fromMaybe (Container 0 0 [])) . fst) o
+encode = T.pack . BU.toString . Aeson.encode . iEncode . (fromMaybe (Container 900 600 [])) . fst -- ^TODO: actually handle Output
 
 -- | Ontsleuteld een inkomend bericht naar een event
 --   De daadwerkelijke code hiervoor staat in CanvasHs.Protocol.Output
