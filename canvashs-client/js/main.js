@@ -6,6 +6,7 @@ var connection = new WebSocket('ws://localhost:8080');
 var canvas = undefined;
 
 var generadedShapeIdIdx = 0;
+var debugOn = false;
 var debugTween;
 var debugAnnimatingShapes = [];
 var debugCanClose = true;
@@ -50,10 +51,14 @@ function parseShapeData(data) {
  * Sending Input events
  */
 
+
 function enableEventHandlers(shape, message) {   
     if(message.eventData != undefined && message.eventData != null) {
         if(message.eventData.listen.indexOf("mouseclick") != -1) {
             shape.on('click', clickEventHandler.bind(undefined, message.eventData.eventId));
+        }
+        if(message.eventData.listen.indexOf("mousedoubleclick") != -1) {
+            shape.on('dblclick', doubleClickEventHandler.bind(undefined, message.eventData.eventId));
         }
         if(message.eventData.listen.indexOf("mousedown") != -1) {
             shape.on('mousedown', mouseDownEventHandler.bind(undefined, message.eventData.eventId));
@@ -78,6 +83,7 @@ function enableEventHandlers(shape, message) {
 }
 
 function clickEventHandler(id, event) { mouseEvent("mouseclick", id, event); }
+function doubleClickEventHandler(id, event) { mouseEvent("mousedoubleclick", id, event); }
 function mouseDownEventHandler(id, event) { mouseEvent("mousedown", id, event); }
 function mouseUpEventHandler(id, event) { mouseEvent("mouseup", id, event); }
 function mouseOverEventHandler(id, event) { mouseEvent("mouseover", id, event); }
@@ -86,9 +92,12 @@ function mouseMoveEventHandler(id, event) { mouseEvent("mousemove", id, event); 
 var mouseDragId = undefined;
 var mouseDragEndHandler = undefined;
 var mouseDragHandler = undefined;
+var dragEventRateLimiter = undefined;
 var mouseDragFound = true;
+var enableDragHandler = true;
 var prevMousePosX = 0;
 var prevMousePosY = 0;
+var mouseMoveRateLimit = 90; // The mousemove interval limit
 function mouseDragStartEventHandler(id, event) {
     mouseDragEndHandler = mouseDragEndEventHandler.bind(undefined, id);
     mouseDragHandler = mouseDragEventHandler.bind(undefined, id);
@@ -101,6 +110,13 @@ function mouseDragStartEventHandler(id, event) {
     canvas.on('mouseout', mouseDragEndHandler);
     canvas.on('mouseup', mouseDragEndHandler);
     canvas.on('mousemove', mouseDragHandler);
+    // Limit mousemoves from firing by a specified interval
+    dragEventRateLimiter = true;
+    dragEventRateLimiter = window.setInterval(function(){
+        enableDragHandler = true;
+    }, mouseMoveRateLimit);
+    // Cancel event bubbling
+    event.cancelBubble = true;
 }
 function mouseDragEndEventHandler(id, event) {
     canvas.off('mouseout', mouseDragEndHandler);
@@ -109,30 +125,42 @@ function mouseDragEndEventHandler(id, event) {
     mouseDragId = undefined;
     mouseDragEndHandler = undefined;
     mouseDragHandler = undefined;
+    if(dragEventRateLimiter != undefined) {
+        clearInterval(dragEventRateLimiter);
+        dragEventRateLimiter = undefined;
+    }
+    // Cancel event bubbling
+    event.cancelBubble = true;
 }
 function mouseDragEventHandler(id, event) {
-    // Compensate for the position of the canvas
-    var canvasPos = $("#canvas").position();
-    var x1 = prevMousePosX; // Fix me
-    var x2 = event.pageX-canvasPos.left+450;
-    prevMousePosX = x2;
-    var y1 = prevMousePosY; // Fix me
-    var y2 = event.pageY-canvasPos.top+300;
-    prevMousePosY = y2;
+    if (enableDragHandler) {
+        // Compensate for the position of the canvas
+        var canvasPos = $("#canvas").position();
+        var x1 = prevMousePosX; // Fix me
+        var x2 = event.pageX-canvasPos.left+450;
+        prevMousePosX = x2;
+        var y1 = prevMousePosY; // Fix me
+        var y2 = event.pageY-canvasPos.top+300;
+        prevMousePosY = y2;
 
-    printDebugMessage("Event mousedrag on <a data-sid=\"" + id + "\" class=\"debugSelector\">" + id + "</a> from (x1:"+x1+" y1:"+y1+") to (x2:"+x2+" y2:"+y2+")" ,0);
+        printDebugMessage("Event mousedrag on <a data-sid=\"" + id + "\" class=\"debugSelector\">" + id + "</a> from (x1:"+x1+" y1:"+y1+") to (x2:"+x2+" y2:"+y2+")" ,0);
 
-    connection.send(JSON.stringify({
-        "event":"mousedrag",
-        "data":{
-            "id1": id,
-            "x1": x1, 
-            "y1": y1,
-            "id2": id,
-            "x2": x2, 
-            "y2": y2
-        }
-    }));
+        connection.send(JSON.stringify({
+            "event":"mousedrag",
+            "data":{
+                "id1": id,
+                "x1": x1, 
+                "y1": y1,
+                "id2": id,
+                "x2": x2, 
+                "y2": y2
+            }
+        }));
+        // Wait for the next interval before firing again
+        enableDragHandler = false;
+    }
+    // Cancel event bubbling
+    event.cancelBubble = true;
 }
 function mouseEvent(eventName, id, event) {
     // Compensate for the position of the canvas
@@ -150,6 +178,8 @@ function mouseEvent(eventName, id, event) {
             "y": y
         }
     }));
+    // Cancel event bubbling
+    event.cancelBubble = true;
 }
 
 function sendKeyEvent(eventName, event) {
@@ -206,7 +236,7 @@ function shapeFromData(message) {
         data["stroke"] = rgbaDictToColor(data["stroke"]);
     }
     // Debug message
-    if(!data["id"]) {
+    if(!data["id"] && debugOn) {
         data["id"] = "sid" + generadedShapeIdIdx;
         generadedShapeIdIdx++;
     }
@@ -263,35 +293,103 @@ function rgbaDictToColor(dict){
     return res;
 }
 
+
 /*
- * Visible debugger
- * 
- * Type 0 = message
- * Type 1 = warning
- * Type 2 = error
- */
+* Visible debugger
+* 
+* Type 0 = message
+* Type 1 = warning
+* Type 2 = error
+*/
 
 function printDebugMessage(message, type) {
+    if(debugOn) {
+        var now = new Date(),
+            now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
 
-    var now = new Date(),
-        now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
+        if(type == 1)
+        {
+            console.warn(message);
+        }
+        else if(type == 2)
+        {
+            console.error(message);
+        }
+        else
+        {
+            console.log(message);
+        }
 
-    if(type == 1)
-    {
-        console.warn(message);
-    }
-    else if(type == 2)
-    {
-        console.error(message);
-    }
-    else
-    {
-        console.log(message);
-    }
+        
+        $("#debug").prepend("<p><strong>["+now+"]</strong> "+message+"</p>");
 
-    
-    $("#debug").prepend("<p><strong>["+now+"]</strong> "+message+"</p>")
+    }
 }
+
+var hideDebugConsole = function(){
+        if(debugCanClose) {
+            if($(this).width() == 20)
+            {
+                $(this).animate({
+                    width: 350
+                },300);
+            }
+            else
+            {
+                $(this).animate({
+                    width: 20
+                },300);
+            }
+        }
+    };
+// For flashing certain shapes while debugging
+var debugSelector = function () {
+    debugCanClose = false;
+    var sid = $(this).data("sid"); // The shape id in an extended data attribute
+
+    var shape = stage.find('#' + sid)[0];
+    var alreadyAnnimatingIdx = $.inArray(shape, debugAnnimatingShapes);
+
+    if(alreadyAnnimatingIdx == -1)
+    { 
+        debugAnnimatingShapes.push(shape);
+
+        var fill = shape.getFill();
+
+        shape.setFill("red");
+        layerList[topLayerIdx].draw();
+
+        var interval = setInterval(function(){
+
+            shape.setFill(fill);
+            layerList[topLayerIdx].draw();
+
+
+            clearInterval(interval);
+            debugAnnimatingShapes.splice( alreadyAnnimatingIdx ,1 );
+            debugCanClose = true;
+        },250);
+    }
+};
+function initDebug() {
+    // Enable debug
+    debugOn = true;
+    // Debug selector for flashing shapes
+    $("#debug").delegate( ".debugSelector", "click", debugSelector);
+    // For hiding the debug console
+    $("#debug").click(hideDebugConsole);
+    $("#debug").show();
+}
+function debugOff() {
+    debugOn = false;
+    // Remove debug selector
+    $("#debug").undelegate( ".debugSelector", "click", debugSelector);
+    // Remove click event for hiding the console
+    $("#debug").off('click',hideDebugConsole);
+    // Clear debug screen and hide
+    $("#debug").hide().html("");
+}
+
 
 /*
  * Canvas setup
@@ -352,54 +450,15 @@ $(document).ready(function() {
         return false; // Prevent browser default behavior
     });
 
-    // For flashing certain shapes while debugging
-    $("#debug").delegate( ".debugSelector", "click", function() {
-        debugCanClose = false;
-        var sid = $(this).data("sid"); // The shape id in an extended data attribute
+    
+    if(debugOn) {
+        initDebug();
+    }
+    else {
+        debugOff();
+    }
 
-        var shape = stage.find('#' + sid)[0];
-        var alreadyAnnimatingIdx = $.inArray(shape, debugAnnimatingShapes);
-
-        if(alreadyAnnimatingIdx == -1)
-        { 
-            debugAnnimatingShapes.push(shape);
-
-            var fill = shape.getFill();
-
-            shape.setFill("red");
-            layerList[topLayerIdx].draw();
-
-            var interval = setInterval(function(){
-
-                shape.setFill(fill);
-                layerList[topLayerIdx].draw();
-
-
-                clearInterval(interval);
-                debugAnnimatingShapes.splice( alreadyAnnimatingIdx ,1 );
-                debugCanClose = true;
-            },250);
-        }
-
-    });
-
-    // For hiding the debug console
-    $("#debug").click(function(){
-        if(debugCanClose) {
-            if($(this).width() == 20)
-            {
-                $(this).animate({
-                    width: 350
-                },300);
-            }
-            else
-            {
-                $(this).animate({
-                    width: 20
-                },300);
-            }
-        }
-    });
+    
 
     // When the connection is open, send some data to the server
     connection.onopen = function () {
