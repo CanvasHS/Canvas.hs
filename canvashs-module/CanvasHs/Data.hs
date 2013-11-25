@@ -113,36 +113,34 @@ data Shape
     -- | A container. Has width and height and a list of shapes in this container.
     | Container Int Int [Shape]
 
--- | Actions which are preformed in IO (on the haskell-side that is). Such as SaveFile and Timer    
-data Action 
+-- | Actions which will trigger an Event, such as LoadFile or Upload
+data BlockingAction 
     -- | Loads a file as string. Has a filepath to load from
     = LoadFileString String
-    -- | Saves a file as string. Has a filepath to save to, and a String of the file contents. When the file already has contents it will be overwritten
-    | SaveFileString String String
     -- | Loads a file in binary mode. Has a filepath to load from
-    | LoadFileBinary String
-    -- | Saves a file in binary mode. Has a filepath to save to, and a ByteString of the file contents. When the file already has contents it will be overwritten
-    | SaveFileBinary String BS.ByteString
-    -- | Starts a repeating Timer. Has a timeout in ms and a String identifying the Timer.
+    | LoadFileBinary String    
+    -- | Uploads a file from the js/canvas to haskell.
+    | Upload
+    -- | Starts a repeating Timer. Has a timeout in ms and a String identifying the Timer. Will trigger the first Tick immediately
     | Timer Int String
     
--- | Actions which are preformed by the remote js/canvas host. Such as Upload and Download or Debug
-data RemoteAction
-    -- | Uploads a file from the js/canvas to haskell.
-    = Upload
+-- | Actions which don't trigger events such as SaveFile, Download, Debug
+data Action
+    -- | Saves a file as string. Has a filepath to save to, and a String of the file contents. When the file already has contents it will be overwritten
+    = SaveFileString String String
+     -- | Saves a file in binary mode. Has a filepath to save to, and a ByteString of the file contents. When the file already has contents it will be overwritten
+    | SaveFileBinary String BS.ByteString
     -- | Turns the debug console on or off. Has a Bool, True means show, False means hide
     | Debug Bool
     
--- | RemoteOutput is the output which will be send to the canvas/hs. Is has a possible shape and 
--- | and a list of possible remote actions. When no shape is provided the canvas should 
--- | not be affected
-type RemoteOutput = (Maybe Shape, Maybe [RemoteAction])
+-- | RemoteOutput is output consisting of a shape to draw 
+type RemoteOutput = (Maybe Shape, Maybe [Action])
 
--- | HSOutput is output which is evaluated locally. It has a list of Actions
-type HSOutput = [Action]
-
--- | Output is the return type of the handler. It is either local output or remote output
-data Output = HS HSOutput | R RemoteOutput
+-- | Output is the return type of the handler. It is either a BlockingAction or RemoteOutput
+-- | It can't have both a BlockingAction and a Shape to draw, because the BlockingAction will 
+-- | trigger handler, which could then return also return a Shape, we then would not know
+-- | which Shape to draw.
+data Output = Block BlockingAction | R RemoteOutput
     
 -- | Keymodifiers that can be enabled in a keyboard event
 data Modifier 
@@ -174,8 +172,8 @@ data Event
     | KeyClick String [Modifier]
     -- | A scroll event consisting of a xdiff and a ydiff
     | Scroll Int Int
-	-- | Start event is thrown when the server is started to notify user
-	| StartEvent
+    -- | Start event is thrown when the server is started to notify user
+    | StartEvent
     -- | When a file requested using the LoadFileString Action has been loaded. Has a filepath and file contents as String
     | FileLoadedString String String
     -- | When a file requested using the LoadFileString Action has been loaded. Has a filepath and file contents as ByteString
