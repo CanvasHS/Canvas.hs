@@ -27,8 +27,8 @@ import Data.Maybe (fromMaybe)
 	encode maakt van een Output een JSON-string (type Data.Text) die voldoet aan het protocol
 	@ensure \result is een valide JSON-object
 -}
-encode :: Output -> T.Text
-encode = T.pack . BU.toString . Aeson.encode . iEncode . (fromMaybe (Container 0 0 [])) . fst
+encode :: RemoteOutput -> T.Text
+encode o = (T.pack . BU.toString . Aeson.encode . iEncode . (fromMaybe (Container 0 0 [])) . fst) o
 
 -- | Ontsleuteld een inkomend bericht naar een event
 --   De daadwerkelijke code hiervoor staat in CanvasHs.Protocol.Output

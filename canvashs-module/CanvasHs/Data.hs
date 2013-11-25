@@ -113,7 +113,7 @@ data Shape
     -- | A container. Has width and height and a list of shapes in this container.
     | Container Int Int [Shape]
 
--- | All actions which can be preformed by CanvasHS, such as file manipulation and the usage of timers     
+-- | Actions which are preformed in IO (on the haskell-side that is). Such as SaveFile and Timer    
 data Action 
     -- | Loads a file as string. Has a filepath to load from
     = LoadFileString String
@@ -126,10 +126,23 @@ data Action
     -- | Starts a repeating Timer. Has a timeout in ms and a String identifying the Timer.
     | Timer Int String
     
--- | Output is the output type of the handler function. Is has a possible shape and 
--- | and a list of possible actions. When no shape is provided the canvas should 
+-- | Actions which are preformed by the remote js/canvas host. Such as Upload and Download or Debug
+data RemoteAction
+    -- | Uploads a file from the js/canvas to haskell.
+    = Upload
+    -- | Turns the debug console on or off. Has a Bool, True means show, False means hide
+    | Debug Bool
+    
+-- | RemoteOutput is the output which will be send to the canvas/hs. Is has a possible shape and 
+-- | and a list of possible remote actions. When no shape is provided the canvas should 
 -- | not be affected
-type Output = (Maybe Shape, Maybe [Action])
+type RemoteOutput = (Maybe Shape, Maybe [RemoteAction])
+
+-- | HSOutput is output which is evaluated locally. It has a list of Actions
+type HSOutput = [Action]
+
+-- | Output is the return type of the handler. It is either local output or remote output
+data Output = HS HSOutput | R RemoteOutput
     
 -- | Keymodifiers that can be enabled in a keyboard event
 data Modifier 
