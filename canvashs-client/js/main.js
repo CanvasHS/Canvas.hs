@@ -11,7 +11,11 @@ var debugTween;
 var debugAnnimatingShapes = [];
 var debugCanClose = true;
 
-// Event handlers
+/**
+ * Handles data received from the websocket connection.
+ * @param {type} event
+ * @returns {undefined}
+ */
 function connectionDataReceived(event) {
 
     // Reset mousedrag
@@ -34,6 +38,11 @@ function connectionDataReceived(event) {
     layerList[topLayerIdx].batchDraw();
 }
 
+/**
+ * Prints a message to the console when a connection error occurs.
+ * @param {type} error
+ * @returns {undefined}
+ */
 function connectionError(error) {
 
     printDebugMessage("WebSocket Error " + error);
@@ -47,11 +56,12 @@ function parseShapeData(data) {
     return shape;
 }
 
-/*
- * Sending Input events
+/**
+ * Adds event handlers for events the server is interested in.
+ * @param {type} shape The shape on which the event handler is set.
+ * @param {type} message The message from the server.
+ * @returns {undefined}
  */
-
-
 function enableEventHandlers(shape, message) {   
     if(message.eventData != undefined && message.eventData != null) {
         if(message.eventData.listen.indexOf("mouseclick") != -1) {
@@ -98,6 +108,12 @@ var enableDragHandler = true;
 var prevMousePosX = 0;
 var prevMousePosY = 0;
 var mouseMoveRateLimit = 90; // The mousemove interval limit
+/**
+ * Starts the mouse drag event handler.
+ * @param {type} id The id of the shape the event handler will listen on.
+ * @param {type} event
+ * @returns {undefined}
+ */
 function mouseDragStartEventHandler(id, event) {
     mouseDragEndHandler = mouseDragEndEventHandler.bind(undefined, id);
     mouseDragHandler = mouseDragEventHandler.bind(undefined, id);
@@ -118,6 +134,12 @@ function mouseDragStartEventHandler(id, event) {
     // Cancel event bubbling
     event.cancelBubble = true;
 }
+/**
+ * Handles mouse drag events.
+ * @param {type} id The id of the shape the event handler listens on.
+ * @param {type} event
+ * @returns {undefined}
+ */
 function mouseDragEndEventHandler(id, event) {
     canvas.off('mouseout', mouseDragEndHandler);
     canvas.off('mouseup', mouseDragEndHandler);
@@ -132,6 +154,12 @@ function mouseDragEndEventHandler(id, event) {
     // Cancel event bubbling
     event.cancelBubble = true;
 }
+/**
+ * Sends information belonging to a mouse drag event.
+ * @param {type} id The id of the shape the drag occurs on.
+ * @param {type} event
+ * @returns {undefined}
+ */
 function mouseDragEventHandler(id, event) {
     if (enableDragHandler) {
         // Compensate for the position of the canvas
@@ -162,6 +190,13 @@ function mouseDragEventHandler(id, event) {
     // Cancel event bubbling
     event.cancelBubble = true;
 }
+/**
+ * Sends information about mouse events.
+ * @param {type} eventName The name of the event as send to the server.
+ * @param {type} id The id of the shape as send to the server.
+ * @param {type} event
+ * @returns {undefined}
+ */
 function mouseEvent(eventName, id, event) {
     // Compensate for the position of the canvas
     var canvasPos = $("#canvas").position();
@@ -181,7 +216,12 @@ function mouseEvent(eventName, id, event) {
     // Cancel event bubbling
     event.cancelBubble = true;
 }
-
+/**
+ * Sends information about key events to the server.
+ * @param {String} eventName The name of the key event as send to the server.
+ * @param {type} event
+ * @returns {undefined}
+ */
 function sendKeyEvent(eventName, event) {
     
     var key = normalizeKeyCode(event);
@@ -203,7 +243,12 @@ function sendKeyEvent(eventName, event) {
         }
     }));
 }
-
+/**
+ * Sends a scroll event to the server.
+ * @param {Number} deltaX How far is scrolled in horizontal direction.
+ * @param {Number} deltaY How far is scrolled in vertical direction.
+ * @returns {undefined}
+ */
 function sendScrollEvent(deltaX,deltaY) {
 
     printDebugMessage("ScrollEvent (deltaX:"+deltaX+" deltaY:"+deltaY+")",0);
@@ -217,10 +262,11 @@ function sendScrollEvent(deltaX,deltaY) {
     }));
 }
 
-/*
- * Drawing shapes
- */ 
-
+/**
+ * Draws shapes from a JSON message.
+ * @param {type} message The message out of which a shape is constructed.
+ * @returns {Kinetic.Group|shapeFromData.shape|Kinetic.Circle|Kinetic.Line|Kinetic.Polygon|Kinetic.Text|Kinetic.Rect}
+ */
 function shapeFromData(message) {
 
     var shape = null;
@@ -301,6 +347,12 @@ function rgbaDictToColor(dict){
 * Type 2 = error
 */
 
+/**
+ * Prints debug messages to the console if debug is enabled.
+ * @param {type} message The message that is printed to the console.
+ * @param {Number} type The severity of the debug message.
+ * @returns {undefined}
+ */
 function printDebugMessage(message, type) {
     if(debugOn) {
         var now = new Date(),
@@ -325,6 +377,10 @@ function printDebugMessage(message, type) {
     }
 }
 
+/**
+ * Hides or unhides the debug console.
+ * @returns {undefined}
+ */
 var hideDebugConsole = function(){
         if(debugCanClose) {
             if($(this).width() == 20)
@@ -341,7 +397,9 @@ var hideDebugConsole = function(){
             }
         }
     };
-// For flashing certain shapes while debugging
+/**
+ * Flashes a shape when it is selected in the debugger.
+ */
 var debugSelector = function () {
     debugCanClose = false;
     var sid = $(this).data("sid"); // The shape id in an extended data attribute
@@ -370,6 +428,10 @@ var debugSelector = function () {
         },250);
     }
 };
+/**
+ * Initializes debug capabilities.
+ * @returns {undefined}
+ */
 function initDebug() {
     // Enable debug
     debugOn = true;
@@ -379,6 +441,10 @@ function initDebug() {
     $("#debug").click(hideDebugConsole);
     $("#debug").show();
 }
+/**
+ * Disables debug capabilities.
+ * @returns {undefined}
+ */
 function debugOff() {
     debugOn = false;
     // Remove debug selector
@@ -390,10 +456,13 @@ function debugOff() {
 }
 
 
-/*
- * Canvas setup
+/**
+ * Initializes the canvas.
+ * @param {type} container
+ * @param {Number} width The width of the canvas.
+ * @param {Number} height The height of the canvas.
+ * @returns {undefined}
  */
-
 function initCanvas(container, width, height) {
     // Only init canvas when there is a container
     // Container is provided for testing purposes and extesibility
@@ -421,15 +490,16 @@ function initWrapper(wrapper, width, height) {
     wrapper.css( "height", $( window ).height()+"px" );
 }
 
-
+/**
+ * Makes a new layer to draw on.
+ */
 function newDefaultLayer() {
-
     topLayerIdx++;
     layerList[topLayerIdx] = new Kinetic.Layer();
     stage.add(layerList[topLayerIdx]);
 }
 
-/*
+/**
  * On document ready
  */
 $(document).ready(function() {
@@ -470,6 +540,5 @@ $(document).ready(function() {
 
     // Begin to listen for keys
     window.addEventListener('keydown', sendKeyEvent.bind(this,'keydown'));
-    
     window.addEventListener('keyup', sendKeyEvent.bind(this,'keyup'));
 });
