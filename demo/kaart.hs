@@ -63,9 +63,19 @@ handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom,searchText = s} (MouseOut (x,
             Text (500, 100) "Ik doe shit en ben daar mega gelukkig over" defaults{font="Cantarell", size=20}
         ])
 -}
-handl st@State{searchHasFocus = focus, searchText = s} (KeyDown a b) = trace [a] $ (newState, drawAll newState)
+handl st@State{searchHasFocus = focus, searchText = s} (KeyDown a b) = (newState, drawAll newState)
     where
-        newS = if focus then (if (Shift `elem` b) then (s ++ [a]) else (s ++ [toLower a])) else s
+        newS = case a of
+                   "backspace" -> if focus && (length s > 0) then (init s) else s
+                   "shift"     -> s
+                   "control"   -> s
+                   "alt"       -> s
+                   "tab"       -> s
+                   "space"     -> s ++ " "
+                   "insert"    -> s
+                   "delete"    -> s
+                   "enter"     -> s
+                   _           -> if focus then (s ++ a) else s
         newState = st{searchText=newS}
 
 handl st _ = (st, drawAll st)
@@ -75,15 +85,15 @@ drawAll st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom, searchText=searchText, sea
     Container 900 600
         [
             drawBackground,
-            drawMap (xDiff, yDiff) zoom,
+            drawMap (xDiff, yDiff) zoom searchText,
             drawControls zoom searchHasFocus searchText
         ]
 
 drawBackground :: Shape
 drawBackground = Fill (135,206,235,1.0) $ Rect (0,0) 900 600
 
-drawMap :: (Int, Int) -> Float -> Shape
-drawMap (xDiff, yDiff) zoom = Translate (450 + xDiff) (300 + yDiff) $ Scale zoom zoom $ Offset 600 768 $ Event defaults{eventId="rootcontainer", mouseDrag=True} $ Container 1200 1536 (nederland ++ steden ++ drawCityPopup "Am")
+drawMap :: (Int, Int) -> Float -> String -> Shape
+drawMap (xDiff, yDiff) zoom searchText = Translate (450 + xDiff) (300 + yDiff) $ Scale zoom zoom $ Offset 600 768 $ Event defaults{eventId="rootcontainer", mouseDrag=True} $ Container 1200 1536 (nederland ++ steden ++ (if (length searchText > 0) then (drawCityPopup searchText) else []))
 
 drawControls :: Float -> Bool -> String -> Shape
 drawControls zl hasFocus s =
@@ -144,7 +154,7 @@ drawCityPopup name = (map (\(n, (x, y)) ->
         cities = trace (show $ findCities name) $ findCities name
 
 findCities :: String -> [(String, (Int, Int))]
-findCities name = filter (\(curr, (x,y)) -> (isInfixOf name curr)) all_city
+findCities name = filter (\(curr, (x,y)) -> (isInfixOf name (map toLower curr))) all_city
 
 translateFromEvent :: String -> (Int, Int)
 translateFromEvent c = case c of
