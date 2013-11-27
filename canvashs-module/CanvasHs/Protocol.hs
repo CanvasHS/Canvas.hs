@@ -21,13 +21,14 @@ import Data.List (intercalate)
 import qualified Data.Aeson as Aeson (encode, eitherDecode)
 import qualified Data.ByteString.Lazy.UTF8 as BU (fromString, toString)
 import Data.Either (either)
+import Data.Maybe (fromMaybe)
 
 {- 	|
 	encode maakt van een Output een JSON-string (type Data.Text) die voldoet aan het protocol
 	@ensure \result is een valide JSON-object
 -}
-encode :: Shape -> T.Text
-encode = T.pack . BU.toString . Aeson.encode . iEncode
+encode :: RemoteOutput -> T.Text
+encode = T.pack . BU.toString . Aeson.encode . iEncode . (fromMaybe (Container 900 600 [])) . fst -- ^TODO: actually handle Output
 
 -- | Ontsleuteld een inkomend bericht naar een event
 --   De daadwerkelijke code hiervoor staat in CanvasHs.Protocol.Output
