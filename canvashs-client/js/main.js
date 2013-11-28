@@ -20,19 +20,14 @@ function connectionDataReceived(event) {
 
     // Reset mousedrag
     mouseDragFound = false;
-    
     // Clear screen
     layerList[topLayerIdx].destroyChildren();
-
     var dataObject = jQuery.parseJSON(event.data);
-
     var shape = parseShapeData(dataObject);
-
     // Disable mousedrag if event is no longer attached to the shape
     if(!mouseDragFound && mouseDragId!=undefined) {
         mouseDragEndEventHandler(mouseDragId,undefined);
     }
-
     // Draw on current layer
     layerList[topLayerIdx].add(shape);
     layerList[topLayerIdx].batchDraw();
@@ -91,13 +86,17 @@ function enableEventHandlers(shape, message) {
         }
     }
 }
-
 function clickEventHandler(id, event) { mouseEvent("mouseclick", id, event); }
 function doubleClickEventHandler(id, event) { mouseEvent("mousedoubleclick", id, event); }
 function mouseDownEventHandler(id, event) { mouseEvent("mousedown", id, event); }
 function mouseUpEventHandler(id, event) { mouseEvent("mouseup", id, event); }
 function mouseOverEventHandler(id, event) { mouseEvent("mouseover", id, event); }
-function mouseOutEventHandler(id, event) { mouseEvent("mouseout", id, event); }
+function mouseOutEventHandler(id, event) { 
+    // Needed, otherwhise redraw fires mouseOut event
+    if(event.targetNode.getParent() != undefined) {
+        mouseEvent("mouseout", id, event); 
+    } 
+}
 function mouseMoveEventHandler(id, event) { mouseEvent("mousemove", id, event); }
 var mouseDragId = undefined;
 var mouseDragEndHandler = undefined;
@@ -224,6 +223,7 @@ function mouseEvent(eventName, id, event) {
  */
 function sendKeyEvent(eventName, event) {
     
+    console.log(eventName);
     var key = normalizeKeyCode(event);
     var ctrl = event.ctrlKey || event.metaKey;
     var alt = event.altKey;
