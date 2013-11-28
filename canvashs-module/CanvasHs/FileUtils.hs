@@ -3,7 +3,7 @@ module FileUtils where
 import Control.Applicative
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TL
-import qualified Data.ByteString as B
+import qualified Data.ByteString.UTF8 as B
 import qualified Data.ByteString.Base64 as B64
 import Control.Monad.Trans (liftIO, lift)
 
@@ -14,6 +14,6 @@ getFileLines path = do
 
 saveBase64File :: T.Text -> IO()
 saveBase64File b64 = do
-                        case (B64.decode $ TL.encodeUtf8 $ b64) of
+                        case (B64.decode $ B.fromString $ T.unpack $ b64) of
                             (Left a) -> putStrLn a
-                            (Right b) -> putStrLn (B.unpack $ b)
+                            (Right b) -> putStrLn $ B.toString b

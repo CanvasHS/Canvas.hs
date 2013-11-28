@@ -182,4 +182,6 @@ data Event
     | FileLoadedBinary String BS.ByteString
     -- | Tick event from a Timer. Has a string identifying the Timer
     | Tick String
+    -- | An upload has been completed. Has a filename and a contents
+    | UploadComplete String String
     deriving(Eq, Show)
