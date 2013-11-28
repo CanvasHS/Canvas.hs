@@ -6,6 +6,9 @@ import Data.Aeson ((.:), (.:?), FromJSON(..), Value(..))
 import Control.Applicative ((<$>), (<*>))
 import Data.Text
 
+import qualified Data.ByteString.UTF8 as B
+import qualified Data.ByteString.Base64 as B64
+
 import CanvasHs.Data
 
 
@@ -105,7 +108,9 @@ makeEvent "scroll"
 
 makeEvent "upload"
     (JSONEventData{filename = Just fn, filecontents = Just fc})
-        = Upload (unpack $ fn)  
+        = UploadComplete (unpack $ fn) (B.toString $ b)
+        where
+            (Right b) = B64.decode $ B.fromString $ unpack $ fc
 
 makeEvent _ _ = error "JSON did not match any event"
 
