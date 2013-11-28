@@ -120,7 +120,8 @@ data BlockingAction
     -- | Loads a file in binary mode. Has a filepath to load from
     | LoadFileBinary String    
     -- | Uploads a file from the js/canvas to haskell.
-    | Upload
+    -- TODO: weten we hiervan te onderscheiden of het binary is
+    | Upload String BS.ByteString
     
 -- | Actions which don't trigger events such as SaveFile, Download, Debug
 data Action
