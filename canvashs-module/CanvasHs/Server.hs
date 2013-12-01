@@ -30,8 +30,6 @@ import Control.Monad.Trans (liftIO, lift)
     note that when Nothing is returned to only way to send data over the websocket is to wait for
     input from the websocket
 -}
-
-
    
 start :: (T.Text -> IO (Maybe T.Text)) -> IO ()
 start f =   do
@@ -67,7 +65,7 @@ websockets f rq =   do
                             else do 
                                 let 
                                     Just m = resp
-                                WS.sendTextData m       
+                                WS.sendTextData m                                 
                         
                         
 -- Used to manage threads
