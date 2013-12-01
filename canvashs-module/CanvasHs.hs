@@ -24,6 +24,8 @@ import Control.Concurrent.Timer
 import Control.Concurrent.Suspend (msDelay)
 import Control.Applicative ((<$>))
 
+import qualified Network.WebSockets as WS
+
 -- | type of the user handler, accepts a state and an Event and produces a tuple of the new State and an Output
 type Callback a = (a -> Event -> (a, Output))
 
@@ -71,7 +73,7 @@ doActions st xs =  (sequence $ map doAction xs) >>= (return . catMaybes)
                     doAction :: Action -> IO (Maybe Action)
                     doAction (SaveFileString p c)   = writeFile p c >> return Nothing
                     doAction (SaveFileBinary p c)   = BS.writeFile p c >> return Nothing
-                    doAction (Timer ms id)          = repeatedTimer (handleEvent st (Tick id) >> return ()) (msDelay $ fromIntegral ms) >> return Nothing
+                    doAction (Timer ms id)          = repeatedTimer (liftIO $ handleTick st id >> return ()) (msDelay $ fromIntegral ms) >> return Nothing
                     -- Other actions fall through and are encoded by encode
                     doAction a                      = return $ Just a
                     
@@ -83,7 +85,8 @@ doBlockingAction (LoadFileBinary p) = BS.readFile p >>= (\c -> return (FileLoade
 -- TODO: Upload
 doBlockingAction _ = return StartEvent
 
-                                   
+handleTick :: IORef (State a) -> String -> WS.WebSockets WS.Hybi00 ()
+handleTick st id = WS.sendTextData <$> handleEvent st (Tick id)
                                    
 
 
