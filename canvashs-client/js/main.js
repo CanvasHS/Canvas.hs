@@ -3,6 +3,10 @@ var topLayerIdx = 0;
 var layerList = new Array();
 var stage = undefined;
 var connection = new WebSocket('ws://localhost:8080');
+var canvasConstWidth = 900; // Do not change after starting
+var canvasConstHeight = 600;
+
+// Event handlers
 var canvas = undefined;
 
 var generadedShapeIdIdx = 0;
@@ -11,7 +15,11 @@ var debugTween;
 var debugAnnimatingShapes = [];
 var debugCanClose = true;
 
-// Event handlers
+/**
+ * Handles data received from the websocket connection.
+ * @param {type} event
+ * @returns {undefined}
+ */
 function connectionDataReceived(event) {
 
     // Reset mousedrag
@@ -34,9 +42,76 @@ function connectionDataReceived(event) {
     layerList[topLayerIdx].batchDraw();
 }
 
+/**
+ * Prints a message to the console when a connection error occurs.
+ * @param {type} error
+ * @returns {undefined}
+ */
 function connectionError(error) {
-
     printDebugMessage("WebSocket Error " + error);
+}
+
+function connectionClosed(error) {
+    printDebugMessage("Connection closed " + error);
+    console.log(error);
+    $("#control-wrapper").addClass('display');
+    $("#control-window").addClass('display');
+    $("#control-window").html("<div class=\"control-content\"><p><strong>Connection lost</strong><br /><!--Retrying in 3... <a>reconnect</a>--></p></div>");
+}
+function fullScreen() {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+    } else if (document.documentElement.mozRequestFullScreen) {
+      document.documentElement.mozRequestFullScreen();
+    } else if (document.documentElement.webkitRequestFullscreen) {
+      document.documentElement.webkitRequestFullscreen();
+    }
+}
+function fullWindow(container) {
+    $("body").addClass('fullwindow');
+    setFluidProportions($("#canvas,#canvas div"));
+    $(window).resize(resize);
+    resize(); // Resizes the canvas
+}
+function fullWindowOff(container) {
+    $("body").removeClass('fullwindow');
+    // Animate the kinetic container
+    $("#canvas div").animate({
+        width: canvasConstWidth+'px',
+        height: canvasConstHeight+'px'},300);
+    setFixedProportions($("#canvas"), canvasConstWidth, canvasConstHeight);
+    resize(); // Resizes the canvas
+}
+function setFluidProportions(container) {
+    // Animate to fluid width and height
+    container.animate({
+        top: "0",
+        left: "0",
+        width: '100%',
+        height: '100%',
+        marginTop: "0px",
+        marginLeft: "0px"
+    },{duration: 300,step:resize});
+}
+function setFixedProportions(container,width,height) {
+    // Animate to fixed width and height
+    container.animate({
+        top: "50%",
+        left: "50%",
+        width: width+'px',
+        height: height+'px',
+        marginTop: "-"+height/2+"px",
+        marginLeft: "-"+width/2+"px"
+    },{duration: 300,step:resize});
+}
+function resize(event) {
+    $("#canvas canvas").attr("width",$("#canvas").outerWidth());
+    $("#canvas canvas").attr("height",$("#canvas").outerHeight());
+    $("#canvas canvas").css("width",$("#canvas").outerWidth()+"px");
+    $("#canvas canvas").css("height",$("#canvas").outerHeight()+"px");
+    if(stage) {
+        stage.batchDraw(); // Redraw Canvas
+    }
 }
 
 function parseShapeData(data) {
@@ -47,11 +122,12 @@ function parseShapeData(data) {
     return shape;
 }
 
-/*
- * Sending Input events
+/**
+ * Adds event handlers for events the server is interested in.
+ * @param {type} shape The shape on which the event handler is set.
+ * @param {type} message The message from the server.
+ * @returns {undefined}
  */
-
-
 function enableEventHandlers(shape, message) {   
     if(message.eventData != undefined && message.eventData != null) {
         if(message.eventData.listen.indexOf("mouseclick") != -1) {
@@ -98,14 +174,19 @@ var enableDragHandler = true;
 var prevMousePosX = 0;
 var prevMousePosY = 0;
 var mouseMoveRateLimit = 90; // The mousemove interval limit
+/**
+ * Starts the mouse drag event handler.
+ * @param {type} id The id of the shape the event handler will listen on.
+ * @param {type} event
+ * @returns {undefined}
+ */
 function mouseDragStartEventHandler(id, event) {
     mouseDragEndHandler = mouseDragEndEventHandler.bind(undefined, id);
     mouseDragHandler = mouseDragEventHandler.bind(undefined, id);
     mouseDragId = id; // Used to disable mousedrag when mousedrag is no longer attached to the shape
     // Compensate for the position of the canvas
-    var canvasPos = $("#canvas").position();
-    prevMousePosX = event.pageX-canvasPos.left+450;
-    prevMousePosY = event.pageY-canvasPos.top+300;
+    prevMousePosX = realX(event.pageX);
+    prevMousePosY = realY(event.pageY);
     
     canvas.on('mouseout', mouseDragEndHandler);
     canvas.on('mouseup', mouseDragEndHandler);
@@ -118,6 +199,12 @@ function mouseDragStartEventHandler(id, event) {
     // Cancel event bubbling
     event.cancelBubble = true;
 }
+/**
+ * Handles mouse drag events.
+ * @param {type} id The id of the shape the event handler listens on.
+ * @param {type} event
+ * @returns {undefined}
+ */
 function mouseDragEndEventHandler(id, event) {
     canvas.off('mouseout', mouseDragEndHandler);
     canvas.off('mouseup', mouseDragEndHandler);
@@ -132,15 +219,20 @@ function mouseDragEndEventHandler(id, event) {
     // Cancel event bubbling
     event.cancelBubble = true;
 }
+/**
+ * Sends information belonging to a mouse drag event.
+ * @param {type} id The id of the shape the drag occurs on.
+ * @param {type} event
+ * @returns {undefined}
+ */
 function mouseDragEventHandler(id, event) {
     if (enableDragHandler) {
         // Compensate for the position of the canvas
-        var canvasPos = $("#canvas").position();
         var x1 = prevMousePosX; // Fix me
-        var x2 = event.pageX-canvasPos.left+450;
+        var x2 = realX(event.pageX);
         prevMousePosX = x2;
         var y1 = prevMousePosY; // Fix me
-        var y2 = event.pageY-canvasPos.top+300;
+        var y2 = realY(event.pageY);
         prevMousePosY = y2;
 
         printDebugMessage("Event mousedrag on <a data-sid=\"" + id + "\" class=\"debugSelector\">" + id + "</a> from (x1:"+x1+" y1:"+y1+") to (x2:"+x2+" y2:"+y2+")" ,0);
@@ -162,26 +254,35 @@ function mouseDragEventHandler(id, event) {
     // Cancel event bubbling
     event.cancelBubble = true;
 }
+/**
+ * Sends information about mouse events.
+ * @param {type} eventName The name of the event as send to the server.
+ * @param {type} id The id of the shape as send to the server.
+ * @param {type} event
+ * @returns {undefined}
+ */
 function mouseEvent(eventName, id, event) {
     // Compensate for the position of the canvas
-    var canvasPos = $("#canvas").position();
-    var x = event.pageX-canvasPos.left+450; // Fix me
-    var y = event.pageY-canvasPos.top+300; // Fix me
-
+    x = realX(event.pageX);
+    y = realY(event.pageY);
     printDebugMessage("Event "+eventName+" on <a data-sid=\"" + id + "\" class=\"debugSelector\">" + id + "</a> (x:"+x+" y:"+y+")",0);
-
     connection.send(JSON.stringify({
         "event":eventName,
         "data":{
             "id": id,
-            "x": x, 
+            "x": x,
             "y": y
         }
     }));
     // Cancel event bubbling
     event.cancelBubble = true;
 }
-
+/**
+ * Sends information about key events to the server.
+ * @param {String} eventName The name of the key event as send to the server.
+ * @param {type} event
+ * @returns {undefined}
+ */
 function sendKeyEvent(eventName, event) {
     
     var key = normalizeKeyCode(event);
@@ -203,7 +304,20 @@ function sendKeyEvent(eventName, event) {
         }
     }));
 }
-
+function realX(x) {
+    var canvasPos = $("#canvas").position();
+    return x-canvasPos.left-parseInt($("#canvas").css("margin-left"));
+}
+function realY(y) {
+    var canvasPos = $("#canvas").position();
+    return y-canvasPos.top-parseInt($("#canvas").css("margin-top"));
+}
+/**
+ * Sends a scroll event to the server.
+ * @param {Number} deltaX How far is scrolled in horizontal direction.
+ * @param {Number} deltaY How far is scrolled in vertical direction.
+ * @returns {undefined}
+ */
 function sendScrollEvent(deltaX,deltaY) {
 
     printDebugMessage("ScrollEvent (deltaX:"+deltaX+" deltaY:"+deltaY+")",0);
@@ -217,10 +331,11 @@ function sendScrollEvent(deltaX,deltaY) {
     }));
 }
 
-/*
- * Drawing shapes
- */ 
-
+/**
+ * Draws shapes from a JSON message.
+ * @param {type} message The message out of which a shape is constructed.
+ * @returns {Kinetic.Group|shapeFromData.shape|Kinetic.Circle|Kinetic.Line|Kinetic.Polygon|Kinetic.Text|Kinetic.Rect}
+ */
 function shapeFromData(message) {
 
     var shape = null;
@@ -285,14 +400,13 @@ function shapeFromData(message) {
 
 function rgbaDictToColor(dict){
     var res = "";
-    if(dict["a"]){
+    if(dict["a"] != undefined){
         res = "rgba({0},{1},{2},{3})".format(dict["r"], dict["g"], dict["b"], dict["a"]);
     } else {
         res = "rgb({0},{1},{2})".format(dict["r"], dict["g"], dict["b"]);
     }
     return res;
 }
-
 
 /*
 * Visible debugger
@@ -302,6 +416,12 @@ function rgbaDictToColor(dict){
 * Type 2 = error
 */
 
+/**
+ * Prints debug messages to the console if debug is enabled.
+ * @param {type} message The message that is printed to the console.
+ * @param {Number} type The severity of the debug message.
+ * @returns {undefined}
+ */
 function printDebugMessage(message, type) {
     if(debugOn) {
         var now = new Date(),
@@ -326,6 +446,10 @@ function printDebugMessage(message, type) {
     }
 }
 
+/**
+ * Hides or unhides the debug console.
+ * @returns {undefined}
+ */
 var hideDebugConsole = function(){
         if(debugCanClose) {
             if($(this).width() == 20)
@@ -342,7 +466,9 @@ var hideDebugConsole = function(){
             }
         }
     };
-// For flashing certain shapes while debugging
+/**
+ * Flashes a shape when it is selected in the debugger.
+ */
 var debugSelector = function () {
     debugCanClose = false;
     var sid = $(this).data("sid"); // The shape id in an extended data attribute
@@ -371,6 +497,10 @@ var debugSelector = function () {
         },250);
     }
 };
+/**
+ * Initializes debug capabilities.
+ * @returns {undefined}
+ */
 function initDebug() {
     // Enable debug
     debugOn = true;
@@ -380,6 +510,10 @@ function initDebug() {
     $("#debug").click(hideDebugConsole);
     $("#debug").show();
 }
+/**
+ * Disables debug capabilities.
+ * @returns {undefined}
+ */
 function debugOff() {
     debugOn = false;
     // Remove debug selector
@@ -391,18 +525,18 @@ function debugOff() {
 }
 
 
-/*
- * Canvas setup
+/**
+ * Initializes the canvas.
+ * @param {type} container
+ * @param {Number} width The width of the canvas.
+ * @param {Number} height The height of the canvas.
+ * @returns {undefined}
  */
-
 function initCanvas(container, width, height) {
     // Only init canvas when there is a container
     // Container is provided for testing purposes and extesibility
     if(container.exists()) {
-        container.css( "width", width+"px" );
-        container.css( "height", height+"px" );
-        container.css( "margin-top", "-"+height/2+"px" );
-        container.css( "margin-left", "-"+width/2+"px" );
+        setFixedProportions(container,width,height);
 
 
         stage = new Kinetic.Stage({
@@ -419,24 +553,25 @@ function initCanvas(container, width, height) {
 function initWrapper(wrapper, width, height) {
 
     wrapper.css( "min-width", width+"px" );
-    wrapper.css( "height", $( window ).height()+"px" );
+    wrapper.css( "min-height", height+"px" );
 }
 
-
+/**
+ * Makes a new layer to draw on.
+ */
 function newDefaultLayer() {
-
     topLayerIdx++;
     layerList[topLayerIdx] = new Kinetic.Layer();
     stage.add(layerList[topLayerIdx]);
 }
 
-/*
+/**
  * On document ready
  */
 $(document).ready(function() {
 
-    var width = 900; // defined here because the container also needs these proportions 
-    var height = 600;
+    var width = canvasConstWidth; // defined here because the container also needs these proportions 
+    var height = canvasConstHeight;
 
     // Init canvas
     initCanvas($('#canvas'),width,height);
@@ -466,11 +601,12 @@ $(document).ready(function() {
     };
     // Log errors
     connection.onerror = connectionError;
+    // Indicate disconnected connection
+    connection.onclose = connectionClosed;
     // Callback for recieving data
     connection.onmessage = connectionDataReceived;
 
     // Begin to listen for keys
     window.addEventListener('keydown', sendKeyEvent.bind(this,'keydown'));
-    
     window.addEventListener('keyup', sendKeyEvent.bind(this,'keyup'));
 });
