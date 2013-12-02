@@ -48,6 +48,10 @@ installEventHandler handl startState = do
     start $ handleWSInput store
     return ()
     
+-- | convenience function to output just a shape
+shape :: Shape -> Output
+shape s = R (Just s, [])
+    
 -- | handles input from the canvas
 handleWSInput :: IORef (State a) -> T.Text -> IO (Maybe T.Text)
 handleWSInput st ip = handleEvent st $ decode ip
@@ -85,8 +89,11 @@ doBlockingAction (LoadFileBinary p) = BS.readFile p >>= (\c -> return (FileLoade
 -- TODO: upload
 doBlockingAction _ = return StartEvent
 
-handleTick :: IORef (State a) -> String -> WS.WebSockets WS.Hybi00 ()
-handleTick st id = WS.sendTextData <$> handleEvent st (Tick id)
+handleTick :: IORef (State a) -> String -> IO ()
+handleTick st id = handleEvent st (Tick id) >>= (\mt -> case mt of
+                                                        Nothing -> return ()
+                                                        Just t -> sendText t
+                                                )
                                    
 
 
