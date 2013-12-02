@@ -1,5 +1,6 @@
 module CanvasHs.Data where
 
+import qualified Data.ByteString.Lazy.UTF8 as BS8
 import qualified Data.ByteString as BS
 
 -- | Convenience type for a point (x, y)
@@ -119,9 +120,6 @@ data BlockingAction
     = LoadFileString String
     -- | Loads a file in binary mode. Has a filepath to load from
     | LoadFileBinary String    
-    -- | Uploads a file from the js/canvas to haskell.
-    -- TODO: weten we hiervan te onderscheiden of het binary is
-    | Upload String BS.ByteString
     
 -- | Actions which don't trigger events such as SaveFile, Download, Debug
 data Action
@@ -183,5 +181,5 @@ data Event
     -- | Tick event from a Timer. Has a string identifying the Timer
     | Tick String
     -- | An upload has been completed. Has a filename and a contents
-    | UploadComplete String String
+    | UploadComplete String (String, BS8.ByteString)
     deriving(Eq, Show)

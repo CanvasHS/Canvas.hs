@@ -1,4 +1,13 @@
+// Check if object has property
+// http://stackoverflow.com/questions/135448/how-do-i-check-to-see-if-an-object-has-a-property-in-javascript
+function hasProperty(obj, prop) {
+    var proto = obj.__proto__ || obj.constructor.prototype;
+    return (prop in obj) &&
+        (!(prop in proto) || proto[prop] !== obj[prop]);
+}
+
 // Extends jquery with exists method
+// http://stackoverflow.com/questions/31044/is-there-an-exists-function-for-jquery
 $.fn.exists = function () {
     return this.length !== 0;
 }
@@ -37,10 +46,6 @@ String.prototype.format = function() {
 }());
 
 // Place any jQuery/helper plugins in here.
-
-
-
-
 var _to_ascii = {
     '188': '44',
     '109': '45',
