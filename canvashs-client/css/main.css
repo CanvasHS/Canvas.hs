@@ -124,6 +124,12 @@ body {
     font-family: monospace;
 }
 
+.debugSelector {
+
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 
 
 
