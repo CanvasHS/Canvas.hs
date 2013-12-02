@@ -6,6 +6,9 @@ import Data.Aeson ((.:), (.:?), FromJSON(..), Value(..))
 import Control.Applicative ((<$>), (<*>))
 import Data.Text
 
+import qualified Data.ByteString.UTF8 as B
+import qualified Data.ByteString.Base64 as B64
+
 import CanvasHs.Data
 
 
@@ -24,26 +27,30 @@ data JSONEventData = JSONEventData {
         alt :: Maybe Bool,
         shift :: Maybe Bool,
         xdelta :: Maybe Integer,
-        ydelta :: Maybe Integer
+        ydelta :: Maybe Integer,
+        filename :: Maybe Text,
+        filecontents :: Maybe Text
     } deriving(Eq, Show)
 
 instance FromJSON JSONEventData where
-    parseJSON (Object v) = JSONEventData    <$>
-                            v .:? "id"      <*>
-                            v .:? "x"       <*>
-                            v .:? "y"       <*>
-                            v .:? "x1"      <*> -- Only for mousedrag
-                            v .:? "y1"      <*> -- Only for mousedrag
-                            v .:? "id1"     <*> -- Only for mousedrag
-                            v .:? "x2"      <*> -- Only for mousedrag
-                            v .:? "y2"      <*> -- Only for mousedrag
-                            v .:? "id2"     <*> -- Only for mousedrag
-                            v .:? "key"     <*>
-                            v .:? "control" <*>
-                            v .:? "alt"     <*>
-                            v .:? "shift"   <*>
-                            v .:? "xdelta"  <*>
-                            v .:? "ydelta"
+    parseJSON (Object v) = JSONEventData         <$>
+                            v .:? "id"           <*>
+                            v .:? "x"            <*>
+                            v .:? "y"            <*>
+                            v .:? "x1"           <*> -- Only for mousedrag
+                            v .:? "y1"           <*> -- Only for mousedrag
+                            v .:? "id1"          <*> -- Only for mousedrag
+                            v .:? "x2"           <*> -- Only for mousedrag
+                            v .:? "y2"           <*> -- Only for mousedrag
+                            v .:? "id2"          <*> -- Only for mousedrag
+                            v .:? "key"          <*>
+                            v .:? "control"      <*>
+                            v .:? "alt"          <*>
+                            v .:? "shift"        <*>
+                            v .:? "xdelta"       <*>
+                            v .:? "ydelta"       <*>
+                            v .:? "filename"     <*> -- Only for upload events
+                            v .:? "filecontents"     -- Only for upload events
     parseJSON _ = error "A toplevel JSON should be an object"
 
 instance FromJSON Event where
@@ -98,6 +105,12 @@ makeEvent "keyup"
 makeEvent "scroll"
     (JSONEventData{xdelta = Just x, ydelta = Just y})
         = Scroll (fromIntegral $ x) (fromIntegral $ y)
+
+makeEvent "upload"
+    (JSONEventData{filename = Just fn, filecontents = Just fc})
+        = UploadComplete (unpack $ fn) (B.toString $ b)
+        where
+            (Right b) = B64.decode $ B.fromString $ unpack $ fc
 
 makeEvent _ _ = error "JSON did not match any event"
 

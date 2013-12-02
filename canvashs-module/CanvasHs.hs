@@ -82,7 +82,7 @@ doActions st xs =  (sequence $ map doAction xs) >>= (return . catMaybes)
 doBlockingAction :: BlockingAction -> IO (Event)
 doBlockingAction (LoadFileString p) = readFile p >>= (\c -> return (FileLoadedString p c))
 doBlockingAction (LoadFileBinary p) = BS.readFile p >>= (\c -> return (FileLoadedBinary p c))
--- TODO: Upload
+-- TODO: upload
 doBlockingAction _ = return StartEvent
 
 handleTick :: IORef (State a) -> String -> WS.WebSockets WS.Hybi00 ()
