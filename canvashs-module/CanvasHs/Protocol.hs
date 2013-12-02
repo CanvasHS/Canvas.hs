@@ -15,6 +15,7 @@ module CanvasHs.Protocol
 
 import CanvasHs.Data
 import CanvasHs.Protocol.ShapeOutput
+import CanvasHs.Protocol.ActionOutput
 import CanvasHs.Protocol.Input
 
 import qualified Data.Text as T
@@ -28,7 +29,7 @@ import Control.Applicative ((<$>))
 
 data JSONOutput = JSONOutput {
         shape :: Maybe JSONShape,
-        actions :: [String]
+        actions :: [JSONAction]
         } deriving (Show)
         
 $(deriveJSON defaultOptions{omitNothingFields=True} ''JSONOutput)
@@ -38,7 +39,7 @@ $(deriveJSON defaultOptions{omitNothingFields=True} ''JSONOutput)
     @ensure \result is een valide JSON-object
 -}
 encode :: RemoteOutput -> T.Text
-encode o = T.pack $ BU.toString $ Aeson.encode (JSONOutput {shape=(shapeEncode <$> fst o), actions=[]})
+encode o = T.pack $ BU.toString $ Aeson.encode (JSONOutput {shape=(shapeEncode <$> fst o), actions=(map actionEncode $ snd o)})
 
 -- | Ontsleuteld een inkomend bericht naar een event
 --   De daadwerkelijke code hiervoor staat in CanvasHs.Protocol.Output
