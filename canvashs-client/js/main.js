@@ -11,9 +11,18 @@ var canvas = undefined;
 
 var generadedShapeIdIdx = 0;
 var debugOn = false;
-var debugTween;
 var debugAnnimatingShapes = [];
 var debugCanClose = true;
+
+var mouseDragId = undefined;
+var mouseDragEndHandler = undefined;
+var mouseDragHandler = undefined;
+var dragEventRateLimiter = undefined;
+var mouseDragFound = true;
+var enableDragHandler = true;
+var prevMousePosX = 0;
+var prevMousePosY = 0;
+var mouseMoveRateLimit = 90; // The mousemove interval limit
 
 /**
  * Handles data received from the websocket connection.
@@ -24,22 +33,38 @@ function connectionDataReceived(event) {
 
     // Reset mousedrag
     mouseDragFound = false;
-    
-    // Clear screen
-    layerList[topLayerIdx].destroyChildren();
 
     var dataObject = jQuery.parseJSON(event.data);
 
-    var shape = parseShapeData(dataObject);
+    // handle the shape data
+    if(hasProperty(dataObject,"shape") && dataObject.shape != undefined) {
+        var shape = parseShapeData(dataObject.shape);
 
-    // Disable mousedrag if event is no longer attached to the shape
-    if(!mouseDragFound && mouseDragId!=undefined) {
-        mouseDragEndEventHandler(mouseDragId,undefined);
+        // Clear screen
+        layerList[topLayerIdx].destroyChildren();
+
+        // Disable mousedrag if event is no longer attached to the shape
+        if(!mouseDragFound && mouseDragId!=undefined) {
+            mouseDragEndEventHandler(mouseDragId,undefined);
+        }
+
+        // Draw on current layer
+        layerList[topLayerIdx].add(shape);
+        layerList[topLayerIdx].batchDraw();
+    }
+    else {
+        printDebugMessage("No shape data recieved",1);
     }
 
-    // Draw on current layer
-    layerList[topLayerIdx].add(shape);
-    layerList[topLayerIdx].batchDraw();
+    if(hasProperty(dataObject,"actions") && dataObject.actions != undefined && 
+        Object.prototype.toString.call( dataObject.actions ) === '[object Array]' ) {
+        
+    }
+    else {
+        printDebugMessage("No actions recieved",0);
+    }
+
+
 }
 
 /**
@@ -48,12 +73,12 @@ function connectionDataReceived(event) {
  * @returns {undefined}
  */
 function connectionError(error) {
-    printDebugMessage("WebSocket Error " + error);
+    printDebugMessage("WebSocket Error " + error,2);
 }
 
 function connectionClosed(error) {
-    printDebugMessage("Connection closed " + error);
-    console.log(error);
+    printDebugMessage("Connection closed " + error,0);
+
     $("#control-wrapper").addClass('display');
     $("#control-window").addClass('display');
     $("#control-window").html("<div class=\"control-content\"><p><strong>Connection lost</strong><br /><!--Retrying in 3... <a>reconnect</a>--></p></div>");
@@ -165,15 +190,7 @@ function mouseUpEventHandler(id, event) { mouseEvent("mouseup", id, event); }
 function mouseOverEventHandler(id, event) { mouseEvent("mouseover", id, event); }
 function mouseOutEventHandler(id, event) { mouseEvent("mouseout", id, event); }
 function mouseMoveEventHandler(id, event) { mouseEvent("mousemove", id, event); }
-var mouseDragId = undefined;
-var mouseDragEndHandler = undefined;
-var mouseDragHandler = undefined;
-var dragEventRateLimiter = undefined;
-var mouseDragFound = true;
-var enableDragHandler = true;
-var prevMousePosX = 0;
-var prevMousePosY = 0;
-var mouseMoveRateLimit = 90; // The mousemove interval limit
+
 /**
  * Starts the mouse drag event handler.
  * @param {type} id The id of the shape the event handler will listen on.
@@ -423,26 +440,22 @@ function rgbaDictToColor(dict){
  * @returns {undefined}
  */
 function printDebugMessage(message, type) {
+
+    if(type == 1) {
+        console.warn(message);
+    }
+    else if(type == 2) {
+        console.error(message);
+    }
+    else if(debugOn) {
+        console.log(message);
+    }
+
     if(debugOn) {
         var now = new Date(),
             now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
 
-        if(type == 1)
-        {
-            console.warn(message);
-        }
-        else if(type == 2)
-        {
-            console.error(message);
-        }
-        else
-        {
-            console.log(message);
-        }
-
-        
         $("#debug").prepend("<p><strong>["+now+"]</strong> "+message+"</p>");
-
     }
 }
 
@@ -584,7 +597,6 @@ $(document).ready(function() {
         sendScrollEvent(event.deltaX,event.deltaY);
         return false; // Prevent browser default behavior
     });
-
     
     if(debugOn) {
         initDebug();
@@ -592,8 +604,6 @@ $(document).ready(function() {
     else {
         debugOff();
     }
-
-    
 
     // When the connection is open, send some data to the server
     connection.onopen = function () {
