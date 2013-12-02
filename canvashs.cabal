@@ -13,7 +13,7 @@ data-files:          canvashs-client/*.html,
 Library
   build-depends: 	base >= 4,
                   QuickCheck >= 2.4,
-                  websockets == 0.7.4.1,
+                  websockets == 0.8.0.0,
                   warp,
                   blaze-html,
                   utf8-string,
