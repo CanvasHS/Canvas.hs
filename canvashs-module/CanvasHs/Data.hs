@@ -129,8 +129,20 @@ data Action
     | SaveFileBinary String BS.ByteString
     -- | Starts a repeating Timer. Has a timeout in ms and a String identifying the Timer.
     | Timer Int String
-    -- | Turns the debug console on or off. Has a Bool, True means show, False means hide
+    -- | Turns the debug console on or off. Has a Bool, True means show, False means hide, send to javascript
     | Debug Bool
+    -- | Turns file drag'n'drop acceptance on or off. Has a Bool (True means accept, False menas don't accept)
+    -- | and a Bool (True means accept multiple files, false means don't accept multiple files)
+    -- | send to javascript
+    | DragNDrop Bool Bool
+    -- | changes the window display type, is eihter FixedSize, FullWindow or FullScreen
+    | DisplayType WindowDisplayType
+    -- | TODO: Sends a file to the javascript so the user can download it. Has the filecontents as ByteString
+    | Download -- ^ TODO: actually add contents
+    
+-- | The window display type. FixedSize as a Width and Height
+data WindowDisplayType = FullWindow | FullScreen | FixedSize Int Int
+    
     
 -- | RemoteOutput is output consisting of a shape to draw and a list of actions, an empty list implies no action
 -- | have to be taken

@@ -42,6 +42,7 @@ Library
                   CanvasHs.Protocol
                   CanvasHs.Protocol.Input
                   CanvasHs.Protocol.ShapeOutput
+                  CanvasHs.Protocol.ActionOutput
 
 
 Test-Suite javascript-tests
