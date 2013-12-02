@@ -5,9 +5,10 @@ module CanvasHs.Protocol.Input (FromJSON(..)) where
 import Data.Aeson ((.:), (.:?), FromJSON(..), Value(..))
 import Control.Applicative ((<$>), (<*>))
 import Data.Text
+import System.FilePath.Posix (takeExtension)
 
-import qualified Data.ByteString.UTF8 as B
-import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Lazy.UTF8 as B
+import qualified Data.ByteString.Base64.Lazy as B64
 
 import CanvasHs.Data
 
@@ -108,7 +109,7 @@ makeEvent "scroll"
 
 makeEvent "upload"
     (JSONEventData{filename = Just fn, filecontents = Just fc})
-        = UploadComplete (unpack $ fn) (B.toString $ b)
+        = UploadComplete (unpack $ fn) (B.toString $ b, b)
         where
             (Right b) = B64.decode $ B.fromString $ unpack $ fc
 
