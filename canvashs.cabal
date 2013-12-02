@@ -30,7 +30,8 @@ Library
                   ghc-prim >= 0.2.0.0,
                   base64-bytestring,
                   timers >= 0.2.0.1,
-                  suspend >= 0.1.0.2
+                  suspend >= 0.1.0.2,
+                  filepath
 
   Exposed-modules:	CanvasHs, CanvasHs.Data
   hs-source-dirs:	canvashs-module
