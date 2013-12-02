@@ -3,6 +3,10 @@ var topLayerIdx = 0;
 var layerList = new Array();
 var stage = undefined;
 var connection = new WebSocket('ws://localhost:8080');
+var canvasConstWidth = 900; // Do not change after starting
+var canvasConstHeight = 600;
+
+// Event handlers
 var canvas = undefined;
 
 var generadedShapeIdIdx = 0;
@@ -44,8 +48,70 @@ function connectionDataReceived(event) {
  * @returns {undefined}
  */
 function connectionError(error) {
-
     printDebugMessage("WebSocket Error " + error);
+}
+
+function connectionClosed(error) {
+    printDebugMessage("Connection closed " + error);
+    console.log(error);
+    $("#control-wrapper").addClass('display');
+    $("#control-window").addClass('display');
+    $("#control-window").html("<div class=\"control-content\"><p><strong>Connection lost</strong><br /><!--Retrying in 3... <a>reconnect</a>--></p></div>");
+}
+function fullScreen() {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+    } else if (document.documentElement.mozRequestFullScreen) {
+      document.documentElement.mozRequestFullScreen();
+    } else if (document.documentElement.webkitRequestFullscreen) {
+      document.documentElement.webkitRequestFullscreen();
+    }
+}
+function fullWindow(container) {
+    $("body").addClass('fullwindow');
+    setFluidProportions($("#canvas,#canvas div"));
+    $(window).resize(resize);
+    resize(); // Resizes the canvas
+}
+function fullWindowOff(container) {
+    $("body").removeClass('fullwindow');
+    // Animate the kinetic container
+    $("#canvas div").animate({
+        width: canvasConstWidth+'px',
+        height: canvasConstHeight+'px'},300);
+    setFixedProportions($("#canvas"), canvasConstWidth, canvasConstHeight);
+    resize(); // Resizes the canvas
+}
+function setFluidProportions(container) {
+    // Animate to fluid width and height
+    container.animate({
+        top: "0",
+        left: "0",
+        width: '100%',
+        height: '100%',
+        marginTop: "0px",
+        marginLeft: "0px"
+    },{duration: 300,step:resize});
+}
+function setFixedProportions(container,width,height) {
+    // Animate to fixed width and height
+    container.animate({
+        top: "50%",
+        left: "50%",
+        width: width+'px',
+        height: height+'px',
+        marginTop: "-"+height/2+"px",
+        marginLeft: "-"+width/2+"px"
+    },{duration: 300,step:resize});
+}
+function resize(event) {
+    $("#canvas canvas").attr("width",$("#canvas").outerWidth());
+    $("#canvas canvas").attr("height",$("#canvas").outerHeight());
+    $("#canvas canvas").css("width",$("#canvas").outerWidth()+"px");
+    $("#canvas canvas").css("height",$("#canvas").outerHeight()+"px");
+    if(stage) {
+        stage.batchDraw(); // Redraw Canvas
+    }
 }
 
 function parseShapeData(data) {
@@ -119,9 +185,8 @@ function mouseDragStartEventHandler(id, event) {
     mouseDragHandler = mouseDragEventHandler.bind(undefined, id);
     mouseDragId = id; // Used to disable mousedrag when mousedrag is no longer attached to the shape
     // Compensate for the position of the canvas
-    var canvasPos = $("#canvas").position();
-    prevMousePosX = event.pageX-canvasPos.left+450;
-    prevMousePosY = event.pageY-canvasPos.top+300;
+    prevMousePosX = realX(event.pageX);
+    prevMousePosY = realY(event.pageY);
     
     canvas.on('mouseout', mouseDragEndHandler);
     canvas.on('mouseup', mouseDragEndHandler);
@@ -163,12 +228,11 @@ function mouseDragEndEventHandler(id, event) {
 function mouseDragEventHandler(id, event) {
     if (enableDragHandler) {
         // Compensate for the position of the canvas
-        var canvasPos = $("#canvas").position();
         var x1 = prevMousePosX; // Fix me
-        var x2 = event.pageX-canvasPos.left+450;
+        var x2 = realX(event.pageX);
         prevMousePosX = x2;
         var y1 = prevMousePosY; // Fix me
-        var y2 = event.pageY-canvasPos.top+300;
+        var y2 = realY(event.pageY);
         prevMousePosY = y2;
 
         printDebugMessage("Event mousedrag on <a data-sid=\"" + id + "\" class=\"debugSelector\">" + id + "</a> from (x1:"+x1+" y1:"+y1+") to (x2:"+x2+" y2:"+y2+")" ,0);
@@ -199,17 +263,14 @@ function mouseDragEventHandler(id, event) {
  */
 function mouseEvent(eventName, id, event) {
     // Compensate for the position of the canvas
-    var canvasPos = $("#canvas").position();
-    var x = event.pageX-canvasPos.left+450; // Fix me
-    var y = event.pageY-canvasPos.top+300; // Fix me
-
+    x = realX(event.pageX);
+    y = realY(event.pageY);
     printDebugMessage("Event "+eventName+" on <a data-sid=\"" + id + "\" class=\"debugSelector\">" + id + "</a> (x:"+x+" y:"+y+")",0);
-
     connection.send(JSON.stringify({
         "event":eventName,
         "data":{
             "id": id,
-            "x": x, 
+            "x": x,
             "y": y
         }
     }));
@@ -242,6 +303,14 @@ function sendKeyEvent(eventName, event) {
             "shift": shift
         }
     }));
+}
+function realX(x) {
+    var canvasPos = $("#canvas").position();
+    return x-canvasPos.left-parseInt($("#canvas").css("margin-left"));
+}
+function realY(y) {
+    var canvasPos = $("#canvas").position();
+    return y-canvasPos.top-parseInt($("#canvas").css("margin-top"));
 }
 /**
  * Sends a scroll event to the server.
@@ -467,10 +536,7 @@ function initCanvas(container, width, height) {
     // Only init canvas when there is a container
     // Container is provided for testing purposes and extesibility
     if(container.exists()) {
-        container.css( "width", width+"px" );
-        container.css( "height", height+"px" );
-        container.css( "margin-top", "-"+height/2+"px" );
-        container.css( "margin-left", "-"+width/2+"px" );
+        setFixedProportions(container,width,height);
 
 
         stage = new Kinetic.Stage({
@@ -487,7 +553,7 @@ function initCanvas(container, width, height) {
 function initWrapper(wrapper, width, height) {
 
     wrapper.css( "min-width", width+"px" );
-    wrapper.css( "height", $( window ).height()+"px" );
+    wrapper.css( "min-height", height+"px" );
 }
 
 /**
@@ -504,8 +570,8 @@ function newDefaultLayer() {
  */
 $(document).ready(function() {
 
-    var width = 900; // defined here because the container also needs these proportions 
-    var height = 600;
+    var width = canvasConstWidth; // defined here because the container also needs these proportions 
+    var height = canvasConstHeight;
 
     // Init canvas
     initCanvas($('#canvas'),width,height);
@@ -535,6 +601,8 @@ $(document).ready(function() {
     };
     // Log errors
     connection.onerror = connectionError;
+    // Indicate disconnected connection
+    connection.onclose = connectionClosed;
     // Callback for recieving data
     connection.onmessage = connectionDataReceived;
 
