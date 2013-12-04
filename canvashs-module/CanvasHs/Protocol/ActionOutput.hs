@@ -10,6 +10,9 @@ import GHC.Generics
 import Data.Aeson.TH
 import qualified Data.Text as T
 
+import qualified Data.ByteString.Lazy.UTF8 as B
+import qualified Data.ByteString.Base64.Lazy as B64
+
 import qualified CanvasHs.Data as D
 
 data JSONAction
@@ -27,7 +30,8 @@ data JSONActionData
         dheight :: Maybe Int,
         denabled :: Maybe Bool,
         dmultiple :: Maybe Bool,
-        dfile :: Maybe String --TODO: fix type
+        dfilename :: Maybe T.Text,
+        dfilecontents :: Maybe T.Text --TODO: fix type
     } deriving (Show)
     
    
@@ -48,8 +52,13 @@ actionEncode (D.DragNDrop a m)  = JSONAction{actiontype = "acceptfiledragndrop"
 actionEncode (D.DisplayType w)  = JSONAction{actiontype = "windowdisplaytype"
                                             ,actiondata = wdtEncode w
                                             }
-actionEncode (D.Download)       = JSONAction{actiontype = "savefile"
-                                            ,actiondata = emptyActionData{dfile = Just "CONTENTS"} -- ^ TODO: Actually add contents (see Data.hs)
+actionEncode (D.Download fn fc)       = JSONAction{actiontype = "savefile"
+                                            ,actiondata = emptyActionData{dfilecontents = Just filecontents, dfilename = filename} -- ^ TODO: Actually add contents (see Data.hs)
+        where
+            -- we maken er een bytestring van, die decoden we naar b64 dan weer
+            -- naar string dan weer naar text, capiche?
+            filecontents = T.pack $ B.toString $ B64.encode $ B.fromString $ fc
+            filename = T.pack $ fn
                                             }
 
 wdtEncode :: D.WindowDisplayType -> JSONActionData
@@ -69,5 +78,6 @@ emptyActionData
             dheight = Nothing,
             denabled = Nothing,
             dmultiple = Nothing,
-            dfile = Nothing
+            dfilename = Nothing,
+            dfilecontents = Nothing
         }
