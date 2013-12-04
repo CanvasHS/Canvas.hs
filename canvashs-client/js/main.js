@@ -170,7 +170,7 @@ function parseShapeData(data) {
 }
 
 function parseActionData(data) {
-    if(hasProperty(data,"action") && data.action != undefined && data.action instanceof String &&
+    if(hasProperty(data,"action") && data.action != undefined &&
        hasProperty(data,"data") && data.data != undefined) {
 
         // Parse certain properties depending on type of action
