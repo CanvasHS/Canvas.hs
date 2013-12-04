@@ -130,6 +130,12 @@ body {
     cursor: pointer;
 }
 
+/* hide the helper input */
+input[type=file], #fileUpload {
+    display:block;
+    height:0;
+    width:0;
+}
 
 
 

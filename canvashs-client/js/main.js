@@ -3,8 +3,9 @@ var topLayerIdx = 0;
 var layerList = new Array();
 var stage = undefined;
 var connection = new WebSocket('ws://localhost:8080');
-var canvasConstWidth = 900; // Do not change after starting
-var canvasConstHeight = 600;
+
+var canvasWindowWidth = 900;
+var canvasWindowHeight = 600;
 
 // Event handlers
 var canvas = undefined;
@@ -59,6 +60,11 @@ function connectionDataReceived(event) {
     if(hasProperty(dataObject,"actions") && dataObject.actions != undefined && 
         Object.prototype.toString.call( dataObject.actions ) === '[object Array]' ) {
         
+        var actions = parseShapeData(dataObject.actions);
+
+        for (var i = 0; i < actions.length; i++) {
+            parseActionData(actions[i]);
+        }
     }
     else {
         printDebugMessage("No actions recieved",0);
@@ -83,30 +89,44 @@ function connectionClosed(error) {
     $("#control-window").addClass('display');
     $("#control-window").html("<div class=\"control-content\"><p><strong>Connection lost</strong><br /><!--Retrying in 3... <a>reconnect</a>--></p></div>");
 }
-function fullScreen() {
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen();
-    } else if (document.documentElement.mozRequestFullScreen) {
-      document.documentElement.mozRequestFullScreen();
-    } else if (document.documentElement.webkitRequestFullscreen) {
-      document.documentElement.webkitRequestFullscreen();
+
+/**
+ * Type is an enumeration where 0 is FizedSize 1 is FullWindow and 2 is FullScreen.
+ * Width and height are required with FixedSize and are ignored with the other types.
+ */
+function setWindowDisplayType(displayType)
+{
+    switch (displayType) {
+        case 0: // FizedSize
+            $("body").removeClass('fullwindow');
+            // Animate the kinetic container
+            $("#canvas div").animate({
+                width: canvasWindowWidth+'px',
+                height: canvasWindowHeight+'px'},300);
+            setFixedProportions($("#canvas"), canvasWindowWidth, canvasWindowHeight);
+            resize(); // Resizes the canvas
+        break;
+        case 1: // FullWindow
+            $("body").addClass('fullwindow');
+            setFluidProportions($("#canvas,#canvas div"));
+            $(window).resize(resize);
+            resize(); // Resizes the canvas
+        break;
+        case 2: // FullScreen
+        // FIXME
+            if (document.documentElement.requestFullscreen) {
+              document.documentElement.requestFullscreen();
+            } else if (document.documentElement.mozRequestFullScreen) {
+              document.documentElement.mozRequestFullScreen();
+            } else if (document.documentElement.webkitRequestFullscreen) {
+              document.documentElement.webkitRequestFullscreen();
+            }
+        break;
+        default:
+            printDebugMessage("Window display type not supported ("+displayType+")",0);
     }
 }
-function fullWindow(container) {
-    $("body").addClass('fullwindow');
-    setFluidProportions($("#canvas,#canvas div"));
-    $(window).resize(resize);
-    resize(); // Resizes the canvas
-}
-function fullWindowOff(container) {
-    $("body").removeClass('fullwindow');
-    // Animate the kinetic container
-    $("#canvas div").animate({
-        width: canvasConstWidth+'px',
-        height: canvasConstHeight+'px'},300);
-    setFixedProportions($("#canvas"), canvasConstWidth, canvasConstHeight);
-    resize(); // Resizes the canvas
-}
+
 function setFluidProportions(container) {
     // Animate to fluid width and height
     container.animate({
@@ -118,6 +138,7 @@ function setFluidProportions(container) {
         marginLeft: "0px"
     },{duration: 300,step:resize});
 }
+
 function setFixedProportions(container,width,height) {
     // Animate to fixed width and height
     container.animate({
@@ -129,6 +150,7 @@ function setFixedProportions(container,width,height) {
         marginLeft: "-"+width/2+"px"
     },{duration: 300,step:resize});
 }
+
 function resize(event) {
     $("#canvas canvas").attr("width",$("#canvas").outerWidth());
     $("#canvas canvas").attr("height",$("#canvas").outerHeight());
@@ -145,6 +167,78 @@ function parseShapeData(data) {
     enableEventHandlers(shape, data);
 
     return shape;
+}
+
+function parseActionData(data) {
+    if(hasProperty(data,"action") && data.action != undefined && data.action instanceof String &&
+       hasProperty(data,"data") && data.data != undefined &&) {
+
+        // Parse certain properties depending on type of action
+        var actionProperties = data.data;
+
+        switch (data.action) {
+            case "windowdisplaytype": // To chacnge the display type
+                if(hasProperty(actionProperties,"type") && actionProperties.type != undefined) {
+                    
+                    // First set the global width and height var's if action contains them
+                    if(hasProperty(actionProperties,"width") && actionProperties.width != undefined)
+                        canvasWindowWidth = actionProperties.width;
+
+                    if(hasProperty(actionProperties,"height") && actionProperties.height != undefined)
+                        canvasWindowHeight = actionProperties.height;
+
+                    setWindowDisplayType(actionProperties.type);
+                }
+                else {
+                    printDebugMessage("Window Display Type action recieved without type",2);
+                }
+
+            break;
+            case "debugger": // To enable or disable the debugger
+                if(hasProperty(actionProperties,"enabled") && actionProperties.enabled != undefined) {
+
+                    if(actionProperties.enabled)
+                        initDebug();
+                    else
+                        debugOff();
+                }
+                else {
+                    printDebugMessage("Debugger action recieved without enabled",2);
+                }
+            break;
+            case "presentfileselectdialog":
+
+                if(hasProperty(actionProperties,"multiple") && actionProperties.multiple != undefined) {
+
+                    // if(actionProperties.multiple)
+                    //     initDebug();
+                    // else
+                    //     debugOff();
+
+                    $('#fileUpload').trigger('click');
+
+                    $('#fileUpload').change(function() {
+                        printDebugMessage("Tries to upload file",0);
+                    });
+
+                }
+                else {
+                    printDebugMessage("Present File Select Dialog action recieved without multiple attribute",2);
+                }
+            
+            break;
+            case "savefile":
+
+            break;
+            case "acceptfiledragndrop":
+
+            break;
+            default:
+                printDebugMessage("Unkown action type: "+data.action,1);
+        }
+    else {
+        printDebugMessage("Error parsing action data",2);
+    }
 }
 
 /**
@@ -321,10 +415,12 @@ function sendKeyEvent(eventName, event) {
         }
     }));
 }
+
 function realX(x) {
     var canvasPos = $("#canvas").position();
     return x-canvasPos.left-parseInt($("#canvas").css("margin-left"));
 }
+
 function realY(y) {
     var canvasPos = $("#canvas").position();
     return y-canvasPos.top-parseInt($("#canvas").css("margin-top"));
@@ -581,9 +677,9 @@ function newDefaultLayer() {
 /**
  * On document ready
  */
-$(document).ready(function() {
+$(document).ready(fuWindown() {
 
-    var width = canvasConstWidth; // defined here because the container also needs these proportions 
+    var width = canvasWindowWidth; // defined here because the container also needs these proportions 
     var height = canvasConstHeight;
 
     // Init canvas
