@@ -131,14 +131,18 @@ data Action
     | Timer Int String
     -- | Turns the debug console on or off. Has a Bool, True means show, False means hide, send to javascript
     | Debug Bool
-    -- | Turns file drag'n'drop acceptance on or off. Has a Bool (True means accept, False menas don't accept)
+    -- | Turns file drag'n'drop acceptance on or off. Has a Bool (True means accept, False means don't accept)
     -- | and a Bool (True means accept multiple files, false means don't accept multiple files)
+    -- | Could result in one or multiple UploadComplete events
     -- | send to javascript
     | DragNDrop Bool Bool
-    -- | changes the window display type, is eihter FixedSize, FullWindow or FullScreen
+    -- | changes the window display type, is eihter FixedSize, FullWindow or FullScreen, send to javascript.
     | DisplayType WindowDisplayType
-    -- | TODO: Sends a file to the javascript so the user can download it. Has the filecontents as ByteString
+    -- | Sends a file to the javascript so the user can download it. Has the filecontents as String, send to javacript
     | Download String String
+    -- | Asks the user to select a file to upload, the Bool indicates if multiple files can be selected or not. 
+    -- | could result in one or multiple UploadComplete events, send to javascript
+    | RequestUpload Bool
     
 -- | The window display type. FixedSize as a Width and Height
 data WindowDisplayType = FullWindow | FullScreen | FixedSize Int Int

@@ -31,7 +31,7 @@ data JSONActionData
         denabled :: Maybe Bool,
         dmultiple :: Maybe Bool,
         dfilename :: Maybe T.Text,
-        dfilecontents :: Maybe T.Text --TODO: fix type
+        dfilecontents :: Maybe T.Text
     } deriving (Show)
     
    
@@ -52,7 +52,7 @@ actionEncode (D.DragNDrop a m)  = JSONAction{actionaction = "acceptfiledragndrop
 actionEncode (D.DisplayType w)  = JSONAction{actionaction = "windowdisplaytype"
                                             ,actiondata = wdtEncode w
                                             }
-actionEncode (D.Download fn fc)       = JSONAction{actionaction = "savefile"
+actionEncode (D.Download fn fc)       = JSONAction{actionaction = "download"
                                             ,actiondata = emptyActionData{dfilecontents = Just filecontents, dfilename = Just filename}}
                                         where
                                             -- we maken er een bytestring van, die decoden we naar b64 dan weer
@@ -60,6 +60,9 @@ actionEncode (D.Download fn fc)       = JSONAction{actionaction = "savefile"
                                             filecontents = T.pack $ B.toString $ B64.encode $ B.fromString $ fc
                                             filename = T.pack $ fn
                                             
+actionEncode (D.RequestUpload b)    = JSONAction{actionaction = "requestupload" 
+                                                ,actiondata = emptyActionData{dmultiple = Just b}
+                                                }
 
 wdtEncode :: D.WindowDisplayType -> JSONActionData
 wdtEncode (D.FixedSize w h) = emptyActionData   {dtype  = Just 0
