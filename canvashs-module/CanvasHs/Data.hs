@@ -138,7 +138,7 @@ data Action
     -- | changes the window display type, is eihter FixedSize, FullWindow or FullScreen
     | DisplayType WindowDisplayType
     -- | TODO: Sends a file to the javascript so the user can download it. Has the filecontents as ByteString
-    | Download -- ^ TODO: actually add contents
+    | Download String String
     
 -- | The window display type. FixedSize as a Width and Height
 data WindowDisplayType = FullWindow | FullScreen | FixedSize Int Int
