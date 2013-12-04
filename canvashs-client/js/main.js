@@ -206,28 +206,38 @@ function parseActionData(data) {
                     printDebugMessage("Debugger action recieved without enabled",2);
                 }
             break;
-            case "presentfileselectdialog":
+            case "requestupload":
 
                 if(hasProperty(actionProperties,"multiple") && actionProperties.multiple != undefined) {
 
-                    // if(actionProperties.multiple)
-                    //     initDebug();
-                    // else
-                    //     debugOff();
+                    if(actionProperties.multiple)
+                         $('#fileUpload').prop('multiple', true);
+                    else
+                         $('#fileUpload').removeProp('multiple');
 
                     $('#fileUpload').trigger('click');
-
                     $('#fileUpload').change(function() {
                         printDebugMessage("Tries to upload file",0);
                     });
 
                 }
                 else {
-                    printDebugMessage("Present File Select Dialog action recieved without multiple attribute",2);
+                    printDebugMessage("Request upload action recieved without multiple attribute",2);
                 }
             
             break;
-            case "savefile":
+            case "download":
+
+
+                if(hasProperty(actionProperties,"file") && actionProperties.file != undefined) {
+
+                    document.location = 'data:text/plain,' +
+                         encodeURIComponent(btoa(actionProperties.file));
+                }
+                else {
+                    printDebugMessage("Download action recieved without file data",2);
+                }
+                
 
             break;
             case "acceptfiledragndrop":
