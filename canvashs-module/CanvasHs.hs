@@ -6,7 +6,8 @@
 -}
 module CanvasHs
 (
-    installEventHandler
+    installEventHandler,
+    shape
 )  where
 
 import CanvasHs.Data
