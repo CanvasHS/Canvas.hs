@@ -104,13 +104,13 @@ function setWindowDisplayType(displayType)
                 width: canvasWindowWidth+'px',
                 height: canvasWindowHeight+'px'},300);
             setFixedProportions($("#canvas"), canvasWindowWidth, canvasWindowHeight);
-            resize(); // Resizes the canvas
+            resizeCanvas(); // Resizes the canvas
         break;
         case 1: // FullWindow
             $("body").addClass('fullwindow');
             setFluidProportions($("#canvas,#canvas div"));
-            $(window).resize(resize);
-            resize(); // Resizes the canvas
+            $(window).resize(resizeCanvas);
+            resizeCanvas(); // Resizes the canvas
         break;
         case 2: // FullScreen
         // FIXME
@@ -136,7 +136,8 @@ function setFluidProportions(container) {
         height: '100%',
         marginTop: "0px",
         marginLeft: "0px"
-    },{duration: 300,step:resize});
+    },{duration: 300,step:resizeCanvas});
+
 }
 
 function setFixedProportions(container,width,height) {
@@ -148,15 +149,16 @@ function setFixedProportions(container,width,height) {
         height: height+'px',
         marginTop: "-"+height/2+"px",
         marginLeft: "-"+width/2+"px"
-    },{duration: 300,step:resize});
+    },{duration: 300,step:resizeCanvas});
 }
 
-function resize(event) {
-    $("#canvas canvas").attr("width",$("#canvas").outerWidth());
-    $("#canvas canvas").attr("height",$("#canvas").outerHeight());
-    $("#canvas canvas").css("width",$("#canvas").outerWidth()+"px");
-    $("#canvas canvas").css("height",$("#canvas").outerHeight()+"px");
-    if(stage) {
+function resizeCanvas(event) {  
+
+    $("#wrapper").css( "min-width", $("#canvas").outerWidth()+"px" );
+    $("#wrapper").css( "min-height", $("#canvas").outerHeight()+"px" );
+
+    if(stage != undefined) {
+        stage.setSize($("#canvas").outerWidth(),$("#canvas").outerHeight());
         stage.batchDraw(); // Redraw Canvas
     }
 }
@@ -459,13 +461,14 @@ function sendWindowResizeEvent(width,height) {
 
     printDebugMessage("Window Resize (width:"+width+" height:"+height+")",0);
 
-    connection.send(JSON.stringify({
-        "event":"resizewindow",
-        "data":{
-            "width": width,
-            "height": height
-        }
-    }));
+    // Not yet implemented in haskell
+    // connection.send(JSON.stringify({
+    //     "event":"resizewindow",
+    //     "data":{
+    //         "width": width,
+    //         "height": height
+    //     }
+    // }));
 }
 
 /**
@@ -671,7 +674,6 @@ function initCanvas(container, width, height) {
     if(container.exists()) {
         setFixedProportions(container,width,height);
 
-
         stage = new Kinetic.Stage({
             container: container.attr('id'),
             width: width, // Default width and height
@@ -682,12 +684,6 @@ function initCanvas(container, width, height) {
         newDefaultLayer();
 
     }
-}
-
-function initWrapper(wrapper, width, height) {
-
-    wrapper.css( "min-width", width+"px" );
-    wrapper.css( "min-height", height+"px" );
 }
 
 /**
@@ -704,13 +700,8 @@ function newDefaultLayer() {
  */
 $(document).ready(function () {
 
-    var width = canvasWindowWidth; // defined here because the container also needs these proportions 
-    var height = canvasWindowHeight;
-
     // Init canvas
-    initCanvas($('#canvas'),width,height);
-    initWrapper($('#wrapper'),width,height);
-
+    initCanvas($('#canvas'),canvasWindowWidth,canvasWindowHeight);
     canvas = $("#canvas canvas");
 
     // Start listening for scroll events using mousewheel.js
