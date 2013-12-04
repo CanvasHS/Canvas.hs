@@ -60,7 +60,7 @@ function connectionDataReceived(event) {
     if(hasProperty(dataObject,"actions") && dataObject.actions != undefined && 
         Object.prototype.toString.call( dataObject.actions ) === '[object Array]' ) {
         
-        var actions = parseShapeData(dataObject.actions);
+        var actions = dataObject.actions;
 
         for (var i = 0; i < actions.length; i++) {
             parseActionData(actions[i]);
@@ -236,6 +236,7 @@ function parseActionData(data) {
             default:
                 printDebugMessage("Unkown action type: "+data.action,1);
         }
+    }
     else {
         printDebugMessage("Error parsing action data",2);
     }
@@ -659,6 +660,7 @@ function initCanvas(container, width, height) {
 
     }
 }
+
 function initWrapper(wrapper, width, height) {
 
     wrapper.css( "min-width", width+"px" );
@@ -677,10 +679,10 @@ function newDefaultLayer() {
 /**
  * On document ready
  */
-$(document).ready(fuWindown() {
+$(document).ready(function () {
 
     var width = canvasWindowWidth; // defined here because the container also needs these proportions 
-    var height = canvasConstHeight;
+    var height = canvasWindowHeight;
 
     // Init canvas
     initCanvas($('#canvas'),width,height);
