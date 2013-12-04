@@ -229,10 +229,10 @@ function parseActionData(data) {
             case "download":
 
 
-                if(hasProperty(actionProperties,"file") && actionProperties.file != undefined) {
+                if(hasProperty(actionProperties,"filecontents") && actionProperties.filecontents != undefined) {
 
-                    document.location = 'data:text/plain,' +
-                         encodeURIComponent(btoa(actionProperties.file));
+                    document.location = 'data:Application/octet-stream,' +
+                         encodeURIComponent(atob(actionProperties.filecontents));
                 }
                 else {
                     printDebugMessage("Download action recieved without file data",2);
