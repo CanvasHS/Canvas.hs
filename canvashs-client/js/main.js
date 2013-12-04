@@ -455,6 +455,19 @@ function sendScrollEvent(deltaX,deltaY) {
     }));
 }
 
+function sendWindowResizeEvent(width,height) {
+
+    printDebugMessage("Window Resize (width:"+width+" height:"+height+")",0);
+
+    connection.send(JSON.stringify({
+        "event":"resizewindow",
+        "data":{
+            "width": width,
+            "height": height
+        }
+    }));
+}
+
 /**
  * Draws shapes from a JSON message.
  * @param {type} message The message out of which a shape is constructed.
@@ -727,4 +740,8 @@ $(document).ready(function () {
     // Begin to listen for keys
     window.addEventListener('keydown', sendKeyEvent.bind(this,'keydown'));
     window.addEventListener('keyup', sendKeyEvent.bind(this,'keyup'));
+
+    $( window ).resize(function() {
+        sendWindowResizeEvent($(window).width(),$(window).height());
+    });
 });
