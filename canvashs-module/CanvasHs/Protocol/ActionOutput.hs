@@ -18,7 +18,7 @@ import qualified CanvasHs.Data as D
 data JSONAction
     = JSONAction {
         --keep these exactly like this, 'action' is dropped in the ToJSON instance
-        actiontype :: T.Text,
+        actionaction :: T.Text,
         actiondata :: JSONActionData
     } deriving (Show)
     
@@ -41,18 +41,18 @@ $(deriveJSON defaultOptions{omitNothingFields=True, fieldLabelModifier = drop 1}
 
 -- | Converts Action to JSONAction, this can be used with Aeson
 actionEncode :: D.Action -> JSONAction
-actionEncode (D.Debug a)        = JSONAction{actiontype = "debugger"
+actionEncode (D.Debug a)        = JSONAction{actionaction = "debugger"
                                             ,actiondata = emptyActionData{denabled = Just a}
                                             }
-actionEncode (D.DragNDrop a m)  = JSONAction{actiontype = "acceptfiledragndrop"
+actionEncode (D.DragNDrop a m)  = JSONAction{actionaction = "acceptfiledragndrop"
                                             ,actiondata = emptyActionData{denabled = Just a
                                                                          ,dmultiple = Just m
                                                                          }
                                             }
-actionEncode (D.DisplayType w)  = JSONAction{actiontype = "windowdisplaytype"
+actionEncode (D.DisplayType w)  = JSONAction{actionaction = "windowdisplaytype"
                                             ,actiondata = wdtEncode w
                                             }
-actionEncode (D.Download fn fc)       = JSONAction{actiontype = "savefile"
+actionEncode (D.Download fn fc)       = JSONAction{actionaction = "savefile"
                                             ,actiondata = emptyActionData{dfilecontents = Just filecontents, dfilename = Just filename}}
                                         where
                                             -- we maken er een bytestring van, die decoden we naar b64 dan weer
