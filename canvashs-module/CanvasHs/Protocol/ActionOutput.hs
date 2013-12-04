@@ -53,13 +53,13 @@ actionEncode (D.DisplayType w)  = JSONAction{actiontype = "windowdisplaytype"
                                             ,actiondata = wdtEncode w
                                             }
 actionEncode (D.Download fn fc)       = JSONAction{actiontype = "savefile"
-                                            ,actiondata = emptyActionData{dfilecontents = Just filecontents, dfilename = filename} -- ^ TODO: Actually add contents (see Data.hs)
-        where
-            -- we maken er een bytestring van, die decoden we naar b64 dan weer
-            -- naar string dan weer naar text, capiche?
-            filecontents = T.pack $ B.toString $ B64.encode $ B.fromString $ fc
-            filename = T.pack $ fn
-                                            }
+                                            ,actiondata = emptyActionData{dfilecontents = Just filecontents, dfilename = Just filename}}
+                                        where
+                                            -- we maken er een bytestring van, die decoden we naar b64 dan weer
+                                            -- naar string dan weer naar text, capiche?
+                                            filecontents = T.pack $ B.toString $ B64.encode $ B.fromString $ fc
+                                            filename = T.pack $ fn
+                                            
 
 wdtEncode :: D.WindowDisplayType -> JSONActionData
 wdtEncode (D.FixedSize w h) = emptyActionData   {dtype  = Just 0
