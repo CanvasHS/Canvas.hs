@@ -148,15 +148,15 @@ data Action
 data WindowDisplayType = FullWindow | FullScreen | FixedSize Int Int
     
     
--- | RemoteOutput is output consisting of a shape to draw and a list of actions, an empty list implies no action
+-- | RegularOutput is output consisting of a shape to draw and a list of actions, an empty list implies no actions
 -- | have to be taken
-type RemoteOutput = (Maybe Shape, [Action])
+type RegularOutput = (Maybe Shape, [Action])
 
 -- | Output is the return type of the handler. It is either a BlockingAction or RemoteOutput
 -- | It can't have both a BlockingAction and a Shape to draw, because the BlockingAction will 
 -- | trigger handler, which could then return also return a Shape, we then would not know
 -- | which Shape to draw.
-data Output = Block BlockingAction | R RemoteOutput
+data Output = Block BlockingAction | Out RegularOutput
     
 -- | Keymodifiers that can be enabled in a keyboard event
 data Modifier 

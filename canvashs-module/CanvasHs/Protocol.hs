@@ -38,7 +38,7 @@ $(deriveJSON defaultOptions{omitNothingFields=True} ''JSONOutput)
     encode maakt van een Output een JSON-string (type Data.Text) die voldoet aan het protocol
     @ensure \result is een valide JSON-object
 -}
-encode :: RemoteOutput -> T.Text
+encode :: RegularOutput -> T.Text
 encode o = T.pack $ BU.toString $ Aeson.encode (JSONOutput {shape=(shapeEncode <$> fst o), actions=(map actionEncode $ snd o)})
 
 -- | Ontsleuteld een inkomend bericht naar een event
