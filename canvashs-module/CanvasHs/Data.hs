@@ -129,7 +129,7 @@ data Shape
     -}
     | Event EventData Shape
     -- | Overrides normal rotationpoint or scalepoint with one specified
-    | Offset Int Int Shape
+    | Offset Point Shape
     -- | A container. Has width and height and a list of shapes in this container.
     | Container Int Int [Shape]
 
