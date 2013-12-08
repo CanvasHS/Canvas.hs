@@ -149,7 +149,7 @@ shapeEncode (D.Event e s)           = js {shapeeventData = Just (shapeEncodeEven
                                 where
                                     js = shapeEncode s
 
-shapeEncode (D.Offset x y s)        = js {shapedata = sd {offset = Just [x,y]}}
+shapeEncode (D.Offset (x,y) s)      = js {shapedata = sd {offset = Just [x,y]}}
                                 where
                                     js = shapeEncode s
                                     sd = shapedata js
