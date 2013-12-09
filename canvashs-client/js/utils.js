@@ -13,6 +13,7 @@ $.fn.exists = function () {
 }
 
 // Adds string format
+// http://stackoverflow.com/questions/610406/javascript-equivalent-to-printf-string-format
 String.prototype.format = function() {
     var s = this,
         i = arguments.length;
@@ -22,6 +23,7 @@ String.prototype.format = function() {
     }
     return s;
 };
+
 // Avoid `console` errors in browsers that lack a console.
 (function() {
     var method;
