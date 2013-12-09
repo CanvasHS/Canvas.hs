@@ -96,7 +96,7 @@ function connectionClosed(error) {
 function setWindowDisplayType(displayType)
 {
     switch (displayType) {
-        case 0: // FizedSize
+        case 0: // FixedSize
 
             window.fullScreenApi.cancelFullScreen(document.getElementById('wrapper'));
 
@@ -116,6 +116,8 @@ function setWindowDisplayType(displayType)
 
             $("body").addClass('fullwindow');
             $("body").removeClass('fullscreen');
+            $("#control-wrapper").removeClass('display');
+            $("#control-window").removeClass('display');
 
             setFluidProportions($("#canvas,#canvas div"));
             $(window).resize(resizeCanvas);
@@ -127,6 +129,8 @@ function setWindowDisplayType(displayType)
 
             $("body").addClass('fullscreen');
             $("body").removeClass('fullwindow');
+            $("#control-wrapper").removeClass('display');
+            $("#control-window").removeClass('display');
 
             setFluidProportions($("#canvas,#canvas div"));
             $(window).resize(resizeCanvas);
@@ -136,6 +140,14 @@ function setWindowDisplayType(displayType)
         default:
             printDebugMessage("Window display type not supported ("+displayType+")",0);
     }
+}
+
+function requestFullscreen() {
+    $("#control-wrapper").addClass('display');
+    $("#control-window").addClass('display');
+    $("#control-window").html("<div class=\"control-content\"><p><strong>Switch to fullscreen?</strong><br /><a href=\"#\" id=\"switchToFullscreen\">Yes</a> - <a href=\"#\" id=\"switchToFullwindow\">No</a></div>");    
+    $("#switchToFullscreen").click(setWindowDisplayType.bind(undefined, 2));
+    $("#switchToFullwindow").click(setWindowDisplayType.bind(undefined, 1));
 }
 
 function setFluidProportions(container) {
@@ -165,8 +177,8 @@ function setFixedProportions(container,width,height) {
 
 function resizeCanvas(event) {  
 
-    $("#wrapper").css( "min-width", $("#canvas").outerWidth()+"px" );
-    $("#wrapper").css( "min-height", $("#canvas").outerHeight()+"px" );
+    $("#canvas canvas").css( "width", $("#canvas").outerWidth()+"px" );
+    $("#canvas canvas").css( "height", $("#canvas").outerHeight()+"px" );
 
     if(stage != undefined) {
         stage.setSize($("#canvas").outerWidth(),$("#canvas").outerHeight());
@@ -752,3 +764,4 @@ $(document).ready(function () {
     });
 
 });
+
