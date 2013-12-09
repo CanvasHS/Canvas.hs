@@ -38,6 +38,13 @@ Library
                   CanvasHs.Protocol.Input
                   CanvasHs.Protocol.Output
 
+Test-Suite setup-tests
+  type:            exitcode-stdio-1.0
+  main-is:         tests/SetupTests.hs
+  build-depends:   
+                   base >= 4 && < 5,
+                   process >= 1.1
+
 
 Test-Suite javascript-tests
   type:            exitcode-stdio-1.0
@@ -59,13 +66,6 @@ Test-Suite module-test
                    hspec >= 1.7,
                    QuickCheck >= 2.4
 
-
-Test-Suite setup-tests
-  type:       	   exitcode-stdio-1.0
-  main-is:         tests/SetupTests.hs
-  build-depends:   
-                   base >= 4 && < 5,
-                   process >= 1.1
 
 source-repository head
   type:     git
