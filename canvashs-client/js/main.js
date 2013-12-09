@@ -84,9 +84,28 @@ function connectionError(error) {
 function connectionClosed(error) {
     printDebugMessage("Connection closed " + error,0);
 
+    openControlWindow("Connection lost");
+}
+/**
+ * Opens a control element with a title and a message
+ * @param {type} title The title of the message (required)
+ * @param {type} message The contents of the message (optional)
+ * @returns {undefined}
+ */
+function openControlWindow(title, message) {
+    // Opens the control interface element
+    message = message == undefined ? "" : message;
     $("#control-wrapper").addClass('display');
     $("#control-window").addClass('display');
-    $("#control-window").html("<div class=\"control-content\"><p><strong>Connection lost</strong><br /><!--Retrying in 3... <a>reconnect</a>--></p></div>");
+    $("#control-window").html("<div class=\"control-content\"><p><strong>"+title+"</strong><br />"+message+"</p></div>");   
+}
+/**
+ * Closes the control element
+ */
+function closeControlWindow() {
+    // Closes the control interface element
+    $("#control-wrapper").removeClass('display');
+    $("#control-window").removeClass('display');
 }
 
 /**
@@ -118,8 +137,8 @@ function setWindowDisplayType(displayType, attempt)
 
             $("body").addClass('fullwindow');
             $("body").removeClass('fullscreen');
-            $("#control-wrapper").removeClass('display');
-            $("#control-window").removeClass('display');
+
+            closeControlWindow();
 
             setFluidProportions($("#canvas,#canvas div"));
             $(window).resize(resizeCanvas);
@@ -130,8 +149,8 @@ function setWindowDisplayType(displayType, attempt)
             window.fullScreenApi.requestFullScreen(document.getElementById('wrapper'));
             $("body").addClass('fullscreen');
             $("body").removeClass('fullwindow');
-            $("#control-wrapper").removeClass('display');
-            $("#control-window").removeClass('display');
+            
+            closeControlWindow();
 
             setFluidProportions($("#canvas,#canvas div"));
             $(window).resize(resizeCanvas);
@@ -140,13 +159,8 @@ function setWindowDisplayType(displayType, attempt)
             if(window.fullScreenApi.isFullScreen() == false) {
                 if(attempt > 2) {
                     // Show a message if it was not possible to switch to full screen
-                    $("#control-wrapper").addClass('display');
-                    $("#control-window").addClass('display');
-                    $("#control-window").html("<div class=\"control-content\"><p><strong>Failed to switch to fullscreen</strong><br /></div>"); 
-                    setTimeout(function() {
-            $("#control-wrapper").removeClass('display');
-            $("#control-window").removeClass('display');
-}, 2400);   
+                    openControlWindow("Failed to switch to fullscreen"); 
+                    setTimeout(closeControlWindow, 2400);   
                 }
                 else {
                     setTimeout(requestFullscreen.bind(undefined, attempt+1), 100*attempt);
@@ -160,9 +174,7 @@ function setWindowDisplayType(displayType, attempt)
 
 function requestFullscreen(attempt) {
     if(window.fullScreenApi.isFullScreen() == false) {
-        $("#control-wrapper").addClass('display');
-        $("#control-window").addClass('display');
-        $("#control-window").html("<div class=\"control-content\"><p><strong>Switch to fullscreen?</strong><br /><a href=\"#\" id=\"switchToFullscreen\">Yes</a> - <a href=\"#\" id=\"switchToFullwindow\">No</a></div>");    
+        openControlWindow("Switch to fullscreen?","<a href=\"#\" id=\"switchToFullscreen\">Yes</a> - <a href=\"#\" id=\"switchToFullwindow\">No</a>");    
         $("#switchToFullscreen").off('click');
         $("#switchToFullwindow").off('click');
         $("#switchToFullscreen").click(setWindowDisplayType.bind(undefined, 2, attempt));
@@ -205,6 +217,7 @@ function resizeCanvas(event) {
         stage.batchDraw(); // Redraw Canvas
     }
 }
+
 
 function parseShapeData(data) {
 
