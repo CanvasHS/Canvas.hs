@@ -70,7 +70,7 @@ installEventHandler handl startState = do
     
 -- | convenience function to output just a shape
 shape :: Shape -> Output
-shape s = Out (Just s, [])
+shape s = Out (Just s, [Debug True])
     
 -- | handles input from the canvas
 handleWSInput :: IORef (State a) -> T.Text -> IO (Maybe T.Text)

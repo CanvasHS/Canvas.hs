@@ -8,6 +8,8 @@ import Buttons
 import Data.List
 import Data.Char
 
+import Debug.Trace
+
 data State = State {
     xDiff :: Int,
     yDiff :: Int,
@@ -21,15 +23,15 @@ emptyState = State 0 0 0.4 False ""
 main = installEventHandler handl emptyState
 
 -- we gebruiken een simpele Int als store (maar het zou ook een record oid kunnen zijn)
-handl :: State -> Event -> (State, Shape)
+handl :: State -> Event -> (State, Output)
 
-handl st StartEvent = (st, drawAll st)
+handl st StartEvent = (st, shape $ drawAll st)
 
-handl st (MouseClick (x,y) "search") = (newState, drawAll newState)
+handl st (MouseClick (x,y) "search") = trace "search" $ (newState, shape $ drawAll newState)
     where
         newState = st{searchHasFocus=True}
 
-handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseClick (x,y) ev) = (newState, drawAll newState)
+handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseClick (x,y) ev) = trace "ev" $ (newState, shape $ drawAll newState)
     where
         (x, y) = translateFromEvent ev
         (xNew, yNew) = (x + xDiff, y + yDiff)
@@ -37,7 +39,7 @@ handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseClick (x,y) ev) = (new
         newState = st{xDiff=xNew, yDiff=yNew, zoom=newZoom, searchHasFocus=False}
 
 
-handl st@State{xDiff=xDiff, yDiff=yDiff} (MouseDrag (x1, y1) "rootcontainer" (x2, y2) _) = (newState, drawAll newState)
+handl st@State{xDiff=xDiff, yDiff=yDiff} (MouseDrag (x1, y1) "rootcontainer" (x2, y2) _) = (newState, shape $ drawAll newState)
     where
         (xNew, yNew) = (xDiff + x2 - x1, yDiff + y2 - y1)
         newState = st{xDiff=xNew, yDiff=yNew}
@@ -61,7 +63,7 @@ handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom,searchText = s} (MouseOut (x,
             Text (500, 100) "Ik doe shit en ben daar mega gelukkig over" defaults{font="Cantarell", size=20}
         ])
 -}
-handl st@State{searchHasFocus = focus, searchText = s} (KeyDown a b) = (newState, drawAll newState)
+handl st@State{searchHasFocus = focus, searchText = s} (KeyDown a b) = (newState, shape $ drawAll newState)
     where
         newS = case a of
                    "backspace" -> if focus && (length s > 0) then (init s) else s
@@ -76,7 +78,7 @@ handl st@State{searchHasFocus = focus, searchText = s} (KeyDown a b) = (newState
                    _           -> if focus then (s ++ a) else s
         newState = st{searchText=newS}
 
-handl st _ = (st, drawAll st)
+handl st _ = (st, shape $ drawAll st)
 
 drawAll :: State -> Shape
 drawAll st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom, searchText=searchText, searchHasFocus=searchHasFocus} =
@@ -90,7 +92,7 @@ drawAll st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom, searchText=searchText, sea
 drawBackground :: Shape
 drawBackground = Fill (135,206,235,1.0) $ Rect (0,0) 900 600
 
-drawMap :: (Int, Int) -> Float -> String -> Shape
+drawMap :: (Int, Int) -> Float -> String -> Shape   
 drawMap (xDiff, yDiff) zoom searchText = Translate (450 + xDiff) (300 + yDiff) $ Scale zoom zoom $ Offset 600 768 $ Event defaults{eventId="rootcontainer", mouseDrag=True} $ Container 1200 1536 (nederland ++ steden ++ (if (length searchText > 0) then (drawCityPopup searchText) else []))
 
 drawControls :: Float -> Bool -> String -> Shape
