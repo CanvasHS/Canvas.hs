@@ -114,7 +114,6 @@ function closeControlWindow() {
  */
 function setWindowDisplayType(displayType, attempt)
 {
-    console.log(attempt);
     attempt = attempt != undefined ? attempt : 1;
     switch (displayType) {
         case 0: // FixedSize
