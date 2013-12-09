@@ -19,7 +19,7 @@ ignoreFiles = ["..","."]
 
 -- Serve static files
 httpget :: [([String], BS.ByteString)] -> WAI.Application
-httpget files req = return $ do WAI.ResponseBuilder status200 [("Content-Type", encoding)] $ BL.copyByteString page
+httpget files req = return $ do WAI.responseBuilder status200 [("Content-Type", encoding)] $ BL.copyByteString page
                     where
                         (encoding, page) | (WAI.pathInfo req) == [] = ("text/html", snd $ files !! 0)
                                          | file == Nothing = ("text/html", "Error 404")
