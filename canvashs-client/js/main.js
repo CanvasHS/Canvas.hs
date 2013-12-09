@@ -99,11 +99,11 @@ function setWindowDisplayType(displayType)
     switch (displayType) {
         case 0: // FizedSize
 
-            $(document).fullScreen(false);
+            window.fullScreenApi.cancelFullScreen(document.getElementById('wrapper'));
 
             $("body").removeClass('fullscreen');
             $("body").removeClass('fullwindow');
-            
+
             // Animate the kinetic container
             $("#canvas div").animate({
                 width: canvasWindowWidth+'px',
@@ -113,7 +113,7 @@ function setWindowDisplayType(displayType)
         break;
         case 1: // FullWindow
 
-            $(document).fullScreen(false);
+            window.fullScreenApi.cancelFullScreen(document.getElementById('wrapper'));
 
             $("body").addClass('fullwindow');
             $("body").removeClass('fullscreen');
@@ -124,7 +124,7 @@ function setWindowDisplayType(displayType)
         break;
         case 2: // FullScreen
 
-            $(document).fullScreen(true);
+            window.fullScreenApi.requestFullScreen(document.getElementById('wrapper'));
 
             $("body").addClass('fullscreen');
             $("body").removeClass('fullwindow');
@@ -748,7 +748,4 @@ $(document).ready(function () {
         sendWindowResizeEvent($(window).width(),$(window).height());
     });
 
-    $(document).bind("fullscreenerror", function(e) {
-       console.log("Full screen error. "+e);
-    });
 });

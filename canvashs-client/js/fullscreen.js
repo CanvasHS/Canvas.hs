@@ -1,173 +1,73 @@
-/**
- * @preserve jquery.fullscreen 1.1.4
- * https://github.com/kayahr/jquery-fullscreen-plugin
- * Copyright (C) 2012 Klaus Reimer <k@ailis.de>
- * Licensed under the MIT license
- * (See http://www.opensource.org/licenses/mit-license)
- */
- 
+/* 
+Native FullScreen JavaScript API
+-------------
+Assumes Mozilla naming conventions instead of W3C for now
+*/
+
 (function() {
-
-/**
- * Sets or gets the fullscreen state.
- * 
- * @param {boolean=} state
- *            True to enable fullscreen mode, false to disable it. If not
- *            specified then the current fullscreen state is returned.
- * @return {boolean|Element|jQuery|null}
- *            When querying the fullscreen state then the current fullscreen
- *            element (or true if browser doesn't support it) is returned
- *            when browser is currently in full screen mode. False is returned
- *            if browser is not in full screen mode. Null is returned if 
- *            browser doesn't support fullscreen mode at all. When setting 
- *            the fullscreen state then the current jQuery selection is 
- *            returned for chaining.
- * @this {jQuery}
- */
-function fullScreen(state)
-{
-    var e, func, doc;
+    var 
+        fullScreenApi = { 
+            supportsFullScreen: false,
+            isFullScreen: function() { return false; }, 
+            requestFullScreen: function() {}, 
+            cancelFullScreen: function() {},
+            fullScreenEventName: '',
+            prefix: ''
+        },
+        browserPrefixes = 'webkit moz o ms khtml'.split(' ');
     
-    // Do nothing when nothing was selected
-    if (!this.length) return this;
-    
-    // We only use the first selected element because it doesn't make sense
-    // to fullscreen multiple elements.
-    e = (/** @type {Element} */ this[0]);
-    
-    // Find the real element and the document (Depends on whether the
-    // document itself or a HTML element was selected)
-    if (e.ownerDocument)
-    {
-        doc = e.ownerDocument;
-    }
-    else
-    {
-        doc = e;
-        e = doc.documentElement;
-    }
-    
-    // When no state was specified then return the current state.
-    if (state == null)
-    {
-        // When fullscreen mode is not supported then return null
-        if (!((/** @type {?Function} */ doc["cancelFullScreen"])
-            || (/** @type {?Function} */ doc["webkitCancelFullScreen"])
-            || (/** @type {?Function} */ doc["mozCancelFullScreen"])))
-        {
-            return null;
+    // check for native support
+    if (typeof document.cancelFullScreen != 'undefined') {
+        fullScreenApi.supportsFullScreen = true;
+    } else {     
+        // check for fullscreen support by vendor prefix
+        for (var i = 0, il = browserPrefixes.length; i < il; i++ ) {
+            fullScreenApi.prefix = browserPrefixes[i];
+            
+            if (typeof document[fullScreenApi.prefix + 'CancelFullScreen' ] != 'undefined' ) {
+                fullScreenApi.supportsFullScreen = true;
+                
+                break;
+            }
         }
-        
-        // Check fullscreen state
-        state = !!doc["fullScreen"]
-            || !!doc["webkitIsFullScreen"]
-            || !!doc["mozFullScreen"];
-        if (!state) return state;
-        
-        // Return current fullscreen element or "true" if browser doesn't
-        // support this
-        return (/** @type {?Element} */ doc["fullScreenElement"])
-            || (/** @type {?Element} */ doc["webkitCurrentFullScreenElement"])
-            || (/** @type {?Element} */ doc["mozFullScreenElement"])
-            || state;
     }
     
-    // When state was specified then enter or exit fullscreen mode.
-    if (state)
-    {
-        // Enter fullscreen
-        func = (/** @type {?Function} */ e["requestFullScreen"])
-            || (/** @type {?Function} */ e["webkitRequestFullScreen"])
-            || (/** @type {?Function} */ e["mozRequestFullScreen"]);
-        if (func) 
-        {
-            if (Element["ALLOW_KEYBOARD_INPUT"])
-                func.call(e, Element["ALLOW_KEYBOARD_INPUT"]);
-            else
-                func.call(e);
+    // update methods to do something useful
+    if (fullScreenApi.supportsFullScreen) {
+        fullScreenApi.fullScreenEventName = fullScreenApi.prefix + 'fullscreenchange';
+        
+        fullScreenApi.isFullScreen = function() {
+            switch (this.prefix) {  
+                case '':
+                    return document.fullScreen;
+                case 'webkit':
+                    return document.webkitIsFullScreen;
+                default:
+                    return document[this.prefix + 'FullScreen'];
+            }
         }
-        return this;
+        fullScreenApi.requestFullScreen = function(el) {
+            return (this.prefix === '') ? el.requestFullScreen() : el[this.prefix + 'RequestFullScreen']();
+        }
+        fullScreenApi.cancelFullScreen = function(el) {
+            return (this.prefix === '') ? document.cancelFullScreen() : document[this.prefix + 'CancelFullScreen']();
+        }       
     }
-    else
-    {
-        // Exit fullscreen
-        func = (/** @type {?Function} */ doc["cancelFullScreen"])
-            || (/** @type {?Function} */ doc["webkitCancelFullScreen"])
-            || (/** @type {?Function} */ doc["mozCancelFullScreen"]);
-        if (func) func.call(doc);
-        return this;
-    }
-}
 
-/**
- * Toggles the fullscreen mode.
- * 
- * @return {!jQuery}
- *            The jQuery selection for chaining.
- * @this {jQuery}
- */
-function toggleFullScreen()
-{
-    return (/** @type {!jQuery} */ fullScreen.call(this, 
-        !fullScreen.call(this)));
-}
-
-/**
- * Handles the browser-specific fullscreenchange event and triggers
- * a jquery event for it.
- *
- * @param {?Event} event
- *            The fullscreenchange event.
- */
-function fullScreenChangeHandler(event)
-{
-    jQuery(document).trigger(new jQuery.Event("fullscreenchange"));
-}
-
-/**
- * Handles the browser-specific fullscreenerror event and triggers
- * a jquery event for it.
- *
- * @param {?Event} event
- *            The fullscreenerror event.
- */
-function fullScreenErrorHandler(event)
-{
-    jQuery(document).trigger(new jQuery.Event("fullscreenerror"));
-}
-
-/**
- * Installs the fullscreenchange event handler.
- */
-function installFullScreenHandlers()
-{
-    var e, change, error;
+    // jQuery plugin
+    if (typeof jQuery != 'undefined') {
+        jQuery.fn.requestFullScreen = function() {
     
-    // Determine event name
-    e = document;
-    if (e["webkitCancelFullScreen"])
-    {
-        change = "webkitfullscreenchange";
-        error = "webkitfullscreenerror";
-    }
-    else if (e["mozCancelFullScreen"])
-    {
-        change = "mozfullscreenchange";
-        error = "mozfullscreenerror";
-    }
-    else 
-    {
-        change = "fullscreenchange";
-        error = "fullscreenerror";
+            return this.each(function() {
+                var el = jQuery(this);
+                if (fullScreenApi.supportsFullScreen) {
+                    fullScreenApi.requestFullScreen(el);
+                }
+            });
+        };
     }
 
-    // Install the event handlers
-    jQuery(document).bind(change, fullScreenChangeHandler);
-    jQuery(document).bind(error, fullScreenErrorHandler);
-}
-
-jQuery.fn["fullScreen"] = fullScreen;
-jQuery.fn["toggleFullScreen"] = toggleFullScreen;
-installFullScreenHandlers();
-
+    // export api
+    window.fullScreenApi = fullScreenApi;   
 })();
+
