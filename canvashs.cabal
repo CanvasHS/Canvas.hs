@@ -13,7 +13,7 @@ data-files:          canvashs-client/*.html,
 Library
   build-depends: 	base >= 4,
                   QuickCheck >= 2.4,
-                  websockets == 0.7.4.1,
+                  websockets == 0.8.0.0,
                   warp,
                   blaze-html,
                   utf8-string,
@@ -27,7 +27,12 @@ Library
                   aeson >= 0.6,
                   bytestring >= 0.10.0.2,
                   split,
-                  ghc-prim >= 0.2.0.0
+                  ghc-prim >= 0.2.0.0,
+                  base64-bytestring,
+                  timers >= 0.2.0.1,
+                  suspend >= 0.1.0.2,
+                  filepath
+
   Exposed-modules:	CanvasHs, CanvasHs.Data
   hs-source-dirs:	canvashs-module
   other-modules:  Paths_canvashs,
@@ -36,7 +41,8 @@ Library
                   CanvasHs.Server.Static,
                   CanvasHs.Protocol
                   CanvasHs.Protocol.Input
-                  CanvasHs.Protocol.Output
+                  CanvasHs.Protocol.ShapeOutput
+                  CanvasHs.Protocol.ActionOutput
 
 
 Test-Suite javascript-tests

@@ -1,10 +1,29 @@
+-- Canvas.Hs, control javascript canvas with Haskell
+-- Copyright (C) 2013, Lennart Buit, Joost van Doorn, Pim Jager, Martijn Roo,
+-- Thijs Scheepers
+--
+-- This library is free software; you can redistribute it and/or
+-- modify it under the terms of the GNU Lesser General Public
+-- License as published by the Free Software Foundation; either
+-- version 2.1 of the License, or (at your option) any later version.
+-- 
+-- This library is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-- Lesser General Public License for more details.
+-- 
+-- You should have received a copy of the GNU Lesser General Public
+-- License along with this library; if not, write to the Free Software
+-- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+-- USA
+
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module CanvasHs.Protocol.Output
-(   iEncode
-,   ToJSON(..)
-) 	where
+module CanvasHs.Protocol.ShapeOutput
+(   shapeEncode
+,   JSONShape
+)   where
 
 import GHC.Generics
 import Data.Aeson (ToJSON, toJSON, object, (.=))
@@ -70,79 +89,79 @@ $(deriveJSON defaultOptions{omitNothingFields=True, fieldLabelModifier = drop 3}
 --    Let op, de primitieven (alles wat in CanvasHs.Data.Shape geen Shape als veld heeft)
 --    Maken de daadwerkelijke JSONShape, alle andere Shapes passen deze hierdoor gebouwde
 --     JSONShape's aan.
-iEncode :: D.Shape -> JSONShape
-iEncode (D.Rect p w h)          = JSONShape {shapetype = "rect" 
-                                            ,shapedata = (iEncodePoint p) {width = Just w, height = Just h}
+shapeEncode :: D.Shape -> JSONShape
+shapeEncode (D.Rect p w h)          = JSONShape {shapetype = "rect" 
+                                            ,shapedata = (shapeEncodePoint p) {width = Just w, height = Just h}
                                             ,shapeeventData = Nothing
                                             ,shapechildren = Nothing
                                             }
-iEncode (D.Circle p r)          = JSONShape {shapetype = "circle"
-                                            ,shapedata = (iEncodePoint p) {radius = Just r}
+shapeEncode (D.Circle p r)          = JSONShape {shapetype = "circle"
+                                            ,shapedata = (shapeEncodePoint p) {radius = Just r}
                                             ,shapeeventData = Nothing
                                             ,shapechildren = Nothing
                                             }
--- iEncode (Arc p r sa ea)    TODO: arc opnemen in het protocol!
-iEncode (D.Line ps)             = JSONShape {shapetype = "line"
-                                            ,shapedata = iEncodePoints ps
+-- shapeEncode (Arc p r sa ea)    TODO: arc opnemen in het protocol!
+shapeEncode (D.Line ps)             = JSONShape {shapetype = "line"
+                                            ,shapedata = shapeEncodePoints ps
                                             ,shapeeventData = Nothing
                                             ,shapechildren = Nothing
                                             }
-iEncode (D.Polygon ps)          = JSONShape {shapetype = "polygon"
-                                            ,shapedata = iEncodePoints ps
+shapeEncode (D.Polygon ps)          = JSONShape {shapetype = "polygon"
+                                            ,shapedata = shapeEncodePoints ps
                                             ,shapeeventData = Nothing
                                             ,shapechildren = Nothing
                                             }
-iEncode (D.Text p s td)         = JSONShape { shapetype = "text"
-                                            ,shapedata = iEncodeTextData p s td
+shapeEncode (D.Text p s td)         = JSONShape { shapetype = "text"
+                                            ,shapedata = shapeEncodeTextData p s td
                                             ,shapeeventData = Nothing
                                             ,shapechildren = Nothing
                                             }
 
-iEncode (D.Fill (r,g,b,a) s)    = updateSD $ recurFill $ iEncode s
+shapeEncode (D.Fill (r,g,b,a) s)    = updateSD $ recurFill $ shapeEncode s
                                 where
                                     recurFill :: JSONShape -> JSONShape
                                     recurFill js = js{shapechildren = (map updateSD) <$> shapechildren js}
                                     updateSD :: JSONShape -> JSONShape --could be in lambda but that decreases readability
                                     updateSD js = recurFill $ js{shapedata = (shapedata js){fill = Just JSONRGBAColor{colr=r, colg=g, colb=b, cola=a}}}  
 
-iEncode (D.Stroke (r,g,b,a) w s)= updateSD $ recurStroke $ iEncode s
+shapeEncode (D.Stroke (r,g,b,a) w s)= updateSD $ recurStroke $ shapeEncode s
                                 where
                                     recurStroke :: JSONShape -> JSONShape
                                     recurStroke js = js{shapechildren = (map updateSD) <$> shapechildren js}
                                     updateSD :: JSONShape -> JSONShape --could be in lambda but that decreases readability
                                     updateSD js = recurStroke $ js{shapedata = (shapedata js){stroke = Just JSONRGBAColor{colr=r, colg=g, colb=b, cola=a}, strokeWidth = Just w}}                                    
 
-iEncode (D.Rotate deg s)        = js {shapedata = sd {rotationDeg = Just deg}}
+shapeEncode (D.Rotate deg s)        = js {shapedata = sd {rotationDeg = Just deg}}
                                 where 
-                                    js = iEncode s
+                                    js = shapeEncode s
                                     sd = shapedata js
-iEncode (D.Translate dx dy s)   = js {shapedata = sd {x = (+dx) <$> (x sd), y = (+dy) <$> (y sd)}}
+shapeEncode (D.Translate dx dy s)   = js {shapedata = sd {x = (+dx) <$> (x sd), y = (+dy) <$> (y sd)}}
                                 where
-                                    js = iEncode s
+                                    js = shapeEncode s
                                     sd = shapedata js
 
-iEncode (D.Scale dx dy s)       = js {shapedata = sd {scaleX = Just dx, scaleY = Just dy}}
+shapeEncode (D.Scale dx dy s)       = js {shapedata = sd {scaleX = Just dx, scaleY = Just dy}}
                                 where 
-                                    js = iEncode s
+                                    js = shapeEncode s
                                     sd = shapedata js
 
-iEncode (D.Event e s)           = js {shapeeventData = Just (iEncodeEventData (shapeeventData js) e)}
+shapeEncode (D.Event e s)           = js {shapeeventData = Just (shapeEncodeEventData (shapeeventData js) e)}
                                 where
-                                    js = iEncode s
+                                    js = shapeEncode s
 
-iEncode (D.Offset x y s)        = js {shapedata = sd {offset = Just [x,y]}}
+shapeEncode (D.Offset x y s)        = js {shapedata = sd {offset = Just [x,y]}}
                                 where
-                                    js = iEncode s
+                                    js = shapeEncode s
                                     sd = shapedata js
 
-iEncode (D.Container w h ss)    = JSONShape {shapetype = "container"
-                                            ,shapedata = (iEncodePoint (0,0)) {width = Just w, height = Just h}
+shapeEncode (D.Container w h ss)    = JSONShape {shapetype = "container"
+                                            ,shapedata = (shapeEncodePoint (0,0)) {width = Just w, height = Just h}
                                             ,shapeeventData = Nothing
-                                            ,shapechildren = Just $ map iEncode ss
+                                            ,shapechildren = Just $ map shapeEncode ss
                                             }
 
-iEncodePoint :: D.Point -> JSONShapeData
-iEncodePoint (x',y')    
+shapeEncodePoint :: D.Point -> JSONShapeData
+shapeEncodePoint (x',y')    
     = JSONShapeData { 
         stroke         = Nothing,
         strokeWidth    = Nothing, 
@@ -163,8 +182,8 @@ iEncodePoint (x',y')
         radius         = Nothing 
     }
     
-iEncodePoints :: [D.Point] -> JSONShapeData
-iEncodePoints ps
+shapeEncodePoints :: [D.Point] -> JSONShapeData
+shapeEncodePoints ps
     = JSONShapeData { 
         stroke         = Nothing,
         strokeWidth    = Nothing, 
@@ -190,10 +209,10 @@ iEncodePoints ps
             eps a []              = a
             eps a ((x',y'):ps)    = eps (x':y':a) ps
 
-iEncodeTextData :: D.Point -> String -> D.TextData -> JSONShapeData
-iEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.italic = i, D.alignment = a, D.underline = u}) = result
+shapeEncodeTextData :: D.Point -> String -> D.TextData -> JSONShapeData
+shapeEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.italic = i, D.alignment = a, D.underline = u}) = result
         where
-            pointData = iEncodePoint ps
+            pointData = shapeEncodePoint ps
             al = case a of 
                         D.Start -> Just "left"
                         D.Center -> Just "center"
@@ -204,9 +223,9 @@ iEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.italic = i, D.alignm
 
 
 
-iEncodeEventData :: Maybe JSONEventData -> D.EventData -> JSONEventData
-iEncodeEventData Nothing e     = iEncodeEventData (Just (JSONEventData{eventId = Nothing, listen = Just []})) e
-iEncodeEventData (Just j) e = j {eventId = Just $ T.pack $ D.eventId e
+shapeEncodeEventData :: Maybe JSONEventData -> D.EventData -> JSONEventData
+shapeEncodeEventData Nothing e     = shapeEncodeEventData (Just (JSONEventData{eventId = Nothing, listen = Just []})) e
+shapeEncodeEventData (Just j) e = j {eventId = Just $ T.pack $ D.eventId e
                                 ,listen = (++ mklisten e) <$> listen j
                                 }
                                 where

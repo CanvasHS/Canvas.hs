@@ -1,3 +1,22 @@
+-- Canvas.Hs, control javascript canvas with Haskell
+-- Copyright (C) 2013, Lennart Buit, Joost van Doorn, Pim Jager, Martijn Roo,
+-- Thijs Scheepers
+--
+-- This library is free software; you can redistribute it and/or
+-- modify it under the terms of the GNU Lesser General Public
+-- License as published by the Free Software Foundation; either
+-- version 2.1 of the License, or (at your option) any later version.
+-- 
+-- This library is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-- Lesser General Public License for more details.
+-- 
+-- You should have received a copy of the GNU Lesser General Public
+-- License along with this library; if not, write to the Free Software
+-- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+-- USA
+
 {-# LANGUAGE OverloadedStrings #-}
 module CanvasHs.Protocol.Input (FromJSON(..)) where
 
@@ -5,6 +24,10 @@ module CanvasHs.Protocol.Input (FromJSON(..)) where
 import Data.Aeson ((.:), (.:?), FromJSON(..), Value(..))
 import Control.Applicative ((<$>), (<*>))
 import Data.Text
+import System.FilePath.Posix (takeExtension)
+
+import qualified Data.ByteString.Lazy.UTF8 as B
+import qualified Data.ByteString.Base64.Lazy as B64
 
 import CanvasHs.Data
 
@@ -24,26 +47,30 @@ data JSONEventData = JSONEventData {
         alt :: Maybe Bool,
         shift :: Maybe Bool,
         xdelta :: Maybe Integer,
-        ydelta :: Maybe Integer
+        ydelta :: Maybe Integer,
+        filename :: Maybe Text,
+        filecontents :: Maybe Text
     } deriving(Eq, Show)
 
 instance FromJSON JSONEventData where
-    parseJSON (Object v) = JSONEventData    <$>
-                            v .:? "id"      <*>
-                            v .:? "x"       <*>
-                            v .:? "y"       <*>
-                            v .:? "x1"      <*> -- Only for mousedrag
-                            v .:? "y1"      <*> -- Only for mousedrag
-                            v .:? "id1"     <*> -- Only for mousedrag
-                            v .:? "x2"      <*> -- Only for mousedrag
-                            v .:? "y2"      <*> -- Only for mousedrag
-                            v .:? "id2"     <*> -- Only for mousedrag
-                            v .:? "key"     <*>
-                            v .:? "control" <*>
-                            v .:? "alt"     <*>
-                            v .:? "shift"   <*>
-                            v .:? "xdelta"  <*>
-                            v .:? "ydelta"
+    parseJSON (Object v) = JSONEventData         <$>
+                            v .:? "id"           <*>
+                            v .:? "x"            <*>
+                            v .:? "y"            <*>
+                            v .:? "x1"           <*> -- Only for mousedrag
+                            v .:? "y1"           <*> -- Only for mousedrag
+                            v .:? "id1"          <*> -- Only for mousedrag
+                            v .:? "x2"           <*> -- Only for mousedrag
+                            v .:? "y2"           <*> -- Only for mousedrag
+                            v .:? "id2"          <*> -- Only for mousedrag
+                            v .:? "key"          <*>
+                            v .:? "control"      <*>
+                            v .:? "alt"          <*>
+                            v .:? "shift"        <*>
+                            v .:? "xdelta"       <*>
+                            v .:? "ydelta"       <*>
+                            v .:? "filename"     <*> -- Only for upload events
+                            v .:? "filecontents"     -- Only for upload events
     parseJSON _ = error "A toplevel JSON should be an object"
 
 instance FromJSON Event where
@@ -98,6 +125,12 @@ makeEvent "keyup"
 makeEvent "scroll"
     (JSONEventData{xdelta = Just x, ydelta = Just y})
         = Scroll (fromIntegral $ x) (fromIntegral $ y)
+
+makeEvent "upload"
+    (JSONEventData{filename = Just fn, filecontents = Just fc})
+        = UploadComplete (unpack $ fn) (B.toString $ b, b)
+        where
+            (Right b) = B64.decode $ B.fromString $ unpack $ fc
 
 makeEvent _ _ = error "JSON did not match any event"
 

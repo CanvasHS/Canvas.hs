@@ -3,17 +3,27 @@ var topLayerIdx = 0;
 var layerList = new Array();
 var stage = undefined;
 var connection = new WebSocket('ws://localhost:8080');
-var canvasConstWidth = 900; // Do not change after starting
-var canvasConstHeight = 600;
+
+var canvasWindowWidth = 900;
+var canvasWindowHeight = 600;
 
 // Event handlers
 var canvas = undefined;
 
 var generadedShapeIdIdx = 0;
 var debugOn = false;
-var debugTween;
 var debugAnnimatingShapes = [];
 var debugCanClose = true;
+
+var mouseDragId = undefined;
+var mouseDragEndHandler = undefined;
+var mouseDragHandler = undefined;
+var dragEventRateLimiter = undefined;
+var mouseDragFound = true;
+var enableDragHandler = true;
+var prevMousePosX = 0;
+var prevMousePosY = 0;
+var mouseMoveRateLimit = 90; // The mousemove interval limit
 
 /**
  * Handles data received from the websocket connection.
@@ -24,22 +34,43 @@ function connectionDataReceived(event) {
 
     // Reset mousedrag
     mouseDragFound = false;
-    
-    // Clear screen
-    layerList[topLayerIdx].destroyChildren();
 
     var dataObject = jQuery.parseJSON(event.data);
 
-    var shape = parseShapeData(dataObject);
+    // handle the shape data
+    if(hasProperty(dataObject,"shape") && dataObject.shape != undefined) {
+        var shape = parseShapeData(dataObject.shape);
 
-    // Disable mousedrag if event is no longer attached to the shape
-    if(!mouseDragFound && mouseDragId!=undefined) {
-        mouseDragEndEventHandler(mouseDragId,undefined);
+        // Clear screen
+        layerList[topLayerIdx].destroyChildren();
+
+        // Disable mousedrag if event is no longer attached to the shape
+        if(!mouseDragFound && mouseDragId!=undefined) {
+            mouseDragEndEventHandler(mouseDragId,undefined);
+        }
+
+        // Draw on current layer
+        layerList[topLayerIdx].add(shape);
+        layerList[topLayerIdx].batchDraw();
+    }
+    else {
+        printDebugMessage("No shape data recieved",1);
     }
 
-    // Draw on current layer
-    layerList[topLayerIdx].add(shape);
-    layerList[topLayerIdx].batchDraw();
+    if(hasProperty(dataObject,"actions") && dataObject.actions != undefined && 
+        Object.prototype.toString.call( dataObject.actions ) === '[object Array]' ) {
+        
+        var actions = dataObject.actions;
+
+        for (var i = 0; i < actions.length; i++) {
+            parseActionData(actions[i]);
+        }
+    }
+    else {
+        printDebugMessage("No actions recieved",0);
+    }
+
+
 }
 
 /**
@@ -48,40 +79,66 @@ function connectionDataReceived(event) {
  * @returns {undefined}
  */
 function connectionError(error) {
-    printDebugMessage("WebSocket Error " + error);
+    printDebugMessage("WebSocket Error " + error,2);
 }
 
 function connectionClosed(error) {
-    printDebugMessage("Connection closed " + error);
-    console.log(error);
+    printDebugMessage("Connection closed " + error,0);
+
     $("#control-wrapper").addClass('display');
     $("#control-window").addClass('display');
     $("#control-window").html("<div class=\"control-content\"><p><strong>Connection lost</strong><br /><!--Retrying in 3... <a>reconnect</a>--></p></div>");
 }
-function fullScreen() {
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen();
-    } else if (document.documentElement.mozRequestFullScreen) {
-      document.documentElement.mozRequestFullScreen();
-    } else if (document.documentElement.webkitRequestFullscreen) {
-      document.documentElement.webkitRequestFullscreen();
+
+/**
+ * Type is an enumeration where 0 is FizedSize 1 is FullWindow and 2 is FullScreen.
+ * Width and height are required with FixedSize and are ignored with the other types.
+ */
+function setWindowDisplayType(displayType)
+{
+    switch (displayType) {
+        case 0: // FizedSize
+
+            $(document).fullScreen(false);
+
+            $("body").removeClass('fullscreen');
+            $("body").removeClass('fullwindow');
+            
+            // Animate the kinetic container
+            $("#canvas div").animate({
+                width: canvasWindowWidth+'px',
+                height: canvasWindowHeight+'px'},300);
+            setFixedProportions($("#canvas"), canvasWindowWidth, canvasWindowHeight);
+            resizeCanvas(); // Resizes the canvas
+        break;
+        case 1: // FullWindow
+
+            $(document).fullScreen(false);
+
+            $("body").addClass('fullwindow');
+            $("body").removeClass('fullscreen');
+
+            setFluidProportions($("#canvas,#canvas div"));
+            $(window).resize(resizeCanvas);
+            resizeCanvas(); // Resizes the canvas
+        break;
+        case 2: // FullScreen
+
+            $(document).fullScreen(true);
+
+            $("body").addClass('fullscreen');
+            $("body").removeClass('fullwindow');
+
+            setFluidProportions($("#canvas,#canvas div"));
+            $(window).resize(resizeCanvas);
+            resizeCanvas(); // Resizes the canvas
+
+        break;
+        default:
+            printDebugMessage("Window display type not supported ("+displayType+")",0);
     }
 }
-function fullWindow(container) {
-    $("body").addClass('fullwindow');
-    setFluidProportions($("#canvas,#canvas div"));
-    $(window).resize(resize);
-    resize(); // Resizes the canvas
-}
-function fullWindowOff(container) {
-    $("body").removeClass('fullwindow');
-    // Animate the kinetic container
-    $("#canvas div").animate({
-        width: canvasConstWidth+'px',
-        height: canvasConstHeight+'px'},300);
-    setFixedProportions($("#canvas"), canvasConstWidth, canvasConstHeight);
-    resize(); // Resizes the canvas
-}
+
 function setFluidProportions(container) {
     // Animate to fluid width and height
     container.animate({
@@ -91,8 +148,10 @@ function setFluidProportions(container) {
         height: '100%',
         marginTop: "0px",
         marginLeft: "0px"
-    },{duration: 300,step:resize});
+    },{duration: 300,step:resizeCanvas});
+
 }
+
 function setFixedProportions(container,width,height) {
     // Animate to fixed width and height
     container.animate({
@@ -102,14 +161,16 @@ function setFixedProportions(container,width,height) {
         height: height+'px',
         marginTop: "-"+height/2+"px",
         marginLeft: "-"+width/2+"px"
-    },{duration: 300,step:resize});
+    },{duration: 300,step:resizeCanvas});
 }
-function resize(event) {
-    $("#canvas canvas").attr("width",$("#canvas").outerWidth());
-    $("#canvas canvas").attr("height",$("#canvas").outerHeight());
-    $("#canvas canvas").css("width",$("#canvas").outerWidth()+"px");
-    $("#canvas canvas").css("height",$("#canvas").outerHeight()+"px");
-    if(stage) {
+
+function resizeCanvas(event) {  
+
+    $("#wrapper").css( "min-width", $("#canvas").outerWidth()+"px" );
+    $("#wrapper").css( "min-height", $("#canvas").outerHeight()+"px" );
+
+    if(stage != undefined) {
+        stage.setSize($("#canvas").outerWidth(),$("#canvas").outerHeight());
         stage.batchDraw(); // Redraw Canvas
     }
 }
@@ -120,6 +181,89 @@ function parseShapeData(data) {
     enableEventHandlers(shape, data);
 
     return shape;
+}
+
+function parseActionData(data) {
+    if(hasProperty(data,"action") && data.action != undefined &&
+       hasProperty(data,"data") && data.data != undefined) {
+
+        // Parse certain properties depending on type of action
+        var actionProperties = data.data;
+
+        switch (data.action) {
+            case "windowdisplaytype": // To chacnge the display type
+                if(hasProperty(actionProperties,"type") && actionProperties.type != undefined) {
+                    
+                    // First set the global width and height var's if action contains them
+                    if(hasProperty(actionProperties,"width") && actionProperties.width != undefined)
+                        canvasWindowWidth = actionProperties.width;
+
+                    if(hasProperty(actionProperties,"height") && actionProperties.height != undefined)
+                        canvasWindowHeight = actionProperties.height;
+
+                    setWindowDisplayType(actionProperties.type);
+                }
+                else {
+                    printDebugMessage("Window Display Type action recieved without type",2);
+                }
+
+            break;
+            case "debugger": // To enable or disable the debugger
+                if(hasProperty(actionProperties,"enabled") && actionProperties.enabled != undefined) {
+
+                    if(actionProperties.enabled)
+                        initDebug();
+                    else
+                        debugOff();
+                }
+                else {
+                    printDebugMessage("Debugger action recieved without enabled",2);
+                }
+            break;
+            case "requestupload":
+
+                if(hasProperty(actionProperties,"multiple") && actionProperties.multiple != undefined) {
+
+                    if(actionProperties.multiple)
+                         $('#fileUpload').prop('multiple', true);
+                    else
+                         $('#fileUpload').removeProp('multiple');
+
+                    $('#fileUpload').trigger('click');
+                    $('#fileUpload').change(function() {
+                        printDebugMessage("Tries to upload file",0);
+                    });
+
+                }
+                else {
+                    printDebugMessage("Request upload action recieved without multiple attribute",2);
+                }
+            
+            break;
+            case "download":
+
+
+                if(hasProperty(actionProperties,"filecontents") && actionProperties.filecontents != undefined) {
+
+                    document.location = 'data:Application/octet-stream,' +
+                         encodeURIComponent(atob(actionProperties.filecontents));
+                }
+                else {
+                    printDebugMessage("Download action recieved without file data",2);
+                }
+                
+
+            break;
+            case "acceptfiledragndrop":
+
+            break;
+            default:
+                printDebugMessage("Unkown action type: "+data.action,1);
+        }
+    }
+    else {
+        printDebugMessage("Error parsing action data",2);
+    }
 }
 
 /**
@@ -165,15 +309,7 @@ function mouseUpEventHandler(id, event) { mouseEvent("mouseup", id, event); }
 function mouseOverEventHandler(id, event) { mouseEvent("mouseover", id, event); }
 function mouseOutEventHandler(id, event) { mouseEvent("mouseout", id, event); }
 function mouseMoveEventHandler(id, event) { mouseEvent("mousemove", id, event); }
-var mouseDragId = undefined;
-var mouseDragEndHandler = undefined;
-var mouseDragHandler = undefined;
-var dragEventRateLimiter = undefined;
-var mouseDragFound = true;
-var enableDragHandler = true;
-var prevMousePosX = 0;
-var prevMousePosY = 0;
-var mouseMoveRateLimit = 90; // The mousemove interval limit
+
 /**
  * Starts the mouse drag event handler.
  * @param {type} id The id of the shape the event handler will listen on.
@@ -304,10 +440,12 @@ function sendKeyEvent(eventName, event) {
         }
     }));
 }
+
 function realX(x) {
     var canvasPos = $("#canvas").position();
     return x-canvasPos.left-parseInt($("#canvas").css("margin-left"));
 }
+
 function realY(y) {
     var canvasPos = $("#canvas").position();
     return y-canvasPos.top-parseInt($("#canvas").css("margin-top"));
@@ -329,6 +467,20 @@ function sendScrollEvent(deltaX,deltaY) {
             "ydelta": deltaY
         }
     }));
+}
+
+function sendWindowResizeEvent(width,height) {
+
+    printDebugMessage("Window Resize (width:"+width+" height:"+height+")",0);
+
+    // Not yet implemented in haskell
+    // connection.send(JSON.stringify({
+    //     "event":"resizewindow",
+    //     "data":{
+    //         "width": width,
+    //         "height": height
+    //     }
+    // }));
 }
 
 /**
@@ -377,6 +529,29 @@ function shapeFromData(message) {
             break;
         case "text":
             shape = new Kinetic.Text(data);
+
+            // As haskell has no idea about textsizes this code wil fix align
+            // it will make sure that the offset is set at the middle/end of the
+            // text.
+            // It does keep align set, that way kinetic knows what to do with
+            // multiline strings.
+            var align = data["align"];
+
+            if(align != undefined){
+                var offsetX = shape.getOffsetX();
+                var width = shape.getWidth();
+
+                console.log(width);
+                
+                if(align == 'center'){
+                    offsetX = offsetX + (width / 2);
+                } else if(align == 'right') {
+                    offsetX = offsetX + width;
+                }
+
+                shape.setOffsetX(offsetX);
+            }
+
             debugMessage += "width x:"+data.x+" y:"+data.y+" text:"+data.text;
             break;
         case "container":
@@ -423,26 +598,22 @@ function rgbaDictToColor(dict){
  * @returns {undefined}
  */
 function printDebugMessage(message, type) {
+
+    if(type == 1) {
+        console.warn(message);
+    }
+    else if(type == 2) {
+        console.error(message);
+    }
+    else if(debugOn) {
+        console.log(message);
+    }
+
     if(debugOn) {
         var now = new Date(),
             now = now.getHours()+':'+now.getMinutes()+':'+now.getSeconds();
 
-        if(type == 1)
-        {
-            console.warn(message);
-        }
-        else if(type == 2)
-        {
-            console.error(message);
-        }
-        else
-        {
-            console.log(message);
-        }
-
-        
         $("#debug").prepend("<p><strong>["+now+"]</strong> "+message+"</p>");
-
     }
 }
 
@@ -538,7 +709,6 @@ function initCanvas(container, width, height) {
     if(container.exists()) {
         setFixedProportions(container,width,height);
 
-
         stage = new Kinetic.Stage({
             container: container.attr('id'),
             width: width, // Default width and height
@@ -549,11 +719,6 @@ function initCanvas(container, width, height) {
         newDefaultLayer();
 
     }
-}
-function initWrapper(wrapper, width, height) {
-
-    wrapper.css( "min-width", width+"px" );
-    wrapper.css( "min-height", height+"px" );
 }
 
 /**
@@ -568,15 +733,10 @@ function newDefaultLayer() {
 /**
  * On document ready
  */
-$(document).ready(function() {
-
-    var width = canvasConstWidth; // defined here because the container also needs these proportions 
-    var height = canvasConstHeight;
+$(document).ready(function () {
 
     // Init canvas
-    initCanvas($('#canvas'),width,height);
-    initWrapper($('#wrapper'),width,height);
-
+    initCanvas($('#canvas'),canvasWindowWidth,canvasWindowHeight);
     canvas = $("#canvas canvas");
 
     // Start listening for scroll events using mousewheel.js
@@ -584,7 +744,6 @@ $(document).ready(function() {
         sendScrollEvent(event.deltaX,event.deltaY);
         return false; // Prevent browser default behavior
     });
-
     
     if(debugOn) {
         initDebug();
@@ -592,8 +751,6 @@ $(document).ready(function() {
     else {
         debugOff();
     }
-
-    
 
     // When the connection is open, send some data to the server
     connection.onopen = function () {
@@ -609,4 +766,12 @@ $(document).ready(function() {
     // Begin to listen for keys
     window.addEventListener('keydown', sendKeyEvent.bind(this,'keydown'));
     window.addEventListener('keyup', sendKeyEvent.bind(this,'keyup'));
+
+    $( window ).resize(function() {
+        sendWindowResizeEvent($(window).width(),$(window).height());
+    });
+
+    $(document).bind("fullscreenerror", function(e) {
+       console.log("Full screen error. "+e);
+    });
 });
