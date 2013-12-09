@@ -101,7 +101,9 @@ function setWindowDisplayType(displayType)
 
             $(document).fullScreen(false);
 
+            $("body").removeClass('fullscreen');
             $("body").removeClass('fullwindow');
+            
             // Animate the kinetic container
             $("#canvas div").animate({
                 width: canvasWindowWidth+'px',
@@ -114,6 +116,8 @@ function setWindowDisplayType(displayType)
             $(document).fullScreen(false);
 
             $("body").addClass('fullwindow');
+            $("body").removeClass('fullscreen');
+
             setFluidProportions($("#canvas,#canvas div"));
             $(window).resize(resizeCanvas);
             resizeCanvas(); // Resizes the canvas
@@ -122,7 +126,9 @@ function setWindowDisplayType(displayType)
 
             $(document).fullScreen(true);
 
-            $("body").addClass('fullwindow');
+            $("body").addClass('fullscreen');
+            $("body").removeClass('fullwindow');
+
             setFluidProportions($("#canvas,#canvas div"));
             $(window).resize(resizeCanvas);
             resizeCanvas(); // Resizes the canvas
