@@ -93,7 +93,7 @@ drawBackground :: Shape
 drawBackground = Fill (135,206,235,1.0) $ Rect (0,0) 900 600
 
 drawMap :: (Int, Int) -> Float -> String -> Shape   
-drawMap (xDiff, yDiff) zoom searchText = Translate (450 + xDiff) (300 + yDiff) $ Scale zoom zoom $ Offset 600 768 $ Event defaults{eventId="rootcontainer", mouseDrag=True} $ Container 1200 1536 (nederland ++ steden ++ (if (length searchText > 0) then (drawCityPopup searchText) else []))
+drawMap (xDiff, yDiff) zoom searchText = Translate (450 + xDiff) (300 + yDiff) $ Scale zoom zoom $ Offset 600 768 $ Event defaults{eventId="rootcontainer", mouseDrag=True} $ Container 1200 1536 ([Fill (0,0,0,1.0) $ Rect (0,0) 1200 1536] ++ nederland ++ steden ++ (if (length searchText > 0) then (drawCityPopup searchText) else []))
 
 drawControls :: Float -> Bool -> String -> Shape
 drawControls zl hasFocus s =
