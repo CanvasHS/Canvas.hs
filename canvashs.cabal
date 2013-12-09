@@ -21,7 +21,7 @@ Library
                   mtl >= 2.1,
                   blaze-builder >= 0.3.1,
                   http-types >= 0.8.1,
-                  wai >= 1.4,
+                  wai >= 1.4 && < 2.0,
                   text >= 0.11,
                   directory >= 1.2,
                   aeson >= 0.6,
@@ -44,6 +44,13 @@ Library
                   CanvasHs.Protocol.ShapeOutput
                   CanvasHs.Protocol.ActionOutput
 
+Test-Suite setup-tests
+  type:            exitcode-stdio-1.0
+  main-is:         tests/SetupTests.hs
+  build-depends:   
+                   base >= 4 && < 5,
+                   process >= 1.1
+
 
 Test-Suite javascript-tests
   type:            exitcode-stdio-1.0
@@ -65,13 +72,6 @@ Test-Suite module-test
                    hspec >= 1.7,
                    QuickCheck >= 2.4
 
-
-Test-Suite setup-tests
-  type:       	   exitcode-stdio-1.0
-  main-is:         tests/SetupTests.hs
-  build-depends:   
-                   base >= 4 && < 5,
-                   process >= 1.1
 
 source-repository head
   type:     git

@@ -295,13 +295,17 @@ function enableEventHandlers(shape, message) {
         }
     }
 }
-
 function clickEventHandler(id, event) { mouseEvent("mouseclick", id, event); }
 function doubleClickEventHandler(id, event) { mouseEvent("mousedoubleclick", id, event); }
 function mouseDownEventHandler(id, event) { mouseEvent("mousedown", id, event); }
 function mouseUpEventHandler(id, event) { mouseEvent("mouseup", id, event); }
 function mouseOverEventHandler(id, event) { mouseEvent("mouseover", id, event); }
-function mouseOutEventHandler(id, event) { mouseEvent("mouseout", id, event); }
+function mouseOutEventHandler(id, event) { 
+    // Needed, otherwhise redraw fires mouseOut event
+    if(event.targetNode.getParent() != undefined) {
+        mouseEvent("mouseout", id, event); 
+    } 
+}
 function mouseMoveEventHandler(id, event) { mouseEvent("mousemove", id, event); }
 
 /**
