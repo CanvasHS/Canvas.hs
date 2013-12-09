@@ -16,23 +16,23 @@ h st StartEvent
     = (st, shape $ drawCanvas st)
 
 h st (MouseClick _ "debug")
-    = (st', R (Just $ drawCanvas st', [Debug d']))
+    = (st', Out (Just $ drawCanvas st', [Debug d']))
         where
             St{debug=d} = st
             d' = not d
             st' = st{debug=d'}
             
 h st (MouseClick _ "fullscreen")
-    = (st, R (Nothing, [DisplayType FullScreen]))
+    = (st, Out (Nothing, [DisplayType FullScreen]))
     
 h st (MouseClick _ "fullwindow")
-    = (st, R (Nothing, [DisplayType FullWindow]))
+    = (st, Out (Nothing, [DisplayType FullWindow]))
     
 h st (MouseClick _ "fixedsize")
-    = (st, R (Nothing, [DisplayType $ FixedSize 400 300]))
+    = (st, Out (Nothing, [DisplayType $ FixedSize 400 300]))
     
 h st (MouseClick _ "timer")
-    = (st, R (Nothing, [Timer 1000 "clock"]))
+    = (st, Out (Nothing, [Timer 1000 "clock"]))
 h st (Tick "clock")
     = (st', shape $ drawCanvas st)
         where
@@ -40,7 +40,7 @@ h st (Tick "clock")
         st' = st{timer=t+1}
         
 h st (MouseClick _ "save")
-    = (st, R (Nothing, [SaveFileString "timer.txt" $ show t]))
+    = (st, Out (Nothing, [SaveFileString "timer.txt" $ show t]))
         where
         St{timer=t} = st
         
@@ -53,15 +53,15 @@ h st (FileLoadedString "timer.txt" c)
         st' = st{timer=read c}
         
 h st (MouseClick _ "download")
-    = (st, R (Nothing, [Download "downloaded_timer.txt" $ show t]))
+    = (st, Out (Nothing, [Download "downloaded_timer.txt" $ show t]))
         where
         St{timer=t} = st
         
 h st (MouseClick _ "upload")
-    = (st, R (Nothing, [RequestUpload False]))
+    = (st, Out (Nothing, [RequestUpload False]))
     
 h st (MouseClick _ "dragndrop")
-    = (st', R (Just $ drawCanvas st', [DragNDrop d' False]))
+    = (st', Out (Just $ drawCanvas st', [DragNDrop d' False]))
         where
         St{dragndrop=d} = st
         d' = not d

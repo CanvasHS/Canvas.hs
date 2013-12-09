@@ -98,6 +98,9 @@ function setWindowDisplayType(displayType)
 {
     switch (displayType) {
         case 0: // FizedSize
+
+            $(document).fullScreen(false);
+
             $("body").removeClass('fullwindow');
             // Animate the kinetic container
             $("#canvas div").animate({
@@ -107,20 +110,23 @@ function setWindowDisplayType(displayType)
             resizeCanvas(); // Resizes the canvas
         break;
         case 1: // FullWindow
+
+            $(document).fullScreen(false);
+
             $("body").addClass('fullwindow');
             setFluidProportions($("#canvas,#canvas div"));
             $(window).resize(resizeCanvas);
             resizeCanvas(); // Resizes the canvas
         break;
         case 2: // FullScreen
-        // FIXME
-            if (document.documentElement.requestFullscreen) {
-              document.documentElement.requestFullscreen();
-            } else if (document.documentElement.mozRequestFullScreen) {
-              document.documentElement.mozRequestFullScreen();
-            } else if (document.documentElement.webkitRequestFullscreen) {
-              document.documentElement.webkitRequestFullscreen();
-            }
+
+            $(document).fullScreen(true);
+
+            $("body").addClass('fullwindow');
+            setFluidProportions($("#canvas,#canvas div"));
+            $(window).resize(resizeCanvas);
+            resizeCanvas(); // Resizes the canvas
+
         break;
         default:
             printDebugMessage("Window display type not supported ("+displayType+")",0);
@@ -734,5 +740,9 @@ $(document).ready(function () {
 
     $( window ).resize(function() {
         sendWindowResizeEvent($(window).width(),$(window).height());
+    });
+
+    $(document).bind("fullscreenerror", function(e) {
+       console.log("Full screen error. "+e);
     });
 });
