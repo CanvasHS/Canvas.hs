@@ -209,11 +209,11 @@ function setFixedProportions(container,width,height) {
 
 function resizeCanvas(event) {  
 
-    $("#canvas canvas").css( "width", $("#canvas").outerWidth()+"px" );
-    $("#canvas canvas").css( "height", $("#canvas").outerHeight()+"px" );
+    $("#canvas canvas").css( "width", $("#canvas").width()+"px" );
+    $("#canvas canvas").css( "height", $("#canvas").height()+"px" );
 
     if(stage != undefined) {
-        stage.setSize($("#canvas").outerWidth(),$("#canvas").outerHeight());
+        stage.setSize($("#canvas").width(),$("#canvas").height());
         stage.batchDraw(); // Redraw Canvas
     }
 }
