@@ -96,7 +96,7 @@ data TextData = TextData {
 
 -- | Defines defaults for TextData
 instance Defaults TextData where
-    defaults = TextData "Arial" 12 False False False Center
+    defaults = TextData "Arial" 12 False False False Start
 
 -- | All drawable objects that the user can define (also includes some modifying objects like scale)
 data Shape 
