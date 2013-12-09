@@ -517,6 +517,29 @@ function shapeFromData(message) {
             break;
         case "text":
             shape = new Kinetic.Text(data);
+
+            // As haskell has no idea about textsizes this code wil fix align
+            // it will make sure that the offset is set at the middle/end of the
+            // text.
+            // It does keep align set, that way kinetic knows what to do with
+            // multiline strings.
+            var align = data["align"];
+
+            if(align != undefined){
+                var offsetX = shape.getOffsetX();
+                var width = shape.getWidth();
+
+                console.log(width);
+                
+                if(align == 'center'){
+                    offsetX = offsetX + (width / 2);
+                } else if(align == 'right') {
+                    offsetX = offsetX + width;
+                }
+
+                shape.setOffsetX(offsetX);
+            }
+
             debugMessage += "width x:"+data.x+" y:"+data.y+" text:"+data.text;
             break;
         case "container":
