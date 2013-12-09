@@ -223,7 +223,6 @@ function mouseEvent(eventName, id, event) {
  */
 function sendKeyEvent(eventName, event) {
     
-    console.log(eventName);
     var key = normalizeKeyCode(event);
     var ctrl = event.ctrlKey || event.metaKey;
     var alt = event.altKey;
