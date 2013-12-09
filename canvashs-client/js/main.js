@@ -11,7 +11,7 @@ var canvasWindowHeight = 600;
 var canvas = undefined;
 
 var generadedShapeIdIdx = 0;
-var debugOn = false;
+var debugOn = true;
 var debugAnnimatingShapes = [];
 var debugCanClose = true;
 
@@ -93,8 +93,10 @@ function connectionClosed(error) {
  * Type is an enumeration where 0 is FizedSize 1 is FullWindow and 2 is FullScreen.
  * Width and height are required with FixedSize and are ignored with the other types.
  */
-function setWindowDisplayType(displayType)
+function setWindowDisplayType(displayType, attempt)
 {
+    console.log(attempt);
+    attempt = attempt != undefined ? attempt : 1;
     switch (displayType) {
         case 0: // FixedSize
 
@@ -126,7 +128,6 @@ function setWindowDisplayType(displayType)
         case 2: // FullScreen
 
             window.fullScreenApi.requestFullScreen(document.getElementById('wrapper'));
-
             $("body").addClass('fullscreen');
             $("body").removeClass('fullwindow');
             $("#control-wrapper").removeClass('display');
@@ -135,19 +136,38 @@ function setWindowDisplayType(displayType)
             setFluidProportions($("#canvas,#canvas div"));
             $(window).resize(resizeCanvas);
             resizeCanvas(); // Resizes the canvas
-
+            // If this did not result in a full screen window then request it from the user.
+            if(window.fullScreenApi.isFullScreen() == false) {
+                if(attempt > 2) {
+                    // Show a message if it was not possible to switch to full screen
+                    $("#control-wrapper").addClass('display');
+                    $("#control-window").addClass('display');
+                    $("#control-window").html("<div class=\"control-content\"><p><strong>Failed to switch to fullscreen</strong><br /></div>"); 
+                    setTimeout(function() {
+            $("#control-wrapper").removeClass('display');
+            $("#control-window").removeClass('display');
+}, 2400);   
+                }
+                else {
+                    setTimeout(requestFullscreen.bind(undefined, attempt+1), 100*attempt);
+                }
+            }
         break;
         default:
             printDebugMessage("Window display type not supported ("+displayType+")",0);
-    }
+    };
 }
 
-function requestFullscreen() {
-    $("#control-wrapper").addClass('display');
-    $("#control-window").addClass('display');
-    $("#control-window").html("<div class=\"control-content\"><p><strong>Switch to fullscreen?</strong><br /><a href=\"#\" id=\"switchToFullscreen\">Yes</a> - <a href=\"#\" id=\"switchToFullwindow\">No</a></div>");    
-    $("#switchToFullscreen").click(setWindowDisplayType.bind(undefined, 2));
-    $("#switchToFullwindow").click(setWindowDisplayType.bind(undefined, 1));
+function requestFullscreen(attempt) {
+    if(window.fullScreenApi.isFullScreen() == false) {
+        $("#control-wrapper").addClass('display');
+        $("#control-window").addClass('display');
+        $("#control-window").html("<div class=\"control-content\"><p><strong>Switch to fullscreen?</strong><br /><a href=\"#\" id=\"switchToFullscreen\">Yes</a> - <a href=\"#\" id=\"switchToFullwindow\">No</a></div>");    
+        $("#switchToFullscreen").off('click');
+        $("#switchToFullwindow").off('click');
+        $("#switchToFullscreen").click(setWindowDisplayType.bind(undefined, 2, attempt));
+        $("#switchToFullwindow").click(setWindowDisplayType.bind(undefined, 1, attempt));
+    }
 }
 
 function setFluidProportions(container) {
