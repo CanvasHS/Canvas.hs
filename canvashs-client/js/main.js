@@ -198,7 +198,14 @@ function promptForUpload() {
         if ( this.files && this.files[0] ) {
             var FR= new FileReader();
             FR.onload = function(e) {
-                printDebugMessage("Tries to upload file: "+e.target.result,0);
+                printDebugMessage("Uploading file: "+e.target.result,0);
+
+                connection.send(JSON.stringify({
+                    "event":"mousedrag",
+                    "data":{
+                        "file": e.target.result
+                    }
+                }));
             };       
             FR.readAsDataURL( this.files[0] );
         }
