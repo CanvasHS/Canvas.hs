@@ -11,7 +11,7 @@ var canvasWindowHeight = 600;
 var canvas = undefined;
 
 var generadedShapeIdIdx = 0;
-var debugOn = false;
+var debugOn = true;
 var debugAnnimatingShapes = [];
 var debugCanClose = true;
 
@@ -70,7 +70,10 @@ function connectionDataReceived(event) {
         printDebugMessage("No actions recieved",0);
     }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> fullscreen
 }
 
 /**
@@ -85,23 +88,45 @@ function connectionError(error) {
 function connectionClosed(error) {
     printDebugMessage("Connection closed " + error,0);
 
+    openControlWindow("Connection lost");
+}
+/**
+ * Opens a control element with a title and a message
+ * @param {type} title The title of the message (required)
+ * @param {type} message The contents of the message (optional)
+ * @returns {undefined}
+ */
+function openControlWindow(title, message) {
+    // Opens the control interface element
+    message = message == undefined ? "" : message;
     $("#control-wrapper").addClass('display');
     $("#control-window").addClass('display');
-    $("#control-window").html("<div class=\"control-content\"><p><strong>Connection lost</strong><br /><!--Retrying in 3... <a>reconnect</a>--></p></div>");
+    $("#control-window").html("<div class=\"control-content\"><p><strong>"+title+"</strong><br />"+message+"</p></div>");   
+}
+/**
+ * Closes the control element
+ */
+function closeControlWindow() {
+    // Closes the control interface element
+    $("#control-wrapper").removeClass('display');
+    $("#control-window").removeClass('display');
 }
 
 /**
  * Type is an enumeration where 0 is FizedSize 1 is FullWindow and 2 is FullScreen.
  * Width and height are required with FixedSize and are ignored with the other types.
  */
-function setWindowDisplayType(displayType)
+function setWindowDisplayType(displayType, attempt)
 {
+    attempt = attempt != undefined ? attempt : 1;
     switch (displayType) {
-        case 0: // FizedSize
+        case 0: // FixedSize
+
+            window.fullScreenApi.cancelFullScreen(document.getElementById('wrapper'));
 
             $("body").removeClass('fullscreen');
             $("body").removeClass('fullwindow');
-            
+
             // Animate the kinetic container
             $("#canvas div").animate({
                 width: canvasWindowWidth+'px',
@@ -111,8 +136,12 @@ function setWindowDisplayType(displayType)
         break;
         case 1: // FullWindow
 
+            window.fullScreenApi.cancelFullScreen(document.getElementById('wrapper'));
+
             $("body").addClass('fullwindow');
             $("body").removeClass('fullscreen');
+
+            closeControlWindow();
 
             setFluidProportions($("#canvas,#canvas div"));
             $(window).resize(resizeCanvas);
@@ -120,16 +149,40 @@ function setWindowDisplayType(displayType)
         break;
         case 2: // FullScreen
 
+            window.fullScreenApi.requestFullScreen(document.getElementById('wrapper'));
+
             $("body").addClass('fullscreen');
             $("body").removeClass('fullwindow');
+            
+            closeControlWindow();
 
             setFluidProportions($("#canvas,#canvas div"));
             $(window).resize(resizeCanvas);
             resizeCanvas(); // Resizes the canvas
-
+            // If this did not result in a full screen window then request it from the user.
+            if(window.fullScreenApi.isFullScreen() == false) {
+                if(attempt > 2) {
+                    // Show a message if it was not possible to switch to full screen
+                    openControlWindow("Failed to switch to fullscreen"); 
+                    setTimeout(closeControlWindow, 2400);   
+                }
+                else {
+                    setTimeout(requestFullscreen.bind(undefined, attempt+1), 100*attempt);
+                }
+            }
         break;
         default:
             printDebugMessage("Window display type not supported ("+displayType+")",0);
+    };
+}
+
+function requestFullscreen(attempt) {
+    if(window.fullScreenApi.isFullScreen() == false) {
+        openControlWindow("Switch to fullscreen?","<a href=\"#\" id=\"switchToFullscreen\">Yes</a> - <a href=\"#\" id=\"switchToFullwindow\">No</a>");    
+        $("#switchToFullscreen").off('click');
+        $("#switchToFullwindow").off('click');
+        $("#switchToFullscreen").click(setWindowDisplayType.bind(undefined, 2, attempt));
+        $("#switchToFullwindow").click(setWindowDisplayType.bind(undefined, 1, attempt));
     }
 }
 
@@ -160,14 +213,15 @@ function setFixedProportions(container,width,height) {
 
 function resizeCanvas(event) {  
 
-    $("#wrapper").css( "min-width", $("#canvas").outerWidth()+"px" );
-    $("#wrapper").css( "min-height", $("#canvas").outerHeight()+"px" );
+    $("#canvas canvas").css( "width", $("#canvas").width()+"px" );
+    $("#canvas canvas").css( "height", $("#canvas").height()+"px" );
 
     if(stage != undefined) {
-        stage.setSize($("#canvas").outerWidth(),$("#canvas").outerHeight());
+        stage.setSize($("#canvas").width(),$("#canvas").height());
         stage.batchDraw(); // Redraw Canvas
     }
 }
+
 
 function parseShapeData(data) {
 
@@ -770,3 +824,4 @@ $(document).ready(function () {
     });
 
 });
+
