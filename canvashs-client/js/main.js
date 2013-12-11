@@ -69,11 +69,6 @@ function connectionDataReceived(event) {
     else {
         printDebugMessage("No actions recieved",0);
     }
-
-<<<<<<< HEAD
-
-=======
->>>>>>> fullscreen
 }
 
 /**
@@ -119,6 +114,7 @@ function closeControlWindow() {
 function setWindowDisplayType(displayType, attempt)
 {
     attempt = attempt != undefined ? attempt : 1;
+
     switch (displayType) {
         case 0: // FixedSize
 
@@ -184,6 +180,31 @@ function requestFullscreen(attempt) {
         $("#switchToFullscreen").click(setWindowDisplayType.bind(undefined, 2, attempt));
         $("#switchToFullwindow").click(setWindowDisplayType.bind(undefined, 1, attempt));
     }
+}
+
+function requestUpload() {
+    
+        openControlWindow("Upload a file?","<a href=\"#\" id=\"acceptPrompt\">Yes</a> - <a href=\"#\" id=\"closePrompt\">No</a>");    
+        $("#acceptPrompt").off('click');
+        $("#closePrompt").off('click');
+        $("#acceptPrompt").click(promptForUpload.bind(undefined));
+        $("#closePrompt").click(closeControlWindow.bind(undefined));
+}
+
+function promptForUpload() {
+
+    $('#fileUpload').trigger('click');
+    $('#fileUpload').change(function() {
+        if ( this.files && this.files[0] ) {
+            var FR= new FileReader();
+            FR.onload = function(e) {
+                printDebugMessage("Tries to upload file: "+e.target.result,0);
+            };       
+            FR.readAsDataURL( this.files[0] );
+        }
+    });
+
+    closeControlWindow();
 }
 
 function setFluidProportions(container) {
@@ -277,11 +298,7 @@ function parseActionData(data) {
                     else
                          $('#fileUpload').removeProp('multiple');
 
-                    $('#fileUpload').trigger('click');
-                    $('#fileUpload').change(function() {
-                        printDebugMessage("Tries to upload file",0);
-                    });
-
+                    requestUpload();
                 }
                 else {
                     printDebugMessage("Request upload action recieved without multiple attribute",2);
