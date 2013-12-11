@@ -83,6 +83,10 @@ makeEvent "mouseout"
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
          = MouseOut (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
 
+makeEvent "scroll"
+    (JSONEventData{jeventId = Just eid, xdelta = Just x, ydelta = Just y})
+        = Scroll (fromIntegral $ x) (fromIntegral $ y) (unpack $ eid)
+
 makeEvent "keydown"
     (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh})
         = KeyDown (unpack $ k) (makeModifiers c a sh)
@@ -94,10 +98,6 @@ makeEvent "keyclick"
 makeEvent "keyup"
     (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh})
         = KeyUp (unpack $ k) (makeModifiers c a sh)
-
-makeEvent "scroll"
-    (JSONEventData{xdelta = Just x, ydelta = Just y})
-        = Scroll (fromIntegral $ x) (fromIntegral $ y)
 
 makeEvent _ _ = error "JSON did not match any event"
 
