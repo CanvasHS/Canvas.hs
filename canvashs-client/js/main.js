@@ -300,17 +300,23 @@ function parseActionData(data) {
             break;
             case "prompt":
 
-
                 if(hasProperty(actionProperties,"message") && actionProperties.message != undefined) {
-                    
+
                     var result;
                     if(hasProperty(actionProperties,"placeholder"))
                         result = prompt(actionProperties.message,actionProperties.placeholder);
                     else
                         result = prompt(actionProperties.message,"");
+
+                    connection.send(JSON.stringify({
+                        "event":"prompt",
+                        "data":{
+                            "value": result
+                        }
+                    }));
                 }
                 else {
-                    printDebugMessage("Download action recieved without file data",2);
+                    printDebugMessage("Prompt action recieved without file data",2);
                 }
                 
 
