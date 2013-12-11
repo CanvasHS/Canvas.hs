@@ -70,10 +70,6 @@ function connectionDataReceived(event) {
         printDebugMessage("No actions recieved",0);
     }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> fullscreen
 }
 
 /**
@@ -295,6 +291,23 @@ function parseActionData(data) {
 
                     document.location = 'data:Application/octet-stream,' +
                          encodeURIComponent(atob(actionProperties.filecontents));
+                }
+                else {
+                    printDebugMessage("Download action recieved without file data",2);
+                }
+                
+
+            break;
+            case "prompt":
+
+
+                if(hasProperty(actionProperties,"message") && actionProperties.message != undefined) {
+                    
+                    var result;
+                    if(hasProperty(actionProperties,"placeholder"))
+                        result = prompt(actionProperties.message,actionProperties.placeholder);
+                    else
+                        result = prompt(actionProperties.message,"");
                 }
                 else {
                     printDebugMessage("Download action recieved without file data",2);
