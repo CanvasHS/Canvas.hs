@@ -123,8 +123,8 @@ makeEvent "keyup"
         = KeyUp (unpack $ k) (makeModifiers c a sh)
 
 makeEvent "scroll"
-    (JSONEventData{xdelta = Just x, ydelta = Just y})
-        = Scroll (fromIntegral $ x) (fromIntegral $ y)
+    (JSONEventData{jeventId = Just eid, xdelta = Just x, ydelta = Just y})
+        = Scroll (unpack $ eid) (fromIntegral $ x) (fromIntegral $ y)
 
 makeEvent "upload"
     (JSONEventData{filename = Just fn, filecontents = Just fc})

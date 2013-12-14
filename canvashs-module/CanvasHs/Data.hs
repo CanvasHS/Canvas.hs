@@ -96,7 +96,7 @@ data TextData = TextData {
 
 -- | Defines defaults for TextData
 instance Defaults TextData where
-    defaults = TextData "Arial" 12 False False False Center
+    defaults = TextData "Arial" 12 False False False Start
 
 -- | All drawable objects that the user can define (also includes some modifying objects like scale)
 data Shape 
@@ -205,8 +205,8 @@ data Event
     | KeyUp String [Modifier]
     -- | A keyclick event, consist of a keycharacter that was pressed and a list of modifiers that were active
     | KeyClick String [Modifier]
-    -- | A scroll event consisting of a xdiff and a ydiff
-    | Scroll Int Int
+    -- | A scroll event consisting of an eventId (the shape that was scrolled) xdiff and a ydiff
+    | Scroll String Int Int
     -- | Start event is thrown when the server is started to notify user
     | StartEvent
     -- | When a file requested using the LoadFileString Action has been loaded. Has a filepath and file contents as String
