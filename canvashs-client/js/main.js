@@ -11,7 +11,7 @@ var canvasWindowHeight = 600;
 var canvas = undefined;
 
 var generadedShapeIdIdx = 0;
-var debugOn = false;
+var debugOn = true;
 var debugAnnimatingShapes = [];
 var debugCanClose = true;
 
@@ -70,7 +70,10 @@ function connectionDataReceived(event) {
         printDebugMessage("No actions recieved",0);
     }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> fullscreen
 }
 
 /**
@@ -85,20 +88,45 @@ function connectionError(error) {
 function connectionClosed(error) {
     printDebugMessage("Connection closed " + error,0);
 
+    openControlWindow("Connection lost");
+}
+/**
+ * Opens a control element with a title and a message
+ * @param {type} title The title of the message (required)
+ * @param {type} message The contents of the message (optional)
+ * @returns {undefined}
+ */
+function openControlWindow(title, message) {
+    // Opens the control interface element
+    message = message == undefined ? "" : message;
     $("#control-wrapper").addClass('display');
     $("#control-window").addClass('display');
-    $("#control-window").html("<div class=\"control-content\"><p><strong>Connection lost</strong><br /><!--Retrying in 3... <a>reconnect</a>--></p></div>");
+    $("#control-window").html("<div class=\"control-content\"><p><strong>"+title+"</strong><br />"+message+"</p></div>");   
+}
+/**
+ * Closes the control element
+ */
+function closeControlWindow() {
+    // Closes the control interface element
+    $("#control-wrapper").removeClass('display');
+    $("#control-window").removeClass('display');
 }
 
 /**
  * Type is an enumeration where 0 is FizedSize 1 is FullWindow and 2 is FullScreen.
  * Width and height are required with FixedSize and are ignored with the other types.
  */
-function setWindowDisplayType(displayType)
+function setWindowDisplayType(displayType, attempt)
 {
+    attempt = attempt != undefined ? attempt : 1;
     switch (displayType) {
-        case 0: // FizedSize
+        case 0: // FixedSize
+
+            window.fullScreenApi.cancelFullScreen(document.getElementById('wrapper'));
+
+            $("body").removeClass('fullscreen');
             $("body").removeClass('fullwindow');
+
             // Animate the kinetic container
             $("#canvas div").animate({
                 width: canvasWindowWidth+'px',
@@ -107,23 +135,54 @@ function setWindowDisplayType(displayType)
             resizeCanvas(); // Resizes the canvas
         break;
         case 1: // FullWindow
+
+            window.fullScreenApi.cancelFullScreen(document.getElementById('wrapper'));
+
             $("body").addClass('fullwindow');
+            $("body").removeClass('fullscreen');
+
+            closeControlWindow();
+
             setFluidProportions($("#canvas,#canvas div"));
             $(window).resize(resizeCanvas);
             resizeCanvas(); // Resizes the canvas
         break;
         case 2: // FullScreen
-        // FIXME
-            if (document.documentElement.requestFullscreen) {
-              document.documentElement.requestFullscreen();
-            } else if (document.documentElement.mozRequestFullScreen) {
-              document.documentElement.mozRequestFullScreen();
-            } else if (document.documentElement.webkitRequestFullscreen) {
-              document.documentElement.webkitRequestFullscreen();
+
+            window.fullScreenApi.requestFullScreen(document.getElementById('wrapper'));
+
+            $("body").addClass('fullscreen');
+            $("body").removeClass('fullwindow');
+            
+            closeControlWindow();
+
+            setFluidProportions($("#canvas,#canvas div"));
+            $(window).resize(resizeCanvas);
+            resizeCanvas(); // Resizes the canvas
+            // If this did not result in a full screen window then request it from the user.
+            if(window.fullScreenApi.isFullScreen() == false) {
+                if(attempt > 2) {
+                    // Show a message if it was not possible to switch to full screen
+                    openControlWindow("Failed to switch to fullscreen"); 
+                    setTimeout(closeControlWindow, 2400);   
+                }
+                else {
+                    setTimeout(requestFullscreen.bind(undefined, attempt+1), 100*attempt);
+                }
             }
         break;
         default:
             printDebugMessage("Window display type not supported ("+displayType+")",0);
+    };
+}
+
+function requestFullscreen(attempt) {
+    if(window.fullScreenApi.isFullScreen() == false) {
+        openControlWindow("Switch to fullscreen?","<a href=\"#\" id=\"switchToFullscreen\">Yes</a> - <a href=\"#\" id=\"switchToFullwindow\">No</a>");    
+        $("#switchToFullscreen").off('click');
+        $("#switchToFullwindow").off('click');
+        $("#switchToFullscreen").click(setWindowDisplayType.bind(undefined, 2, attempt));
+        $("#switchToFullwindow").click(setWindowDisplayType.bind(undefined, 1, attempt));
     }
 }
 
@@ -154,14 +213,15 @@ function setFixedProportions(container,width,height) {
 
 function resizeCanvas(event) {  
 
-    $("#wrapper").css( "min-width", $("#canvas").outerWidth()+"px" );
-    $("#wrapper").css( "min-height", $("#canvas").outerHeight()+"px" );
+    $("#canvas canvas").css( "width", $("#canvas").width()+"px" );
+    $("#canvas canvas").css( "height", $("#canvas").height()+"px" );
 
     if(stage != undefined) {
-        stage.setSize($("#canvas").outerWidth(),$("#canvas").outerHeight());
+        stage.setSize($("#canvas").width(),$("#canvas").height());
         stage.batchDraw(); // Redraw Canvas
     }
 }
+
 
 function parseShapeData(data) {
 
@@ -289,13 +349,17 @@ function enableEventHandlers(shape, message) {
         }
     }
 }
-
 function clickEventHandler(id, event) { mouseEvent("mouseclick", id, event); }
 function doubleClickEventHandler(id, event) { mouseEvent("mousedoubleclick", id, event); }
 function mouseDownEventHandler(id, event) { mouseEvent("mousedown", id, event); }
 function mouseUpEventHandler(id, event) { mouseEvent("mouseup", id, event); }
 function mouseOverEventHandler(id, event) { mouseEvent("mouseover", id, event); }
-function mouseOutEventHandler(id, event) { mouseEvent("mouseout", id, event); }
+function mouseOutEventHandler(id, event) { 
+    // Needed, otherwhise redraw fires mouseOut event
+    if(event.targetNode.getParent() != undefined) {
+        mouseEvent("mouseout", id, event); 
+    } 
+}
 function mouseMoveEventHandler(id, event) { mouseEvent("mousemove", id, event); }
 
 /**
@@ -517,6 +581,29 @@ function shapeFromData(message) {
             break;
         case "text":
             shape = new Kinetic.Text(data);
+
+            // As haskell has no idea about textsizes this code wil fix align
+            // it will make sure that the offset is set at the middle/end of the
+            // text.
+            // It does keep align set, that way kinetic knows what to do with
+            // multiline strings.
+            var align = data["align"];
+
+            if(align != undefined){
+                var offsetX = shape.getOffsetX();
+                var width = shape.getWidth();
+
+                console.log(width);
+                
+                if(align == 'center'){
+                    offsetX = offsetX + (width / 2);
+                } else if(align == 'right') {
+                    offsetX = offsetX + width;
+                }
+
+                shape.setOffsetX(offsetX);
+            }
+
             debugMessage += "width x:"+data.x+" y:"+data.y+" text:"+data.text;
             break;
         case "container":
@@ -735,4 +822,6 @@ $(document).ready(function () {
     $( window ).resize(function() {
         sendWindowResizeEvent($(window).width(),$(window).height());
     });
+
 });
+
