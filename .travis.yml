@@ -1,5 +1,6 @@
 language: haskell
 after_success:
+- npm install -g dox
 - dox --debug < canvashs-client/js/main.js
 - cabal sdist
 - cabal haddock
