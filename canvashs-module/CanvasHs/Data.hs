@@ -162,6 +162,10 @@ data Action
     -- | Asks the user to select a file to upload, the Bool indicates if multiple files can be selected or not. 
     -- | could result in one or multiple UploadComplete events, send to javascript
     | RequestUpload Bool
+    -- | Prompts the user a message and asks for a certain value, with a default for that value.
+    -- | Has a String of the message to show and a String of the default value.
+    | Prompt String String
+    
     
 -- | The window display type. FixedSize as a Width and Height
 data WindowDisplayType = FullWindow | FullScreen | FixedSize Int Int
@@ -217,4 +221,6 @@ data Event
     | Tick String
     -- | An upload has been completed. Has a filename and a contents
     | UploadComplete String (String, BS8.ByteString)
+    -- | An response of the user to the prompt. Has a String of the response.
+    | PromptResponse String
     deriving(Eq, Show)

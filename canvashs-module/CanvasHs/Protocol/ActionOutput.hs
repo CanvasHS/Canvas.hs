@@ -50,7 +50,9 @@ data JSONActionData
         denabled :: Maybe Bool,
         dmultiple :: Maybe Bool,
         dfilename :: Maybe T.Text,
-        dfilecontents :: Maybe T.Text
+        dfilecontents :: Maybe T.Text,
+        dmessage :: Maybe T.Text,
+        dplaceholder :: Maybe T.Text
     } deriving (Show)
     
    
@@ -82,6 +84,9 @@ actionEncode (D.Download fn fc)       = JSONAction{actionaction = "download"
 actionEncode (D.RequestUpload b)    = JSONAction{actionaction = "requestupload" 
                                                 ,actiondata = emptyActionData{dmultiple = Just b}
                                                 }
+actionEncode (D.Prompt q d)         = JSONAction{actionaction = "prompt"
+                                                ,actiondata = emptyActionData{dmessage = Just $ T.pack q, dplaceholder = Just $ T.pack d}
+                                                }
 
 wdtEncode :: D.WindowDisplayType -> JSONActionData
 wdtEncode (D.FixedSize w h) = emptyActionData   {dtype  = Just 0
@@ -101,5 +106,7 @@ emptyActionData
             denabled = Nothing,
             dmultiple = Nothing,
             dfilename = Nothing,
-            dfilecontents = Nothing
+            dfilecontents = Nothing,
+            dmessage = Nothing,
+            dplaceholder = Nothing
         }
