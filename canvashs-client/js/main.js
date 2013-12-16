@@ -70,10 +70,6 @@ function connectionDataReceived(event) {
         printDebugMessage("No actions recieved",0);
     }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> fullscreen
 }
 
 /**
@@ -525,14 +521,13 @@ function sendWindowResizeEvent(width,height) {
 
     printDebugMessage("Window Resize (width:"+width+" height:"+height+")",0);
 
-    // Not yet implemented in haskell
-    // connection.send(JSON.stringify({
-    //     "event":"resizewindow",
-    //     "data":{
-    //         "width": width,
-    //         "height": height
-    //     }
-    // }));
+    connection.send(JSON.stringify({
+        "event":"resizewindow",
+        "data":{
+            "width": width,
+            "height": height
+        }
+    }));
 }
 
 /**

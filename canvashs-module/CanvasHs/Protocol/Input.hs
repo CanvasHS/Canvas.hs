@@ -34,20 +34,22 @@ import CanvasHs.Data
 
 data JSONEventData = JSONEventData {
         jeventId :: Maybe Text,
-        x :: Maybe Integer,
-        y :: Maybe Integer,
-        x1 :: Maybe Integer, -- Only for mousedrag
-        y1 :: Maybe Integer, -- Only for mousedrag
+        x :: Maybe Int,
+        y :: Maybe Int,
+        x1 :: Maybe Int, -- Only for mousedrag
+        y1 :: Maybe Int, -- Only for mousedrag
         jeventId1 :: Maybe Text, -- Only for mousedrag
-        x2 :: Maybe Integer, -- Only for mousedrag
-        y2 :: Maybe Integer, -- Only for mousedrag
+        x2 :: Maybe Int, -- Only for mousedrag
+        y2 :: Maybe Int, -- Only for mousedrag
         jeventId2 :: Maybe Text, -- Only for mousedrag
         key :: Maybe Text,
         control :: Maybe Bool,
         alt :: Maybe Bool,
         shift :: Maybe Bool,
-        xdelta :: Maybe Integer,
-        ydelta :: Maybe Integer,
+        xdelta :: Maybe Int,
+        ydelta :: Maybe Int,
+        width :: Maybe Int,
+        height :: Maybe Int,
         filename :: Maybe Text,
         filecontents :: Maybe Text
     } deriving(Eq, Show)
@@ -69,6 +71,8 @@ instance FromJSON JSONEventData where
                             v .:? "shift"        <*>
                             v .:? "xdelta"       <*>
                             v .:? "ydelta"       <*>
+                            v .:? "width"        <*>
+                            v .:? "height"       <*>
                             v .:? "filename"     <*> -- Only for upload events
                             v .:? "filecontents"     -- Only for upload events
     parseJSON _ = error "A toplevel JSON should be an object"
@@ -84,31 +88,31 @@ instance FromJSON Event where
 makeEvent :: Text -> JSONEventData -> Event
 makeEvent "mousedown" 
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y}) 
-        = MouseDown (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
+        = MouseDown (x, y) (unpack $ eid)
 
 makeEvent "mouseclick"
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})  
-        = MouseClick (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
+        = MouseClick (x, y) (unpack $ eid)
 
 makeEvent "mouseup" 
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
-         = MouseUp (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
+         = MouseUp (x, y) (unpack $ eid)
 
 makeEvent "mousedoubleclick"
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
-         = MouseDoubleClick (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
+         = MouseDoubleClick (x, y) (unpack $ eid)
 
 makeEvent "mousedrag"
     (JSONEventData{jeventId1 = Just eid1, x1 = Just x1, y1 = Just y1, jeventId2 = Just eid2, x2 = Just x2, y2 = Just y2})
-        = MouseDrag (fromIntegral $ x1, fromIntegral $ y1) (unpack $ eid1) (fromIntegral $ x2, fromIntegral $ y2) (unpack $ eid2)
+        = MouseDrag (x1, y1) (unpack $ eid1) (x2, y2) (unpack $ eid2)
 
 makeEvent "mouseover"
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
-         = MouseOver (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
+         = MouseOver (x, y) (unpack $ eid)
 
 makeEvent "mouseout"
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
-         = MouseOut (fromIntegral $ x, fromIntegral $ y) (unpack $ eid)
+         = MouseOut (x, y) (unpack $ eid)
 
 makeEvent "keydown"
     (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh})
@@ -123,14 +127,18 @@ makeEvent "keyup"
         = KeyUp (unpack $ k) (makeModifiers c a sh)
 
 makeEvent "scroll"
-    (JSONEventData{jeventId = Just eid, xdelta = Just x, ydelta = Just y})
-        = Scroll (unpack $ eid) (fromIntegral $ x) (fromIntegral $ y)
+    (JSONEventData{jeventId = Just eid, xdelta = Just xd, ydelta = Just yd})
+        = Scroll (unpack $ eid) xd yd
 
 makeEvent "upload"
     (JSONEventData{filename = Just fn, filecontents = Just fc})
         = UploadComplete (unpack $ fn) (B.toString $ b, b)
         where
             (Right b) = B64.decode $ B.fromString $ unpack $ fc
+            
+makeEvent "resizewindow"
+    (JSONEventData{width = Just w, height = Just h})
+        = WindowResize w h
 
 makeEvent _ _ = error "JSON did not match any event"
 

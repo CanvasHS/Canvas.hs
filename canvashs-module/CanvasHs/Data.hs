@@ -217,4 +217,6 @@ data Event
     | Tick String
     -- | An upload has been completed. Has a filename and a contents
     | UploadComplete String (String, BS8.ByteString)
+    -- | A reseizewindoweventm has a new width and height
+    | WindowResize Int Int
     deriving(Eq, Show)
