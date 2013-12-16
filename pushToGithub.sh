@@ -38,7 +38,7 @@ echo "
     <td> <a href=\"dist/canvashs-$TRAVIS_BUILD_NUMBER.tar.gz\"> canvashs-$TRAVIS_BUILD_NUMBER.tar.gz </td> 
     <td> <a href=\"dist/docs/$TRAVIS_BUILD_NUMBER/index.html\"> hs docs </a> </td>
     <td> <a href=\"dist/jsdocs/$TRAVIS_BUILD_NUMBER/index.html\"> js docs </a> </td>
-</tr>" | cat - _includes/list.html > /tmp/out && mv /tmp/out _includes/list.html
+</tr>" | cat - _includes/list.html > tmpout && mv tmpout _includes/list.html
 
 # push the changes back to github pages
 git add .
