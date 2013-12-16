@@ -201,9 +201,9 @@ function promptForUpload() {
                 printDebugMessage("Uploading file: "+e.target.result,0);
 
                 connection.send(JSON.stringify({
-                    "event":"mousedrag",
+                    "event":"upload",
                     "data":{
-                        "file": e.target.result
+                        "filecontents": e.target.result
                     }
                 }));
             };       
