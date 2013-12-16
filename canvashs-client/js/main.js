@@ -20,7 +20,7 @@ var debugCanClose = true;
 
 /**
  * Handles data received from the websocket connection.
- * @param {type} event
+ * @param {type} event The event received from the server side.
  * @returns {undefined}
  */
 function connectionDataReceived(event) {
@@ -43,13 +43,18 @@ function connectionDataReceived(event) {
 
 /**
  * Prints a message to the console when a connection error occurs.
- * @param {type} error
+ * @param {String} error The error message.
  * @returns {undefined}
  */
 function connectionError(error) {
     printDebugMessage("WebSocket Error " + error);
 }
 
+/**
+ * Displays a message when the connection to the server is lost.
+ * @param {String} error The error message.
+ * @returns {undefined}
+ */
 function connectionClosed(error) {
     printDebugMessage("Connection closed " + error);
     console.log(error);
@@ -57,6 +62,10 @@ function connectionClosed(error) {
     $("#control-window").addClass('display');
     $("#control-window").html("<div class=\"control-content\"><p><strong>Connection lost</strong><br /><!--Retrying in 3... <a>reconnect</a>--></p></div>");
 }
+/**
+ * Makes the canvas display fullscreen.
+ * @returns {undefined}
+ */
 function fullScreen() {
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen();
@@ -66,6 +75,11 @@ function fullScreen() {
       document.documentElement.webkitRequestFullscreen();
     }
 }
+/**
+ * Turns the canvas to full window display.
+ * @param {type} container
+ * @returns {undefined}
+ */
 function fullWindow(container) {
     $("body").addClass('fullwindow');
     setFluidProportions($("#canvas,#canvas div"));
