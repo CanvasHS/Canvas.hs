@@ -4,6 +4,7 @@ after_success:
 - mkdir jsdoc
 - jsdoc canvashs-client/js/main.js canvashs-client/js/utils.js -d jsdoc --verbose
 - ls
+- ls jsdoc
 - cabal sdist
 - cabal haddock
 - ./pushToGithub.sh
