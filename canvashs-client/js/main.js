@@ -308,12 +308,15 @@ function parseActionData(data) {
                     else
                         result = prompt(actionProperties.message,"");
 
-                    connection.send(JSON.stringify({
-                        "event":"prompt",
-                        "data":{
-                            "value": result
-                        }
-                    }));
+                    if(result != undefined)
+                    {
+                        connection.send(JSON.stringify({
+                            "event":"prompt",
+                            "data":{
+                                "value": result
+                            }
+                        }));
+                    }
                 }
                 else {
                     printDebugMessage("Prompt action recieved without file data",2);
