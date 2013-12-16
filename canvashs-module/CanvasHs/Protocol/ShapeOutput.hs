@@ -54,6 +54,9 @@ data JSONShapeData
         fontFamily     :: Maybe T.Text,
         text           :: Maybe T.Text,
         align          :: Maybe T.Text,
+        bold           :: Maybe Bool,
+        italic         :: Maybe Bool,
+        underline      :: Maybe Bool,
         points         :: Maybe [Int],
         offset         :: Maybe [Int],
         x              :: Maybe Int, 
@@ -173,6 +176,9 @@ shapeEncodePoint (x',y')
         fontFamily     = Nothing,
         text           = Nothing,
         align          = Nothing,
+        bold           = Nothing,
+        italic         = Nothing,
+        underline      = Nothing,
         points         = Nothing,
         offset         = Nothing,
         x              = Just x', 
@@ -195,6 +201,9 @@ shapeEncodePoints ps
         fontFamily     = Nothing, 
         text           = Nothing,
         align          = Nothing,
+        bold           = Nothing,
+        italic         = Nothing,
+        underline      = Nothing,
         points         = Just $ eps [] $ reverse ps,
         offset         = Nothing,
         x              = Nothing, 
@@ -210,7 +219,7 @@ shapeEncodePoints ps
             eps a ((x',y'):ps)    = eps (x':y':a) ps
 
 shapeEncodeTextData :: D.Point -> String -> D.TextData -> JSONShapeData
-shapeEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.italic = i, D.alignment = a, D.underline = u}) = result
+shapeEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.alignment = a, D.bold = b, D.italic = i, D.underline = u}) = result
         where
             pointData = shapeEncodePoint ps
             al = case a of 
@@ -219,7 +228,7 @@ shapeEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.italic = i, D.al
                         D.End -> Just "right"
 
             text = pointData{text= Just $ T.pack $ s}
-            result = text{fontFamily= Just $ T.pack $ f, fontSize = Just si, align = al}
+            result = text{fontFamily=Just $ T.pack f, fontSize=Just si, align =al, bold=Just b, italic=Just i, underline=Just u}
 
 
 
