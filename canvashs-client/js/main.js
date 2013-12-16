@@ -200,10 +200,15 @@ function promptForUpload() {
             FR.onload = function(e) {
                 printDebugMessage("Uploading file: "+e.target.result,0);
 
+                //e.target.result contains the base64 filecontents, but with a mimetype prepended (which we don't want)
+                parts = e.target.result.split("base64,");
+                mimetype = parts[0]; //not used
+                contents = parts[1];
+                
                 connection.send(JSON.stringify({
                     "event":"upload",
                     "data":{
-                        "filecontents": e.target.result
+                        "filecontents": contents
                     }
                 }));
             };       
