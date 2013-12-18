@@ -13,41 +13,107 @@
 
   <!-- include spec files here... -->
   <!--<script type="text/javascript" src="spec/specfile.js"></script>-->
+  <script type="text/javascript" src="spec/DrawSpec.js"></script>
 
   <!-- include source files here... -->
   <!--  <script type="text/javascript" src="javascript/file"></script> -->
+  <script type="text/javascript" src="../js/jquery.js"></script>
+  <script type="text/javascript" src="../js/mousewheel.js"></script>
+  <script type="text/javascript" src="../js/kinetic.js"></script>
+  <script type="text/javascript" src="../js/main.js" data-cover></script>
+  <script type="text/javascript" src="../js/utils.js"></script>
+
+  <!-- Code coverage tools -->
+  <script type="text/javascript" src="../../lib/blanket/dist/qunit/blanket.js"></script>
+  <script type="text/javascript" src="../../lib/blanket/src/adapters/jasmine-blanket.js"></script>
+  <script type="text/javascript" src="../../lib/blanket/test/helpers/console_runner.js"></script>
 
   <script type="text/javascript">
-    (function() {
-      var jasmineEnv = jasmine.getEnv();
-      jasmineEnv.updateInterval = 1000;
+    (function () {
+          var currentWindowOnload = window.onload;
+          window.onload = function() {
+              if (currentWindowOnload) {
+                  currentWindowOnload();
+              }
+              if(typeof jasmine === 'undefined' || typeof blanket === 'undefined') {
+                  document.getElementById("testInstructions").style.display = "block";
+              }
+              try {
+              _blanket.utils.getFile(
+                _blanket.utils.qualifyURL("../js/main.js"),
+                function() {}, 
+                function(){
+                }
+              );
 
-      var trivialReporter = new jasmine.TrivialReporter();
-
-      jasmineEnv.addReporter(trivialReporter);
-
-      jasmineEnv.specFilter = function(spec) {
-        return trivialReporter.specFilter(spec);
-      };
-
-      var currentWindowOnload = window.onload;
-
-      window.onload = function() {
-        if (currentWindowOnload) {
-          currentWindowOnload();
-        }
-        execJasmine();
-      };
-
-      function execJasmine() {
-        jasmineEnv.execute();
-      }
+              } catch(e) {
+                // Show instructions how to use code coverage
+                $("#codeCoverageInstructions").css('display',"block");
+                $("body").addClass('hideBlanket');
+              }
+          
+          };
+          window.blanketTestJasmineExpected=1;
+          
+          var jasmineEnv = jasmine.getEnv();
+          jasmineEnv.updateInterval = 1000;
+          
+          var trivialReporter = new jasmine.TrivialReporter();
+          
+          jasmineEnv.addReporter(trivialReporter);
+          
+          jasmineEnv.specFilter = function(spec) {
+              return trivialReporter.specFilter(spec);
+          };
+          
+          /* this is just for our automated tests */
+          window.jasmine_phantom_reporter = new jasmine.ConsoleReporter;
+          
+          jasmineEnv.addReporter(jasmine_phantom_reporter);
+          /*   */
+          
+          jasmineEnv.specFilter = function (spec) {
+              return trivialReporter.specFilter(spec);
+          };
+          
+          
+          function execJasmine() {
+              jasmineEnv.execute();
+          }
 
     })();
   </script>
 
+  <style>
+    body {
+      margin: 0px;
+      background: #FFFFFF;
+    }
+    #TrivialReporter {
+      position: relative;
+    }
+    #testInstructions, #codeCoverageInstructions {
+      padding: 20px;
+      display: none;
+    }
+    .hideBlanket #blanket-main {
+      display: none;
+    }
+  </style>
+
 </head>
 
 <body>
+  <div id="testInstructions">
+    To run tests and see code coverage you first have to install the required libraries. This can be done using either "<em>runhaskell tests/SetupTests.hs</em>" or "<em>cabal install --enable-tests & cabal test</em>" in the root of the Canvas.hs project.
+  </div>
+  <div id="codeCoverageInstructions">
+    Code coverage is disabled. To enable:<br />
+    <ul>
+      <li><strong>Chrome:</strong> Run chrome using: (Mac) "<em>open /Applications/Google\ Chrome.app --args --disable-web-security</em>" (Windows) "<em>chrome.exe --disable-web-security</em>"</li>
+      <li><strong>Firefox:</strong> Follow these instructions: <a href="http://kb.mozillazine.org/Links_to_local_pages_do_not_work">Links to local pages do not work</a>.</li>
+      <li><strong>Other:</strong> Enable cross origin requests in your browser.</li>
+    </ul>
+  </div>
 </body>
 </html>
