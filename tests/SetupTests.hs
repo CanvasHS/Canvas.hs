@@ -10,6 +10,7 @@ cloneRepos
        executeShellCommand "git -v"
        executeShellCommand "git clone https://github.com/pivotal/jasmine.git lib/jasmine -b v1.3.1"
        executeShellCommand "git clone https://github.com/HumbleSoftware/js-imagediff.git lib/js-imagediff -b v1.0.4"
+       executeShellCommand "git clone https://github.com/alex-seville/blanket.git lib/blanket"
        putStrLn "Finished test install script"
 
 executeShellCommand cmd   = putStrLn ("EXEC: " ++ cmd) >> system cmd >>= check
