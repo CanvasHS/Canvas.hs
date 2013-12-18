@@ -5,6 +5,7 @@ cabal-dev
 *.hi
 *.chi
 *.chs.h
+.hpc
 .virthualenv
 lib
 docs
