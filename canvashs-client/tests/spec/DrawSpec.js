@@ -83,7 +83,7 @@ describe("Draw elements", function() {
   	it("draws a rectangle", function() {
   		runs(function() {
   			// Draw in the Canvas.hs canvas
-	  		connectionDataReceived({"data":'{"type": "rect","data": {"id": "rect_b","x": 10,"y": 12,"width": 10,"height": 20,"stroke": {"r":255,"g":255,"b":255,"a":1},"strokeWidth": 2,"fill": {"r":255,"g":0,"b":0,"a":1},"scaleX": 1.5}}'});
+	  		connectionDataReceived({"data":'{"shape":{"type": "rect","data": {"id": "rect_b","x": 10,"y": 12,"width": 10,"height": 20,"stroke": {"r":255,"g":255,"b":255,"a":1},"strokeWidth": 2,"fill": {"r":255,"g":0,"b":0,"a":1},"scaleX": 1.5}}}'});
 	 		stage.batchDraw();
 	 		stage.draw();
 	 	});
@@ -111,7 +111,7 @@ describe("Draw elements", function() {
   	it("draws a polygon", function() {
   		runs(function() {
   			// Draw in the Canvas.hs canvas
-	  		connectionDataReceived({"data":'{    "type": "polygon",    "data": {        "id": "polygon_nr_23",        "points": [73, 192, 73, 160, 340, 23, 500, 109, 499, 139, 342, 93],        "stroke": {"r":255,"g":255,"b":255,"a":1},        "strokeWidth": 2,        "fill": {"r":255,"g":100,"b":100,"a":1},        "rotationDeg": 40    }}'});
+	  		connectionDataReceived({ "data":'{"shape":{    "type": "polygon",    "data": {        "id": "polygon_nr_23",        "points": [73, 192, 73, 160, 340, 23, 500, 109, 499, 139, 342, 93],        "stroke": {"r":255,"g":255,"b":255,"a":1},        "strokeWidth": 2,        "fill": {"r":255,"g":100,"b":100,"a":1},        "rotationDeg": 40    }}}'});
 	 		stage.batchDraw();
 	 		stage.draw();
 	 	});
@@ -136,7 +136,7 @@ describe("Draw elements", function() {
   	it("draws a circle (using rgb)", function() {
   		runs(function() {
   			// Draw in the Canvas.hs canvas
-	  		connectionDataReceived({"data":'{    "type": "circle",    "data": {        "id": "circle_nr_1",        "x": 20,        "y": 20,        "radius": 5,        "stroke": {"r":225,"g":255,"b":215},        "strokeWidth": 2,        "fill": {"r":255,"g":0,"b":0,"a":1}    }}'});
+	  		connectionDataReceived({"data":'{"shape":{    "type": "circle",    "data": {        "id": "circle_nr_1",        "x": 20,        "y": 20,        "radius": 5,        "stroke": {"r":225,"g":255,"b":215},        "strokeWidth": 2,        "fill": {"r":255,"g":0,"b":0,"a":1}    }}}'});
 	 		stage.batchDraw();
 	 		stage.draw();
 	 	});
@@ -162,7 +162,7 @@ describe("Draw elements", function() {
   	it("draws a circle with stroke alpha zero", function() {
   		runs(function() {
   			// Draw in the Canvas.hs canvas
-	  		connectionDataReceived({"data":'{    "type": "circle",    "data": {        "id": "circle_nr_1",        "x": 20,        "y": 20,        "radius": 5,        "stroke": {"r":225,"g":55,"b":215,"a":0},        "strokeWidth": 5,        "fill": {"r":255,"g":0,"b":0,"a":1}    }}'});
+	  		connectionDataReceived({"data":'{"shape":{    "type": "circle",    "data": {        "id": "circle_nr_1",        "x": 20,        "y": 20,        "radius": 5,        "stroke": {"r":225,"g":55,"b":215,"a":0},        "strokeWidth": 5,        "fill": {"r":255,"g":0,"b":0,"a":1}    }}}'});
 	 		stage.batchDraw();
 	 		stage.draw();
 	 	});
@@ -188,7 +188,7 @@ describe("Draw elements", function() {
   	it("draws text", function() {
   		runs(function() {
   			// Draw in the Canvas.hs canvas
-	  		connectionDataReceived({"data":'{    "type": "text",    "data": {        "id": "text",        "x": 25,        "y": 20,        "text": "Simple Text",        "fontSize": 30,        "fontFamily": "Helvetica",        "fill": {"r":200,"g":10,"b":10,"a":0.8}    }}'});
+	  		connectionDataReceived({"data":'{"shape":{    "type": "text",    "data": {        "id": "text",        "x": 25,        "y": 20,        "text": "Simple Text",        "fontSize": 30,        "fontFamily": "Helvetica",        "fill": {"r":200,"g":10,"b":10,"a":0.8}    }}}'});
 	 		stage.batchDraw();
 	 		stage.draw();
 	 	});
@@ -215,7 +215,7 @@ describe("Draw elements", function() {
 //  	it("draws container", function() {
 //  		runs(function() {
 //  			// Draw in the Canvas.hs canvas
-//	  		connectionDataReceived({"data":'{    "type": "container",    "data": {        "id": "container_b",        "x": 10,        "y": 10,        "width": 600,        "height": 400,        "scaleX": 1,        "scaleY": 1,        "rotationDeg": 0    },    "children" : [        {            "type": "circle",            "data": {                "id": "circle_nr_1",                "x": 20,                "y": 20,                "radius": 5,                "stroke": {"r":255,"g":255,"b":255,"a":1},                "strokeWidth": 2,                "fill": {"r":255,"g":0,"b":0,"a":1}            }        },        {            "type": "polygon",            "data": {                "id": "polygon_nr_23",                "points": [73, 192, 73, 160, 340, 23, 500, 109, 499, 139, 342, 93],                "stroke": {"r":255,"g":255,"b":255,"a":1},                "strokeWidth": 3,                "fill": {"r":255,"g":0,"b":0,"a":1},                "rotationDeg": 0 , "x":0,"y":0           }        }    ]}'});
+//	  		connectionDataReceived({"data":{"shape":'{    "type": "container",    "data": {        "id": "container_b",        "x": 10,        "y": 10,        "width": 600,        "height": 400,        "scaleX": 1,        "scaleY": 1,        "rotationDeg": 0    },    "children" : [        {            "type": "circle",            "data": {                "id": "circle_nr_1",                "x": 20,                "y": 20,                "radius": 5,                "stroke": {"r":255,"g":255,"b":255,"a":1},                "strokeWidth": 2,                "fill": {"r":255,"g":0,"b":0,"a":1}            }        },        {            "type": "polygon",            "data": {                "id": "polygon_nr_23",                "points": [73, 192, 73, 160, 340, 23, 500, 109, 499, 139, 342, 93],                "stroke": {"r":255,"g":255,"b":255,"a":1},                "strokeWidth": 3,                "fill": {"r":255,"g":0,"b":0,"a":1},                "rotationDeg": 0 , "x":0,"y":0           }        }    ]}'}});
 //	 		stage.batchDraw();
 //	 		stage.draw();
 //	 	});
@@ -265,7 +265,7 @@ describe("Draw elements", function() {
 //  	it("draws container with clipping ", function() {
 //  		runs(function() {
 //  			// Draw in the Canvas.hs canvas
-//	  		connectionDataReceived({"data":'{    "type": "container",    "data": {        "id": "container_b",        "x": 10,        "y": 10,        "width": 300,        "height": 310,        "scaleX": 1,        "scaleY": 1,        "rotationDeg": 0    },    "children" : [        {            "type": "circle",            "data": {                "id": "circle_nr_1",                "x": 20,                "y": 20,                "radius": 5,                "stroke": {"r":255,"g":255,"b":255,"a":1},                "strokeWidth": 2,                "fill": {"r":255,"g":0,"b":0,"a":1}            }        },        {            "type": "polygon",            "data": {                "id": "polygon_nr_23",                "points": [73, 192, 73, 160, 340, 23, 500, 109, 499, 139, 342, 93],                "stroke": {"r":255,"g":255,"b":255,"a":1},                "strokeWidth": 3,                "fill": {"r":255,"g":0,"b":0,"a":1},                "rotationDeg": 0 , "x":0,"y":0           }        }    ]}'});	 		
+//	  		connectionDataReceived({"data":{"shape":'{    "type": "container",    "data": {        "id": "container_b",        "x": 10,        "y": 10,        "width": 300,        "height": 310,        "scaleX": 1,        "scaleY": 1,        "rotationDeg": 0    },    "children" : [        {            "type": "circle",            "data": {                "id": "circle_nr_1",                "x": 20,                "y": 20,                "radius": 5,                "stroke": {"r":255,"g":255,"b":255,"a":1},                "strokeWidth": 2,                "fill": {"r":255,"g":0,"b":0,"a":1}            }        },        {            "type": "polygon",            "data": {                "id": "polygon_nr_23",                "points": [73, 192, 73, 160, 340, 23, 500, 109, 499, 139, 342, 93],                "stroke": {"r":255,"g":255,"b":255,"a":1},                "strokeWidth": 3,                "fill": {"r":255,"g":0,"b":0,"a":1},                "rotationDeg": 0 , "x":0,"y":0           }        }    ]}'});	 		
 //	 		stage.batchDraw();
 //	 		stage.draw();
 //	 	});
