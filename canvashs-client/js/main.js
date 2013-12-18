@@ -27,12 +27,11 @@ var mouseMoveRateLimit = 90; // The mousemove interval limit
 
 /**
  * Handles data received from the websocket connection.
- * @param {type} event The event received from the server side.
+ * @param {type} event
  * @returns {undefined}
  */
 function connectionDataReceived(event) {
-    // Reset tracking of scrollable shapes
-    scrollShapes = new Array();
+
     // Reset mousedrag
     mouseDragFound = false;
 
@@ -74,18 +73,13 @@ function connectionDataReceived(event) {
 
 /**
  * Prints a message to the console when a connection error occurs.
- * @param {String} error The error message.
+ * @param {type} error
  * @returns {undefined}
  */
 function connectionError(error) {
     printDebugMessage("WebSocket Error " + error,2);
 }
 
-/**
- * Displays a message when the connection to the server is lost.
- * @param {String} error The error message.
- * @returns {undefined}
- */
 function connectionClosed(error) {
     printDebugMessage("Connection closed " + error,0);
 
@@ -233,7 +227,6 @@ function promptFileBrowser() {
 
     closeControlWindow();
 }
-
 
 function setFluidProportions(container) {
     // Animate to fluid width and height
@@ -401,12 +394,6 @@ function enableEventHandlers(shape, message) {
             mouseDragFound = mouseDragFound || message.eventData["eventId"]==mouseDragId; // Used to disable mousedrag when no longer this event is requested
             shape.on('mousedown', mouseDragStartEventHandler.bind(undefined, message.eventData.eventId));
         }
-        if(message.eventData.listen.indexOf("scroll") != -1) {
-            // Start listening for scroll events using mousewheel.js
-            canvas.on('mousewheel', scrollEventHandler.bind(undefined, message.eventData.eventId));
-            shape["id"] = message.eventData.eventId;
-            scrollShapes.push(shape);
-        }
     }
 }
 function clickEventHandler(id, event) { mouseEvent("mouseclick", id, event); }
@@ -572,14 +559,13 @@ function realY(y) {
  * @param {Number} deltaY How far is scrolled in vertical direction.
  * @returns {undefined}
  */
-function scrollEvent(id,deltaX,deltaY) {
+function sendScrollEvent(deltaX,deltaY) {
 
-    printDebugMessage("ScrollEvent (id:"+id+" deltaX:"+deltaX+" deltaY:"+deltaY+")",0);
+    printDebugMessage("ScrollEvent (deltaX:"+deltaX+" deltaY:"+deltaY+")",0);
 
     connection.send(JSON.stringify({
         "event":"scroll",
         "data":{
-            "id": id,
             "xdelta": deltaX,
             "ydelta": deltaY
         }
@@ -860,12 +846,12 @@ $(document).ready(function () {
     // Init canvas
     initCanvas($('#canvas'),canvasWindowWidth,canvasWindowHeight);
     canvas = $("#canvas canvas");
+
     // Start listening for scroll events using mousewheel.js
     canvas.mousewheel(function(event) {
         sendScrollEvent(event.deltaX,event.deltaY);
         return false; // Prevent browser default behavior
     });
-
     
     if(debugOn) {
         initDebug();
@@ -894,4 +880,3 @@ $(document).ready(function () {
     });
 
 });
-
