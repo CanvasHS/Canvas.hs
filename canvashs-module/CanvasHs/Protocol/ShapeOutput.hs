@@ -223,9 +223,9 @@ shapeEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.alignment = a, D
         where
             pointData = shapeEncodePoint ps
             al = case a of 
-                        D.Start -> Just "left"
-                        D.Center -> Just "center"
-                        D.End -> Just "right"
+                        D.AlignLeft -> Just "left"
+                        D.AlignCenter -> Just "center"
+                        D.AlignRight -> Just "right"
 
             text = pointData{text= Just $ T.pack $ s}
             result = text{fontFamily=Just $ T.pack f, fontSize=Just si, align =al, bold=Just b, italic=Just i, underline=Just u}

@@ -67,11 +67,11 @@ type FontSize = Int
 -- | Ways to align text	
 data Alignment 
     -- | Aligns the start of the text to the specified point.
-    = Start 
+    = AlignLeft 
     -- | Aligns the end of the text to the specified point.
-    | End 
+    | AlignRight 
     -- | Aligns the center of the text to the speciied point.
-    | Center
+    | AlignCenter
 		deriving (Eq, Show)
 
 -- | Record holding formatting data for text, eg fonts and sizes
@@ -96,7 +96,7 @@ data TextData = TextData {
 
 -- | Defines defaults for TextData
 instance Defaults TextData where
-    defaults = TextData "Arial" 12 False False False Start
+    defaults = TextData "Arial" 12 False False False AlignLeft
 
 -- | All drawable objects that the user can define (also includes some modifying objects like scale)
 data Shape 
