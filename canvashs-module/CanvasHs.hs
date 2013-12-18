@@ -26,7 +26,8 @@
 module CanvasHs
 (
     installEventHandler,
-    shape
+    shape,
+    actions
 )  where
 
 import CanvasHs.Data
@@ -71,6 +72,10 @@ installEventHandler handl startState = do
 -- | convenience function to output just a shape
 shape :: Shape -> Output
 shape s = Out (Just s, [])
+
+-- convenience function to output just a list of actions
+actions :: [Action] -> Output
+actions a = Out (Nothing, a)
     
 -- | handles input from the canvas
 handleWSInput :: IORef (State a) -> T.Text -> IO (Maybe T.Text)

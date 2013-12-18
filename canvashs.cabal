@@ -9,7 +9,8 @@ data-files:          canvashs-client/*.html,
                      canvashs-client/js/*.js,
                      canvashs-client/js/*.map,
                      canvashs-client/css/*.css
-
+flag hpc
+  default: False
 Library
   build-depends: 	base >= 4,
                   QuickCheck >= 2.4,
@@ -43,6 +44,8 @@ Library
                   CanvasHs.Protocol.Input
                   CanvasHs.Protocol.ShapeOutput
                   CanvasHs.Protocol.ActionOutput
+  if flag(hpc)
+    ghc-options: -fhpc
 
 Test-Suite setup-tests
   type:            exitcode-stdio-1.0
@@ -50,7 +53,6 @@ Test-Suite setup-tests
   build-depends:   
                    base >= 4 && < 5,
                    process >= 1.1
-
 
 Test-Suite javascript-tests
   type:            exitcode-stdio-1.0
