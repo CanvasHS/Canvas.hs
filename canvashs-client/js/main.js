@@ -69,10 +69,6 @@ function connectionDataReceived(event) {
     else {
         printDebugMessage("No actions recieved",0);
     }
-<<<<<<< HEAD
-=======
-
->>>>>>> dev
 }
 
 /**
