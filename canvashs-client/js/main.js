@@ -11,7 +11,7 @@ var canvasWindowHeight = 600;
 var canvas = undefined;
 
 var generadedShapeIdIdx = 0;
-var debugOn = true;
+var debugOn = false;
 var debugAnnimatingShapes = [];
 var debugCanClose = true;
 
@@ -587,8 +587,6 @@ function shapeFromData(message) {
             if(align != undefined){
                 var offsetX = shape.getOffsetX();
                 var width = shape.getWidth();
-
-                console.log(width);
                 
                 if(align == 'center'){
                     offsetX = offsetX + (width / 2);

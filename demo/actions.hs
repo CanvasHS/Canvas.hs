@@ -1,20 +1,25 @@
 import CanvasHs
 import CanvasHs.Data
+import Debug.Trace
 import Prelude
-
+ 
 data St
     = St {
         debug :: Bool,
         dragndrop :: Bool,
-        timer :: Int
-    }
-
-main = installEventHandler h (St{debug=False, timer=0, dragndrop=False})
-
+        timer :: Int,
+        ballx :: Int,
+        bally :: Int,
+        ballvx :: Int,
+        ballvy :: Int
+    } deriving (Show)
+ 
+main = installEventHandler h (St{debug=False, timer=0, dragndrop=False, ballx=30, bally=30, ballvx=15, ballvy=9})
+ 
 h :: St -> Event -> (St, Output)
 h st StartEvent
     = (st, shape $ drawCanvas st)
-
+ 
 h st (MouseClick _ "debug")
     = (st', Out (Just $ drawCanvas st', [Debug d']))
         where
@@ -29,7 +34,7 @@ h st (MouseClick _ "fullwindow")
     = (st, Out (Nothing, [DisplayType FullWindow]))
     
 h st (MouseClick _ "fixedsize")
-    = (st, Out (Nothing, [DisplayType $ FixedSize 400 300]))
+    = (st, Out (Nothing, [DisplayType $ FixedSize 900 600]))
     
 h st (MouseClick _ "timer")
     = (st, Out (Nothing, [Timer 1000 "clock"]))
@@ -65,7 +70,7 @@ h st (MouseClick _ "dragndrop")
         where
         St{dragndrop=d} = st
         d' = not d
-        st' = st{dragndrop=d}
+        st' = st{dragndrop=d'}
 -- | a file has been uploaded using either drag'n'drop or RequestUpload, we treat it as a timer value        
 h st (UploadComplete _ (con, _))
     = (st', shape $ drawCanvas st')
@@ -73,49 +78,75 @@ h st (UploadComplete _ (con, _))
         t = read con
         st' = st{timer=t}
         
+h st (MouseClick _ "bounceball")
+    = (st, Out (Nothing, [Timer 120 "ball"]))
+h st (Tick "ball")
+    = (st', shape $ drawCanvas st')
+        where
+        st' = calculateBall st
+        
 h st _ = h st StartEvent
-
+ 
 drawCanvas :: St -> Shape
-drawCanvas st  = Container 900 600 [drawButtons
-                                    ,Translate 350 25 $ drawState st
+drawCanvas st   = Container 900 600 [drawButtons
+                                    ,Translate 175 25 $ drawState st
+                                    ,Translate 175 100 $ drawBounce st
                                     ]
-
--- | Draws a container of size w:200 h:150 displaying the current state
+ 
+-- | Draws a container of size w:200 h:60 displaying the current state
 drawState :: St -> Shape
-drawState st = Fill darkred $ Container 200 150 
-                                [Text (0,0)    ("Timer: " ++ show t) defaults{font="Helvetica", alignment=Start, bold=True}
-                                ,Text (0,50)    ("Debug: " ++ show d) defaults{font="Helvetica", alignment=Start, bold=True}
-                                ,Text (0,100)  ("Drag'n'Drop: " ++ show dnd) defaults{font="Helvetica", alignment=Start, bold=True}
+drawState st = Fill darkred $ Container 200 60 
+                                [Text (0,0)     ("Timer: " ++ show t) defaults{font="Helvetica", alignment=Start, bold=True}
+                                ,Text (0,20)    ("Debug: " ++ show d) defaults{font="Helvetica", alignment=Start, bold=True}
+                                ,Text (0,40)   ("Drag'n'Drop: " ++ show dnd) defaults{font="Helvetica", alignment=Start, bold=True}
                                 ]
                 where
                 St{timer=t, debug=d, dragndrop=dnd} = st
     
 -- | returns a container at position 0 0 of width 125, height 500 containing all buttons
 drawButtons :: Shape    
-drawButtons = Container 125 500 [Translate 25 0    $ button "Toggle debug" "debug"
+drawButtons = Container 150 500 [Translate 25 0     $ button "Toggle debug" "debug"
                                 ,Translate 25 40    $ button "Fullscreen" "fullscreen"
                                 ,Translate 25 80    $ button "Fullwindow" "fullwindow"
-                                ,Translate 25 120  $ button "Fixedsize 400 300" "fixedsize"
-                                ,Translate 25 160  $ button "Start timer" "timer"
-                                ,Translate 25 200  $ button "Save to timer.txt" "save"
-                                ,Translate 25 240  $ button "Load from timer.txt" "load"
-                                ,Translate 25 280  $ button "Download timer" "download"
-                                ,Translate 25 320  $ button "Request upload" "upload"
-                                ,Translate 25 360  $ button "Toggle drag'n'drop" "dragndrop"
+                                ,Translate 25 120   $ button "Fixedsize 900 600" "fixedsize"
+                                ,Translate 25 160   $ button "Start timer" "timer"
+                                ,Translate 25 200   $ button "Save to timer.txt" "save"
+                                ,Translate 25 240   $ button "Load from timer.txt" "load"
+                                ,Translate 25 280   $ button "Download timer" "download"
+                                ,Translate 25 320   $ button "Request upload" "upload"
+                                ,Translate 25 360   $ button "Toggle drag'n'drop" "dragndrop"
+                                ,Translate 25 400   $ button "Start bounce" "bounceball"
                                 ]
-
+ 
 -- | draws a button at position 0 0, with the first string as label and the second as event id
 button :: String -> String -> Shape
-button lab id  = Event defaults{eventId=id, mouseClick=True} $
-                    Container 100 30 [Stroke darkblue 5 $ Fill blue $ Rect (0,0) 100 30
-                                      ,Fill darkblue $ Text (5,5) lab defaults{font="Helvetica", alignment=Start}
-                                      ]
-
-
-
+button lab id   = Event defaults{eventId=id, mouseClick=True} $
+                     Container 125 30 [Stroke darkblue 5 $ Fill blue $ Rect (0,0) 125 30
+                                       ,Fill darkblue $ Text (5,5) lab defaults{font="Helvetica", alignment=Start}
+                                       ]
+ 
+-- | draws a container of 400 400 containing a bouncing ball
+drawBounce :: St -> Shape
+drawBounce st = Container 400 400   [Stroke darkred 10 $ Fill magenta $ Rect (0,0) 400 400
+                                    ,Fill darkred $ Circle (x,y) 30
+                                    ]
+                where
+                St{ballx=x, bally=y} = st
+                
+calculateBall :: St -> St
+calculateBall st = st{ballx=x', bally=y', ballvx=vx', ballvy=vy'}
+                    where
+                    St{ballx=x, bally=y, ballvx=vx, ballvy=vy} = st
+                    vx' = if ((x + vx) > 370) || ((x + vx) < 30) then negate vx else vx
+                    vy' = if ((y + vy) > 370) || ((y + vy) < 30) then negate vy else vy
+                    x' = x + vx
+                    y' = y + vy
+                                
+ 
 -- Color helper functions
 black = (0,0,0,1.0)
 gray = (207,207,197,1.0)
 blue = (174,198,207,1.0)
 darkblue = (100,130,180,1.0)
 darkred = (194,59,34,1.0)
+magenta = (244,154,194,1.0)
