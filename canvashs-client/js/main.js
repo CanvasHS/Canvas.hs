@@ -7,6 +7,9 @@ var connection = new WebSocket('ws://localhost:8080');
 var canvasWindowWidth = 900;
 var canvasWindowHeight = 600;
 
+// Keep track of scrollable shapes.
+var scrollShapes = new Array();
+
 // Event handlers
 var canvas = undefined;
 
@@ -27,11 +30,12 @@ var mouseMoveRateLimit = 90; // The mousemove interval limit
 
 /**
  * Handles data received from the websocket connection.
- * @param {type} event
+ * @param {type} event The event received from the server side.
  * @returns {undefined}
  */
 function connectionDataReceived(event) {
-
+    // Reset tracking of scrollable shapes
+    scrollShapes = new Array();
     // Reset mousedrag
     mouseDragFound = false;
 
@@ -74,13 +78,18 @@ function connectionDataReceived(event) {
 
 /**
  * Prints a message to the console when a connection error occurs.
- * @param {type} error
+ * @param {String} error The error message.
  * @returns {undefined}
  */
 function connectionError(error) {
     printDebugMessage("WebSocket Error " + error,2);
 }
 
+/**
+ * Displays a message when the connection to the server is lost.
+ * @param {String} error The error message.
+ * @returns {undefined}
+ */
 function connectionClosed(error) {
     printDebugMessage("Connection closed " + error,0);
 
@@ -343,6 +352,12 @@ function enableEventHandlers(shape, message) {
             mouseDragFound = mouseDragFound || message.eventData["eventId"]==mouseDragId; // Used to disable mousedrag when no longer this event is requested
             shape.on('mousedown', mouseDragStartEventHandler.bind(undefined, message.eventData.eventId));
         }
+        if(message.eventData.listen.indexOf("scroll") != -1) {
+            // Start listening for scroll events using mousewheel.js
+            canvas.on('mousewheel', scrollEventHandler.bind(undefined, message.eventData.eventId));
+            shape["id"] = message.eventData.eventId;
+            scrollShapes.push(shape);
+        }
     }
 }
 function clickEventHandler(id, event) { mouseEvent("mouseclick", id, event); }
@@ -357,7 +372,29 @@ function mouseOutEventHandler(id, event) {
     } 
 }
 function mouseMoveEventHandler(id, event) { mouseEvent("mousemove", id, event); }
-
+function scrollEventHandler(id, event) {
+    // Find out which of the scrollable images is scrolled on, if any.
+    var shape = null;
+    for (i = 0; i < scrollShapes.length; i++) {
+        if(scrollShapes[i].intersects(realX(event.pageX),realY(event.pageY))) {
+            shape = scrollShapes[i];
+            break;
+        }
+    }
+    if(shape != null) {
+        event.preventDefault();
+        scrollEvent(shape.id, event.deltaX, event.deltaY);
+    }
+}
+var mouseDragId = undefined;
+var mouseDragEndHandler = undefined;
+var mouseDragHandler = undefined;
+var dragEventRateLimiter = undefined;
+var mouseDragFound = true;
+var enableDragHandler = true;
+var prevMousePosX = 0;
+var prevMousePosY = 0;
+var mouseMoveRateLimit = 90; // The mousemove interval limit
 /**
  * Starts the mouse drag event handler.
  * @param {type} id The id of the shape the event handler will listen on.
@@ -488,12 +525,10 @@ function sendKeyEvent(eventName, event) {
         }
     }));
 }
-
 function realX(x) {
     var canvasPos = $("#canvas").position();
     return x-canvasPos.left-parseInt($("#canvas").css("margin-left"));
 }
-
 function realY(y) {
     var canvasPos = $("#canvas").position();
     return y-canvasPos.top-parseInt($("#canvas").css("margin-top"));
@@ -504,13 +539,14 @@ function realY(y) {
  * @param {Number} deltaY How far is scrolled in vertical direction.
  * @returns {undefined}
  */
-function sendScrollEvent(deltaX,deltaY) {
+function scrollEvent(id,deltaX,deltaY) {
 
-    printDebugMessage("ScrollEvent (deltaX:"+deltaX+" deltaY:"+deltaY+")",0);
+    printDebugMessage("ScrollEvent (id:"+id+" deltaX:"+deltaX+" deltaY:"+deltaY+")",0);
 
     connection.send(JSON.stringify({
         "event":"scroll",
         "data":{
+            "id": id,
             "xdelta": deltaX,
             "ydelta": deltaY
         }
@@ -785,12 +821,6 @@ $(document).ready(function () {
     // Init canvas
     initCanvas($('#canvas'),canvasWindowWidth,canvasWindowHeight);
     canvas = $("#canvas canvas");
-
-    // Start listening for scroll events using mousewheel.js
-    canvas.mousewheel(function(event) {
-        sendScrollEvent(event.deltaX,event.deltaY);
-        return false; // Prevent browser default behavior
-    });
     
     if(debugOn) {
         initDebug();
