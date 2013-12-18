@@ -29,7 +29,6 @@ import GHC.Generics
 import Data.Aeson.TH
 import qualified Data.Text as T
 
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BU
 import qualified Data.ByteString.Lazy.UTF8 as BUL

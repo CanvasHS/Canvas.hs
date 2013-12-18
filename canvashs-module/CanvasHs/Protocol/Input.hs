@@ -25,7 +25,6 @@ import Data.Aeson ((.:), (.:?), FromJSON(..), Value(..))
 import Control.Applicative ((<$>), (<*>))
 import System.FilePath.Posix (takeExtension)
 
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BU
 import qualified Data.ByteString.Lazy.UTF8 as BUL
