@@ -30,6 +30,7 @@ import Data.Aeson (ToJSON, toJSON, object, (.=))
 import Data.Aeson.TH
 import qualified Data.Text as T
 import Control.Applicative ((<$>))
+import qualified Data.ByteString.UTF8 as BU
 
 import qualified CanvasHs.Data as D
 
@@ -51,9 +52,9 @@ data JSONShapeData
         scaleY         :: Maybe Float, 
         rotationDeg    :: Maybe Int, 
         fontSize       :: Maybe Int, 
-        fontFamily     :: Maybe T.Text,
-        text           :: Maybe T.Text,
-        align          :: Maybe T.Text,
+        fontFamily     :: Maybe BU.ByteString,
+        text           :: Maybe BU.ByteString,
+        align          :: Maybe BU.ByteString,
         bold           :: Maybe Bool,
         italic         :: Maybe Bool,
         underline      :: Maybe Bool,
@@ -68,8 +69,8 @@ data JSONShapeData
 
 data JSONEventData
     = JSONEventData { 
-        eventId        :: Maybe T.Text, 
-        listen         :: Maybe [T.Text]
+        eventId        :: Maybe BU.ByteString, 
+        listen         :: Maybe [BU.ByteString]
     } deriving (Show)
 
 data JSONRGBAColor
@@ -227,14 +228,14 @@ shapeEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.alignment = a, D
                         D.AlignCenter -> Just "center"
                         D.AlignRight -> Just "right"
 
-            text = pointData{text= Just $ T.pack $ s}
-            result = text{fontFamily=Just $ T.pack f, fontSize=Just si, align =al, bold=Just b, italic=Just i, underline=Just u}
+            text = pointData{text= Just $ BU.fromString $ s}
+            result = text{fontFamily=Just $ BU.fromString f, fontSize=Just si, align =al, bold=Just b, italic=Just i, underline=Just u}
 
 
 
 shapeEncodeEventData :: Maybe JSONEventData -> D.EventData -> JSONEventData
 shapeEncodeEventData Nothing e     = shapeEncodeEventData (Just (JSONEventData{eventId = Nothing, listen = Just []})) e
-shapeEncodeEventData (Just j) e = j {eventId = Just $ T.pack $ D.eventId e
+shapeEncodeEventData (Just j) e = j {eventId = Just $ BU.fromString $ D.eventId e
                                 ,listen = (++ mklisten e) <$> listen j
                                 }
                                 where

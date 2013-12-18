@@ -29,7 +29,10 @@ import GHC.Generics
 import Data.Aeson.TH
 import qualified Data.Text as T
 
-import qualified Data.ByteString.Lazy.UTF8 as B
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.UTF8 as BU
+import qualified Data.ByteString.Lazy.UTF8 as BUL
 import qualified Data.ByteString.Base64.Lazy as B64
 
 import qualified CanvasHs.Data as D
@@ -49,8 +52,8 @@ data JSONActionData
         dheight :: Maybe Int,
         denabled :: Maybe Bool,
         dmultiple :: Maybe Bool,
-        dfilename :: Maybe T.Text,
-        dfilecontents :: Maybe T.Text
+        dfilename :: Maybe BU.ByteString,
+        dfilecontents :: Maybe BSL.ByteString
     } deriving (Show)
     
    
@@ -74,10 +77,8 @@ actionEncode (D.DisplayType w)  = JSONAction{actionaction = "windowdisplaytype"
 actionEncode (D.Download fn fc)       = JSONAction{actionaction = "download"
                                             ,actiondata = emptyActionData{dfilecontents = Just filecontents, dfilename = Just filename}}
                                         where
-                                            -- we maken er een bytestring van, die decoden we naar b64 dan weer
-                                            -- naar string dan weer naar text, capiche?
-                                            filecontents = T.pack $ B.toString $ B64.encode $ B.fromString $ fc
-                                            filename = T.pack $ fn
+                                            filecontents = B64.encode $ BUL.fromString fc
+                                            filename = BU.fromString fn
                                             
 actionEncode (D.RequestUpload b)    = JSONAction{actionaction = "requestupload" 
                                                 ,actiondata = emptyActionData{dmultiple = Just b}

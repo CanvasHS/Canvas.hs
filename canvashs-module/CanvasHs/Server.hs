@@ -27,7 +27,8 @@ import CanvasHs.Server.Static
 -- Paths_canvashs is required to include static files
 import qualified Network.WebSockets as WS
 import Control.Monad (forever)
-import qualified Data.Text as T
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BU
 import Data.Maybe (isNothing)
 import qualified Network.Wai.Handler.Warp as WRP (run)
 import Data.Monoid
@@ -57,7 +58,7 @@ conn = unsafePerformIO (newIORef Nothing)
     note that when Nothing is returned to only way to send data over the websocket is to wait for
     input from the websocket
 -}
-start :: (T.Text -> IO (Maybe T.Text)) -> IO ()
+start :: (BS.ByteString -> IO (Maybe BS.ByteString)) -> IO ()
 start f =   do
                 forkChild serverHttp -- the httpserver servers static files
                 forkChild serverHandle -- runserver is a simple server for websockets   
@@ -74,11 +75,11 @@ serverHttp = do
                 forkIO $ WRP.run 8000 (httpget (concat dirFiles))
                 return ()
 
-websockets :: (T.Text -> IO (Maybe T.Text)) -> WS.PendingConnection -> IO ()
+websockets :: (BU.ByteString -> IO (Maybe BU.ByteString)) -> WS.PendingConnection -> IO ()
 websockets f rq = do
                     cn <- WS.acceptRequest rq
                     atomicModifyIORef conn (\_ -> (Just cn, ()))
-                    (Just initial) <- f $ T.pack "INIT"
+                    (Just initial) <- f "INIT"
                     WS.sendTextData cn initial
                     forever $ do
                         resp <- WS.receiveData cn >>= f
@@ -86,7 +87,7 @@ websockets f rq = do
                             Nothing -> return ()
                             Just m  -> WS.sendTextData cn m
                             
-sendText :: T.Text -> IO ()
+sendText :: BU.ByteString -> IO ()
 sendText t = readIORef conn >>= (\c -> case c of
                 Nothing -> error "No open connection, cannot sendText"
                 Just cn -> WS.sendTextData cn t

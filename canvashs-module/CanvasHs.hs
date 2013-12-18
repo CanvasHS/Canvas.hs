@@ -39,11 +39,12 @@ import qualified Data.Text as T
 import Data.IORef (IORef, newIORef, atomicModifyIORef, readIORef)
 import Control.Monad.Trans (liftIO, lift)
 import System.IO (readFile, writeFile)
-import qualified Data.ByteString as BS (readFile, writeFile)
 import Data.Maybe (catMaybes)
 import Control.Concurrent.Timer
 import Control.Concurrent.Suspend (msDelay)
 import Control.Applicative ((<$>))
+import qualified Data.ByteString as BS (readFile, writeFile)
+import qualified Data.ByteString.UTF8 as BU
 
 import qualified Network.WebSockets as WS
 
@@ -78,11 +79,11 @@ actions :: [Action] -> Output
 actions a = Out (Nothing, a)
     
 -- | handles input from the canvas
-handleWSInput :: IORef (State a) -> T.Text -> IO (Maybe T.Text)
+handleWSInput :: IORef (State a) -> BU.ByteString -> IO (Maybe BU.ByteString)
 handleWSInput st ip = handleEvent st $ decode ip
 
 -- | handles an event, it is fed through the handler, the newstate is saved and the resulting 
-handleEvent :: IORef (State a) -> Event -> IO (Maybe T.Text)
+handleEvent :: IORef (State a) -> Event -> IO (Maybe BU.ByteString)
 handleEvent st e    = do
                         curState <- readIORef st
                         let
