@@ -46,16 +46,11 @@ data JSONEventData = JSONEventData {
         control :: Maybe Bool,
         alt :: Maybe Bool,
         shift :: Maybe Bool,
-<<<<<<< HEAD
-        xdelta :: Maybe Integer,
-        ydelta :: Maybe Integer,
-=======
         xdelta :: Maybe Int,
         ydelta :: Maybe Int,
         width :: Maybe Int,
         height :: Maybe Int,
         filename :: Maybe Text,
->>>>>>> dev
         filecontents :: Maybe Text
     } deriving(Eq, Show)
 
@@ -76,12 +71,9 @@ instance FromJSON JSONEventData where
                             v .:? "shift"        <*>
                             v .:? "xdelta"       <*>
                             v .:? "ydelta"       <*>
-<<<<<<< HEAD
-=======
                             v .:? "width"        <*>
                             v .:? "height"       <*>
                             v .:? "filename"     <*> -- Only for upload events
->>>>>>> dev
                             v .:? "filecontents"     -- Only for upload events
     parseJSON _ = error "A toplevel JSON should be an object"
 
