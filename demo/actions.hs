@@ -67,7 +67,7 @@ h st (MouseClick _ "dragndrop")
         d' = not d
         st' = st{dragndrop=d}
 -- | a file has been uploaded using either drag'n'drop or RequestUpload, we treat it as a timer value        
-h st (UploadComplete _ (con, _))
+h st (UploadComplete (con, _))
     = (st', shape $ drawCanvas st')
         where
         t = read con
@@ -83,9 +83,9 @@ drawCanvas st  = Container 900 600 [drawButtons
 -- | Draws a container of size w:200 h:150 displaying the current state
 drawState :: St -> Shape
 drawState st = Fill darkred $ Container 200 150 
-                                [Text (0,0)    ("Timer: " ++ show t) defaults{font="Helvetica", alignment=Start, bold=True}
-                                ,Text (0,50)    ("Debug: " ++ show d) defaults{font="Helvetica", alignment=Start, bold=True}
-                                ,Text (0,100)  ("Drag'n'Drop: " ++ show dnd) defaults{font="Helvetica", alignment=Start, bold=True}
+                                [Text (0,0)    ("Timer: " ++ show t) defaults{font="Helvetica", alignment=AlignLeft, bold=True}
+                                ,Text (0,50)    ("Debug: " ++ show d) defaults{font="Helvetica", alignment=AlignLeft, bold=True}
+                                ,Text (0,100)  ("Drag'n'Drop: " ++ show dnd) defaults{font="Helvetica", alignment=AlignLeft, bold=True}
                                 ]
                 where
                 St{timer=t, debug=d, dragndrop=dnd} = st
@@ -108,7 +108,7 @@ drawButtons = Container 125 500 [Translate 25 0    $ button "Toggle debug" "debu
 button :: String -> String -> Shape
 button lab id  = Event defaults{eventId=id, mouseClick=True} $
                     Container 100 30 [Stroke darkblue 5 $ Fill blue $ Rect (0,0) 100 30
-                                      ,Fill darkblue $ Text (5,5) lab defaults{font="Helvetica", alignment=Start}
+                                      ,Fill darkblue $ Text (5,5) lab defaults{font="Helvetica", alignment=AlignLeft}
                                       ]
 
 
