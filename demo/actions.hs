@@ -79,26 +79,26 @@ h st (MouseClick _ "dragndrop")
         d' = not d
         st' = st{dragndrop=d'}
 -- | a file has been uploaded using either drag'n'drop or RequestUpload, we treat it as a timer value 
-{-       
+       
 h st (UploadComplete (con, _))
     = (st', shape $ drawCanvas st')
         where
         t = read con
         st' = st{timer=t}
--}        
+        
 h st (MouseClick _ "bounceball")
     = (st, Out (Nothing, [Timer 120 "ball"]))
 h st (Tick "ball")
     = (st', shape $ drawCanvas st')
         where
         st' = calculateBall st
-    {-     
+
 h st (MouseClick _ "prompt")
     = (st, Out (Nothing, [Prompt "What is your favourite colour?" "green"]))
 h st (PromptResponse ans)
     = (st', shape $ drawCanvas st')
         where st' = st{colour = ans}
-    -}    
+
 h st _ = h st StartEvent
  
 drawCanvas :: St -> Shape
