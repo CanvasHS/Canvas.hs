@@ -51,7 +51,8 @@ data JSONEventData = JSONEventData {
         width :: Maybe Int,
         height :: Maybe Int,
         filename :: Maybe Text,
-        filecontents :: Maybe Text
+        filecontents :: Maybe Text,
+        value :: Maybe Text
     } deriving(Eq, Show)
 
 instance FromJSON JSONEventData where
@@ -74,7 +75,8 @@ instance FromJSON JSONEventData where
                             v .:? "width"        <*>
                             v .:? "height"       <*>
                             v .:? "filename"     <*> -- Only for upload events
-                            v .:? "filecontents"     -- Only for upload events
+                            v .:? "filecontents" <*> -- Only for upload events
+                            v .:? "value"
     parseJSON _ = error "A toplevel JSON should be an object"
 
 instance FromJSON Event where
@@ -139,6 +141,10 @@ makeEvent "upload"
 makeEvent "resizewindow"
     (JSONEventData{width = Just w, height = Just h})
         = WindowResize w h
+
+makeEvent "prompt"
+    (JSONEventData{value = Just val})
+        = PromptResponse (unpack val)
 
 makeEvent _ _ = error "JSON did not match any event"
 
