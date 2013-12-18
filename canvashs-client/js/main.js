@@ -73,7 +73,6 @@ function connectionDataReceived(event) {
     else {
         printDebugMessage("No actions recieved",0);
     }
-
 }
 
 /**
@@ -124,6 +123,7 @@ function closeControlWindow() {
 function setWindowDisplayType(displayType, attempt)
 {
     attempt = attempt != undefined ? attempt : 1;
+
     switch (displayType) {
         case 0: // FixedSize
 
@@ -191,6 +191,52 @@ function requestFullscreen(attempt) {
     }
 }
 
+/**
+ * Opens a prompt to ask if a file should be uploaded. When clicked on "Yes" a file selecion browser will be opened.
+ * @returns {undefined}
+ */
+function requestUpload() {
+    
+    openControlWindow("Upload a file?","<a href=\"#\" id=\"acceptPrompt\">Yes</a> - <a href=\"#\" id=\"closePrompt\">No</a>");    
+    $("#acceptPrompt").off('click');
+    $("#closePrompt").off('click');
+    $("#acceptPrompt").click(promptForUpload.bind(undefined));
+    $("#closePrompt").click(closeControlWindow.bind(undefined));
+}
+
+/**
+ * Opens a file browser in which you can select a file. This function should be called directly through user input
+ * and not through a websocket for example. Browsers have built in protection to prevent this, the promt will not show.
+ * @returns {undefined}
+ */
+function promptFileBrowser() {
+
+    $('#fileUpload').trigger('click');
+    $('#fileUpload').change(function() {
+        if ( this.files && this.files[0] ) {
+            var FR= new FileReader();
+            FR.onload = function(e) {
+                printDebugMessage("Uploading file: "+e.target.result,0);
+
+                //e.target.result contains the base64 filecontents, but with a mimetype prepended (which we don't want)
+                parts = e.target.result.split("base64,");
+                mimetype = parts[0]; //not used
+                contents = parts[1];
+                
+                connection.send(JSON.stringify({
+                    "event":"upload",
+                    "data":{
+                        "filecontents": contents
+                    }
+                }));
+            };       
+            FR.readAsDataURL( this.files[0] );
+        }
+    });
+
+    closeControlWindow();
+}
+
 function setFluidProportions(container) {
     // Animate to fluid width and height
     container.animate({
@@ -227,7 +273,11 @@ function resizeCanvas(event) {
     }
 }
 
-
+/**
+ * Parses shape data and returns an object kinetic accepts. Also coupling to event handlers is done.
+ * @param {type} shape data
+ * @returns {Kinetic.Group|shapeFromData.shape|Kinetic.Circle|Kinetic.Line|Kinetic.Polygon|Kinetic.Text|Kinetic.Rect}
+ */
 function parseShapeData(data) {
 
     var shape = shapeFromData(data);
@@ -236,6 +286,11 @@ function parseShapeData(data) {
     return shape;
 }
 
+/**
+ * Parses action data and execute the actions.
+ * @param {type} action data
+ * @returns {undefined}
+ */
 function parseActionData(data) {
     if(hasProperty(data,"action") && data.action != undefined &&
        hasProperty(data,"data") && data.data != undefined) {
@@ -282,11 +337,7 @@ function parseActionData(data) {
                     else
                          $('#fileUpload').removeProp('multiple');
 
-                    $('#fileUpload').trigger('click');
-                    $('#fileUpload').change(function() {
-                        printDebugMessage("Tries to upload file",0);
-                    });
-
+                    requestUpload();
                 }
                 else {
                     printDebugMessage("Request upload action recieved without multiple attribute",2);
@@ -420,6 +471,7 @@ function mouseDragStartEventHandler(id, event) {
     // Cancel event bubbling
     event.cancelBubble = true;
 }
+
 /**
  * Handles mouse drag events.
  * @param {type} id The id of the shape the event handler listens on.
@@ -440,6 +492,7 @@ function mouseDragEndEventHandler(id, event) {
     // Cancel event bubbling
     event.cancelBubble = true;
 }
+
 /**
  * Sends information belonging to a mouse drag event.
  * @param {type} id The id of the shape the drag occurs on.
@@ -475,6 +528,7 @@ function mouseDragEventHandler(id, event) {
     // Cancel event bubbling
     event.cancelBubble = true;
 }
+
 /**
  * Sends information about mouse events.
  * @param {type} eventName The name of the event as send to the server.
@@ -533,6 +587,7 @@ function realY(y) {
     var canvasPos = $("#canvas").position();
     return y-canvasPos.top-parseInt($("#canvas").css("margin-top"));
 }
+
 /**
  * Sends a scroll event to the server.
  * @param {Number} deltaX How far is scrolled in horizontal direction.
@@ -553,6 +608,12 @@ function scrollEvent(id,deltaX,deltaY) {
     }));
 }
 
+/**
+ * Sends a window resize event to the server.
+ * @param {Number} width How wide the window has become.
+ * @param {Number} height How high the window has become.
+ * @returns {undefined}
+ */
 function sendWindowResizeEvent(width,height) {
 
     printDebugMessage("Window Resize (width:"+width+" height:"+height+")",0);
