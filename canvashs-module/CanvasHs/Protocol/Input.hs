@@ -131,8 +131,8 @@ makeEvent "scroll"
         = Scroll (unpack $ eid) xd yd
 
 makeEvent "upload"
-    (JSONEventData{filename = Just fn, filecontents = Just fc})
-        = UploadComplete (unpack $ fn) (B.toString $ b, b)
+    (JSONEventData{filecontents = Just fc})
+        = UploadComplete (B.toString $ b, b)
         where
             (Right b) = B64.decode $ B.fromString $ unpack $ fc
             
