@@ -27,7 +27,6 @@ import CanvasHs.Server.Static
 -- Paths_canvashs is required to include static files
 import qualified Network.WebSockets as WS
 import Control.Monad (forever)
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BU
 import Data.Maybe (isNothing)
 import qualified Network.Wai.Handler.Warp as WRP (run)
@@ -58,7 +57,7 @@ conn = unsafePerformIO (newIORef Nothing)
     note that when Nothing is returned to only way to send data over the websocket is to wait for
     input from the websocket
 -}
-start :: (BS.ByteString -> IO (Maybe BS.ByteString)) -> IO ()
+start :: (BU.ByteString -> IO (Maybe BU.ByteString)) -> IO ()
 start f =   do
                 forkChild serverHttp -- the httpserver servers static files
                 forkChild serverHandle -- runserver is a simple server for websockets   

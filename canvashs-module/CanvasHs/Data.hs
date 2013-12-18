@@ -19,8 +19,7 @@
 
 module CanvasHs.Data where
 
-import qualified Data.ByteString.Lazy.UTF8 as BS8
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
 
 -- | Convenience type for a point (x, y)
 type Point = (Int, Int)
@@ -145,7 +144,7 @@ data Action
     -- | Saves a file as string. Has a filepath to save to, and a String of the file contents. When the file already has contents it will be overwritten
     = SaveFileString String String
      -- | Saves a file in binary mode. Has a filepath to save to, and a ByteString of the file contents. When the file already has contents it will be overwritten
-    | SaveFileBinary String BS.ByteString
+    | SaveFileBinary String BSL.ByteString
     -- | Starts a repeating Timer. Has a timeout in ms and a String identifying the Timer.
     | Timer Int String
     -- | Turns the debug console on or off. Has a Bool, True means show, False means hide, send to javascript
@@ -212,11 +211,11 @@ data Event
     -- | When a file requested using the LoadFileString Action has been loaded. Has a filepath and file contents as String
     | FileLoadedString String String
     -- | When a file requested using the LoadFileString Action has been loaded. Has a filepath and file contents as ByteString
-    | FileLoadedBinary String BS.ByteString
+    | FileLoadedBinary String BSL.ByteString
     -- | Tick event from a Timer. Has a string identifying the Timer
     | Tick String
     -- | An upload has been completed. Has contents
-    | UploadComplete (String, BS8.ByteString)
+    | UploadComplete (String, BSL.ByteString)
     -- | A reseizewindoweventm has a new width and height
     | WindowResize Int Int
     deriving(Eq, Show)

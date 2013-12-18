@@ -43,7 +43,7 @@ import Data.Maybe (catMaybes)
 import Control.Concurrent.Timer
 import Control.Concurrent.Suspend (msDelay)
 import Control.Applicative ((<$>))
-import qualified Data.ByteString as BS (readFile, writeFile)
+import qualified Data.ByteString.Lazy as BSL (readFile, writeFile)
 import qualified Data.ByteString.UTF8 as BU
 
 import qualified Network.WebSockets as WS
@@ -102,7 +102,7 @@ doActions st xs =  (sequence $ map doAction xs) >>= (return . catMaybes)
                 where
                     doAction :: Action -> IO (Maybe Action)
                     doAction (SaveFileString p c)   = writeFile p c >> return Nothing
-                    doAction (SaveFileBinary p c)   = BS.writeFile p c >> return Nothing
+                    doAction (SaveFileBinary p c)   = BSL.writeFile p c >> return Nothing
                     doAction (Timer ms id)          = repeatedTimer (liftIO $ handleTick st id >> return ()) (msDelay $ fromIntegral ms) >> return Nothing
                     -- Other actions fall through and are encoded by encode
                     doAction a                      = return $ Just a
@@ -111,7 +111,7 @@ doActions st xs =  (sequence $ map doAction xs) >>= (return . catMaybes)
 -- | handles blocking actions. The actions are executed and the corresponding Event is returned
 doBlockingAction :: BlockingAction -> IO (Event)
 doBlockingAction (LoadFileString p) = readFile p >>= (\c -> return (FileLoadedString p c))
-doBlockingAction (LoadFileBinary p) = BS.readFile p >>= (\c -> return (FileLoadedBinary p c))
+doBlockingAction (LoadFileBinary p) = BSL.readFile p >>= (\c -> return (FileLoadedBinary p c))
 -- TODO: upload
 doBlockingAction _ = return StartEvent
 
