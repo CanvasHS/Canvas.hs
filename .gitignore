@@ -1,9 +1,11 @@
 dist
 cabal-dev
+.hpc
 *.o
 *.hi
 *.chi
 *.chs.h
+.hpc
 .virthualenv
 lib
 docs
