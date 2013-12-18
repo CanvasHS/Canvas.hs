@@ -191,7 +191,7 @@ function requestUpload() {
     openControlWindow("Upload a file?","<a href=\"#\" id=\"acceptPrompt\">Yes</a> - <a href=\"#\" id=\"closePrompt\">No</a>");    
     $("#acceptPrompt").off('click');
     $("#closePrompt").off('click');
-    $("#acceptPrompt").click(promptForUpload.bind(undefined));
+    $("#acceptPrompt").click(promptFileBrowser.bind(undefined));
     $("#closePrompt").click(closeControlWindow.bind(undefined));
 }
 
