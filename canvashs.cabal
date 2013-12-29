@@ -34,7 +34,7 @@ Library
                   suspend >= 0.1.0.2,
                   filepath
 
-  Exposed-modules:	CanvasHs, CanvasHs.Data
+  Exposed-modules:	CanvasHs, CanvasHs.Data, CanvasHs.Colors
   hs-source-dirs:	canvashs-module
   other-modules:  Paths_canvashs,
                   CanvasHs.Launch,
