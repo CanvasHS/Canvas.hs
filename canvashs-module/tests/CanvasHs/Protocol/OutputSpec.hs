@@ -46,7 +46,7 @@ spec = do
             it "can encode proper Circles" $ do
                 shapeDec (Circle (1,2) 3) `shouldBe` shapeTextDec "{\"type\": \"circle\", \"data\": {\"x\": 1, \"y\": 2, \"radius\": 3, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}}}"
             it "can encode proper Arcs" $ do
-                pendingWith "Arcs not yet implemented"
+                shapeDec (Arc (1, 2) 3 4) `shouldBe` shapeTextDec "{\"type\": \"arc\", \"data\": {\"x\": 1, \"y\": 2, \"radius\": 3, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}, \"angleDeg\":4 }}"
             it "can encode proper Lines" $ do
                 shapeDec (Line [(1,2),(3,4),(5,6),(7,8)]) `shouldBe` shapeTextDec "{\"type\": \"line\", \"data\": {\"points\": [1,2,3,4,5,6,7,8], \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}}}"
             it "can encode proper Polygons" $ do
