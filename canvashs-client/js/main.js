@@ -661,6 +661,9 @@ function shapeFromData(message) {
             shape = new Kinetic.Rect(data);
             debugMessage += "width x:"+data.x+" y:"+data.y+" width:"+data.width+" height:"+data.height;
             break;
+        case "arc":
+            shape = new CanvasHs.Arc(data);
+            debugMessage += "x:"+data.x+" y:"+data.y;
         case "text":
             var fontStyle;
             if(data.bold) {

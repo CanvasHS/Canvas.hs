@@ -104,8 +104,7 @@ data Shape
     = Rect Point Int Int
     -- | A circle. Has a centerpoint and a radius.
     | Circle Point Int
-    -- | An arch. Has a centerpoint, radius, startangle and endangle (counterclockwise).\
-    -- | Not yet implemented
+    -- | An arch. Has a centerpoint, radius, startangle and endangle (counterclockwise).
     | Arc Point Int Int Int
     -- | A line. Has a path containing its points, doesn't connect start and end.
     | Line Path
