@@ -664,6 +664,7 @@ function shapeFromData(message) {
         case "arc":
             shape = new CanvasHs.Arc(data);
             debugMessage += "x:"+data.x+" y:"+data.y;
+            break;
         case "text":
             var fontStyle;
             if(data.bold) {
