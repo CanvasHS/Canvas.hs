@@ -662,6 +662,17 @@ function shapeFromData(message) {
             debugMessage += "width x:"+data.x+" y:"+data.y+" width:"+data.width+" height:"+data.height;
             break;
         case "text":
+            var fontStyle;
+            if(data.bold) {
+                fontStyle = "bold";
+                delete data.bold;
+            }
+            if(data.italic) {
+                fontStyle += " italic";
+                delete data.italic;
+            }
+
+            data.fontStyle = fontStyle;
             shape = new Kinetic.Text(data);
 
             // As haskell has no idea about textsizes this code wil fix align
