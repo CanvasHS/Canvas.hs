@@ -1,27 +1,32 @@
 // As this is a custom shape, we will define our own namespace
-var CanvasHs = {}
+var CanvasHs = {};
 
 // Make new scope
 (function() {
     CanvasHs.Arc  = function(config) {
-        this.__init(config);
+        this.___init(config);
     }
 
     CanvasHs.Arc.prototype = {
-        __init: function(config) {
-            Kinetic.Wedge.call(this, config);
+        ___init: function(config) {
+            Kinetic.Shape.call(this, config);
             this.className = 'Arc';
             this.setDrawFunc(this.draw);
         },
         draw: function(context) {
             context.beginPath();
-            context.arc(0,0, this.getRadius(), 0, this.getAngle(), this.getClockwise());
-            context.closePath();
-            context.fillStrokeShape(this);
+            console.log(this.getRadius()+" "+this.getAngle());
+            // this is a hackfix, but it works..
+            context.arc(0,0, this.getRadius(), 0, -1 *this.getAngle(), true);
+            context.strokeShape(this);
         }
 
     }
 
-    Kinetic.Util.extend(CanvasHs.Arc, Kinetic.Wedge);
+    Kinetic.Util.extend(CanvasHs.Arc, Kinetic.Shape);
+
+    Kinetic.Factory.addGetterSetter(CanvasHs.Arc, 'radius', 0);
+
+    Kinetic.Factory.addRotationGetterSetter(CanvasHs.Arc, 'angle', 0);
 
 })();
