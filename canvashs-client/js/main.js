@@ -191,7 +191,7 @@ function requestUpload() {
     openControlWindow("Upload a file?","<a href=\"#\" id=\"acceptPrompt\">Yes</a> - <a href=\"#\" id=\"closePrompt\">No</a>");    
     $("#acceptPrompt").off('click');
     $("#closePrompt").off('click');
-    $("#acceptPrompt").click(promptForUpload.bind(undefined));
+    $("#acceptPrompt").click(promptFileBrowser.bind(undefined));
     $("#closePrompt").click(closeControlWindow.bind(undefined));
 }
 
@@ -345,6 +345,32 @@ function parseActionData(data) {
                 }
                 else {
                     printDebugMessage("Download action recieved without file data",2);
+                }
+                
+
+            break;
+            case "prompt":
+
+                if(hasProperty(actionProperties,"message") && actionProperties.message != undefined) {
+
+                    var result;
+                    if(hasProperty(actionProperties,"placeholder"))
+                        result = prompt(actionProperties.message,actionProperties.placeholder);
+                    else
+                        result = prompt(actionProperties.message,"");
+
+                    if(result != undefined)
+                    {
+                        connection.send(JSON.stringify({
+                            "event":"prompt",
+                            "data":{
+                                "value": result
+                            }
+                        }));
+                    }
+                }
+                else {
+                    printDebugMessage("Prompt action recieved without file data",2);
                 }
                 
 
