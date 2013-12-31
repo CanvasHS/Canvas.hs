@@ -17,6 +17,11 @@
 -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 -- USA
 
+{- |
+    This module exposes a function which will launch a browser pointing to
+    a given url on Windows (32 and 64 bits), OSX and multiple UNIX variants.
+    The launched brwoser will be the users default brwoser
+-}
 module CanvasHs.Launch (launchBrowser) where
 
 import Prelude
@@ -24,6 +29,8 @@ import System.Info
 import System.Process
 import System.Exit
 
+-- | Opens a new browser window or tab (depending on the users settings) pointing to the given url 
+--   in the system default browser.
 launchBrowser :: String -> IO()
 launchBrowser url = do
                 status <- case os of 
