@@ -15,8 +15,11 @@ var CanvasHs = {};
         },
         draw: function(context) {
             context.beginPath();
-            console.log(this.getRadius()+" "+this.getAngle());
-            // this is a hackfix, but it works..
+            context.arc(0,0, this.getRadius(), 0, -1 *this.getAngle(), true);
+            context.lineTo(0,0);
+            context.fillShape(this);
+
+            context.beginPath();
             context.arc(0,0, this.getRadius(), 0, -1 *this.getAngle(), true);
             context.strokeShape(this);
         }
