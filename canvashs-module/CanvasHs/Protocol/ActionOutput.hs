@@ -20,7 +20,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-{-
+{- |
     The CanvasHs.Protocol.ActionOutput module exposes a function and a datatype used in encoding 
     CanvasHs Data to JSON. It will encode the 'Action' to a JSONAction which derrives JSON so
     it can be encoded by Aeson
