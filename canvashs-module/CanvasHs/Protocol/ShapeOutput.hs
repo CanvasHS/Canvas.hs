@@ -20,7 +20,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-{-
+{- |
     The CanvasHs.Protocol.ShapeOutput module exposes a function and a datatype used in encoding 
     CanvasHs Data to JSON. It will encode the 'Shape' to a JSONShape which derrives JSON so
     it can be encoded by Aeson

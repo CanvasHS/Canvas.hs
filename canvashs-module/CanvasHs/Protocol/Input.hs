@@ -18,6 +18,11 @@
 -- USA
 
 {-# LANGUAGE OverloadedStrings #-}
+
+{- | 
+    The CanvasHs.Protocol.Input module exposes a FromJSON instance for for Event which allows
+    JOSN strings describing an event te bo decoded by Aeson
+-}
 module CanvasHs.Protocol.Input (FromJSON(..)) where
 
 
@@ -31,7 +36,8 @@ import qualified Data.ByteString.Base64.Lazy as B64
 
 import CanvasHs.Data
 
-
+-- | JSONEventData describes eventdata which could be incoming in a JSONstring as a record which can later be used
+--   to construct an 'Event'
 data JSONEventData = JSONEventData {
         jeventId :: Maybe Text,
         x :: Maybe Int,
@@ -55,6 +61,7 @@ data JSONEventData = JSONEventData {
         value :: Maybe Text
     } deriving(Eq, Show)
 
+-- | The FromJSON instance for JSONEventData allows the fromJSON instance of 'Event' to use parseJSON on the data field    
 instance FromJSON JSONEventData where
     parseJSON (Object v) = JSONEventData         <$>
                             v .:? "id"           <*>
@@ -79,6 +86,9 @@ instance FromJSON JSONEventData where
                             v .:? "value"
     parseJSON _ = error "A toplevel JSON should be an object"
 
+-- | The FromJSON instance of 'Event' allows incoming JSON strings describing an event to be decoded by Aeson, 
+--   incoming strings hold an event field identyfing the type of event and a datafield which decribes the event
+--   bith of these are read by Aeson and read by the makeEvent function
 instance FromJSON Event where
     parseJSON (Object v) = do
         makeEvent <$>
@@ -86,7 +96,7 @@ instance FromJSON Event where
             v .: "data"
     parseJSON _ = error "A toplevel JSON should be an object"
 
--- Ooit gehoord van pattern matching, nou ik blijkbaar wel
+-- | makeEvent will process the decoded JSON and will result in an 'Event'
 makeEvent :: Text -> JSONEventData -> Event
 makeEvent "mousedown" 
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y}) 
@@ -148,6 +158,7 @@ makeEvent "prompt"
 
 makeEvent _ _ = error "JSON did not match any event"
 
+-- | a helper function to make a modifierlist from the incoming JSON
 makeModifiers :: Bool -> Bool -> Bool -> [Modifier]
 makeModifiers ctrl alt shift = 
     (if ctrl then [Ctrl] else []) ++ 
