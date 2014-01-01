@@ -64,11 +64,12 @@ data JSONActionData
     
 -- | This templateHaskkel will make JSONAction derrive JSON and will drop 'action' from all the record fields
 $(deriveJSON defaultOptions{fieldLabelModifier = drop 6} ''JSONAction)
+
 -- | This templateHaskell will make JSONActionData derrive JSON, will drop 'd' from all the record fields and 
 --   will omit nothing fields in the encoded JSON
 $(deriveJSON defaultOptions{omitNothingFields=True, fieldLabelModifier = drop 1} ''JSONActionData)
 
--- | Converts Action to JSONAction which can be encoede by Aeson.
+-- | Converts Action to JSONAction which can be encoded by Aeson.
 actionEncode :: D.Action -> JSONAction
 actionEncode (D.Debug a)        = JSONAction{actionaction = "debugger"
                                             ,actiondata = emptyActionData{denabled = Just a}
