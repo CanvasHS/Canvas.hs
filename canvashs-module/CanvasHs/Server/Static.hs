@@ -40,7 +40,7 @@ import qualified Data.ByteString as BS
 ignoreFiles :: [String]
 ignoreFiles = ["..","."]
 
--- | builds WAI responses for requests for static files with a WAI response conatining the requested file 
+-- | builds WAI responses for requests for static files with a WAI response containing the requested file 
 --   and its content/type, if the file is in the provided files list 
 httpget :: [([String], BS.ByteString)] -> WAI.Application
 httpget files req = return $ do WAI.ResponseBuilder status200 [("Content-Type", encoding)] $ BL.copyByteString page
@@ -67,7 +67,7 @@ getDirectories path = do
     directoryExists <- mapM doesDirectoryExist (map ((dirPath++"/")++) filesAndDirectories) --Check if directories exist
     return [ (path++"/")++(filesAndDirectories !! i) | i <- [0..(length filesAndDirectories-1)], directoryExists !! i ]
 
--- | Gets all files within the given dorectory
+-- | Gets all files within the given directory
 getDirectoryFiles :: String -> IO [([String], BS.ByteString)]
 getDirectoryFiles path = do
     dirPath <- getDataFileName path
