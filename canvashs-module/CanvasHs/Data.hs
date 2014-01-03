@@ -17,27 +17,34 @@
 -- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
 -- USA
 
+{- | 
+    The CanvasHs.Data module exposes all data types needed for the Event handler function.
+    It exposes Events, Shapes, Actions and Output and all their needed sub-types
+-}
 module CanvasHs.Data where
 
 import qualified Data.ByteString.Lazy.UTF8 as BS8
 import qualified Data.ByteString as BS
 
--- | Convenience type for a point (x, y)
+-- | Represents a Point on the canvas as a tuple of two Ints: (x, y) 
 type Point = (Int, Int)
 
--- | Convenience type for a path consisting of points
+-- | Represents a path as a list of 'Point's
 type Path = [Point]
 
--- | Convenience type for a RGBA color
+-- | Represents a RGBA color as tuple of 3 Ints for RGB (value should range from 0 to 255) 
+--   and a float for A (value should range from 0 to 1.0), (r, g, b, a)
+--   these value ranges are not enforced by the encoding and values outside of the range will
+--   be send to the canvas unchanged and could result in unexpected behaviour.
 type Color = (Int, Int, Int, Float)
 
--- | A class that defines a function `defaults` that returns a default value
+-- | A class that defines a function `defaults` that returns a default value for a given record
 class Defaults a where
     defaults :: a
 
--- | Stores data about what events a shape is interested in
+-- | Used in conjunction with the 'Event' Shape to decribe which events a 'Shape' is interested in.
 data EventData = EventData {
-                    -- | The ID of the event, should be unique.
+                    -- | The ID of the event, should be unique. Duplicate id's could result in unexpected behaviour
                     eventId :: String,
                     -- | Toggles whether to react on mouseDown.
                     mouseDown :: Bool,
@@ -57,136 +64,144 @@ data EventData = EventData {
                     scroll :: Bool
                 } deriving (Eq, Show)
 
--- | Defines defaults for EventData
+-- | The 'Defaults' for 'EventData', has eventId="" and False for all possible events
 instance Defaults EventData where
     defaults = EventData "" False False False False False False False False
 
--- | Defines textsize
+-- | Defines fontsize as an Int
 type FontSize = Int
 	
--- | Ways to align text	
+-- | Defines text alignment, used in conjunction with 'TextData'
 data Alignment 
     -- | Aligns the start of the text to the specified point.
     = AlignLeft 
     -- | Aligns the end of the text to the specified point.
     | AlignRight 
-    -- | Aligns the center of the text to the speciied point.
+    -- | Aligns the center of the text to the specified point.
     | AlignCenter
 		deriving (Eq, Show)
 
--- | Record holding formatting data for text, eg fonts and sizes
+-- | Used in conjunction with the 'Text' shape to describe how to draw text
 data TextData = TextData {
                     -- | The font for this text, no guarantees are made about availability
                     font :: String,
                     -- | The fontsize in Points or Pixels
                     size :: FontSize,
                     -- | Toggles bold.
-                    -- TODO: implement this
                     bold :: Bool,
                     -- | Toggles italic.
-                    -- TODO: implement this
                     italic :: Bool,
-                    -- | Toggles underline.
-                    -- TODO: implement this
+                    -- | Toggles underline. Note that as of yet underline is not implemented by the canvas
                     underline :: Bool,
                     -- | Specifies how to align this text.
-                    -- TODO: implement this
                     alignment :: Alignment
                 } deriving (Eq, Show)
 
--- | Defines defaults for TextData
+-- | The 'Defaults' for 'TextData', has Arial 12, is left Aligned and is not bold, italic, or underlined.
 instance Defaults TextData where
     defaults = TextData "Arial" 12 False False False AlignLeft
 
--- | All drawable objects that the user can define (also includes some modifying objects like scale)
+-- | All drawable Shapes and the transformations that can be applied to them. In practice these will be combined
+--   in one big shape tree. By default shapes are filled in black (0,0,0,1.0)
 data Shape 
     -- | A rectangle. Has a startpoint (left upper corner) and width, height
     = Rect Point Int Int
-    -- | A circle. Has a centerpoint and a radius.
+    -- | A circle. Has a centerpoint and a radius
     | Circle Point Int
-    -- | An arch. Has a centerpoint, radius, startangle and endangle (counterclockwise).\
+    -- | An arch. Has a centerpoint, radius, startangle and endangle (counterclockwise)
     -- | Not yet implemented
     | Arc Point Int Int Int
-    -- | A line. Has a path containing its points, doesn't connect start and end.
+    -- | A line. Has a path containing its points, doesn't connect start to end.
     | Line Path
-    -- | A polygon. Has a path containing its points, does connect start with end.
+    -- | A polygon. Has a path containing its points, does connect start to end to form a closed shape
     | Polygon Path
-    -- | A text. Has a centerpoint a string containing the text and some extra data.
+    -- | Text. Has a point (how to align to that point is set using the alignment field in TextData)
+    --   a string containing the text to draw and 'TextData' containing extra data on how to draw the text
     | Text Point String TextData
-    -- | Applies fill. Has a color and a shape that needs to be filled.
+    -- | Applies fill. Has a 'Color' and a shape that the fill will be applied to.
     | Fill Color Shape
-    -- | Applies stroke. Has a color, a strokewidth and a shape that needs to be stroked.
+    -- | Applies stroke. Has a 'Color', a strokewidth and a shape that the stroke will be applied to.
     | Stroke Color Int Shape
-    -- | Applies rotate. Has a rotation (counterclockwise) and a shape that needs to be rotated.
+    -- | Applies rotation. Has a rotation (counterclockwise) in degrees and a shape that needs to be rotated.
     | Rotate Int Shape
-    -- | Applies translation. Has xdiff, ydiff and a shape that needs to be translated.
+    -- | Applies translation. Has an xdiff and ydiff (how much the Shape should be moved in x an y direction)
+    --   and a shape that needs to be translated.
     | Translate Int Int Shape
-    -- | Applies scale. Has xscale, yscale and a shape that needs to be scaled.
+    -- | Applies scale. Has xscale, yscale (how much the shape should be scaled in width and height)
+    --   and a shape that needs to be scaled.
     | Scale Float Float Shape
-    {- 
-        | Adds eventdata to a shape.
-          The eventdata contains booleans for the events that the shape is interested in.
-    -}
+    -- | Indicates that the given shape is interested in Events. 'EventData' describes this interest 
     | Event EventData Shape
-    -- | Overrides normal rotationpoint or scalepoint with one specified
+    -- | Overrides the normal rotationpoint or scalepoint with the one specified
     | Offset Point Shape
-    -- | A container. Has width and height and a list of shapes in this container.
+    -- | A container. Has width and height and a list of shapes in this container. 
+    --   Note that by default a container is drawn at point (0, 0) and it can be moved using 'Translate'
     | Container Int Int [Shape]
 
--- | Actions which will trigger an Event, such as LoadFile or Upload
+-- | A BlockingAction can not be combined with other Shapes or Actions in Output. Like an 'Action' it will instruct 
+--   CanvasHs to do something. It will execute and then trigger an 'Event' with the result of the BlockingAction
 data BlockingAction 
     -- | Loads a file as string. Has a filepath to load from
     = LoadFileString String
     -- | Loads a file in binary mode. Has a filepath to load from
     | LoadFileBinary String    
     
--- | Actions which don't trigger events such as SaveFile, Download, Debug
+-- | An Action will instruct CanvasHs to do something on either the haskell side, such as saving a file or
+--   starting a timer, or on the canvas side such as prompting for input or downloading a file. These Actions 
+--   may or may not result in an 'Event' and could be done either by Haskell or the Canvas (javascript)
 data Action
-    -- | Saves a file as string. Has a filepath to save to, and a String of the file contents. When the file already has contents it will be overwritten
+    -- | Saves a file as string. Has a filepath to save to, and a String of the file contents. 
+    --   If the file already has contents it will be overwritten
     = SaveFileString String String
-     -- | Saves a file in binary mode. Has a filepath to save to, and a ByteString of the file contents. When the file already has contents it will be overwritten
+     -- | Saves a file in binary mode. Has a filepath to save to, and a ByteString of the file contents. 
+     --   If the file already has contents it will be overwritten
     | SaveFileBinary String BS.ByteString
     -- | Starts a repeating Timer. Has a timeout in ms and a String identifying the Timer.
     | Timer Int String
-    -- | Turns the debug console on or off. Has a Bool, True means show, False means hide, send to javascript
+    -- | Turns the debug console on or off. Has a Bool, True means show, False means hide
+    --   is send to javascript
     | Debug Bool
     -- | Turns file drag'n'drop acceptance on or off. Has a Bool (True means accept, False means don't accept)
-    -- | and a Bool (True means accept multiple files, false means don't accept multiple files)
-    -- | Could result in one or multiple UploadComplete events
-    -- | send to javascript
+    --   and a Bool (True means accept multiple files, false means don't accept multiple files)
+    --   Could result in one or multiple UploadComplete events
+    --   is send to javascript
     | DragNDrop Bool Bool
-    -- | changes the window display type, is eihter FixedSize, FullWindow or FullScreen, send to javascript.
+    -- | Changes the window display type to the specified 'WindowDisplayType'
+    --   is send to javascript
     | DisplayType WindowDisplayType
-    -- | Sends a file to the javascript so the user can download it. Has the filecontents as String, send to javacript
+    -- | Sends a file to the javascript so the user can download it. Has the filename and filecontents as String
+    --   is send to javacript
     | Download String String
     -- | Asks the user to select a file to upload, the Bool indicates if multiple files can be selected or not. 
-    -- | could result in one or multiple UploadComplete events, send to javascript
+    --   could result in one or multiple UploadComplete events. 
+    --   is send to javascript
     | RequestUpload Bool
     -- | Prompts the user a message and asks for a certain value, with a default for that value.
-    -- | Has a String of the message to show and a String of the default value.
+    --   Has a String of the message to show and a String of the default value.
     | Prompt String String
     
-    
--- | The window display type. FixedSize as a Width and Height
+-- | The window display type for use in conjunction with the 'DisplayType' 'Event'. FixedSize has a Width and Height
 data WindowDisplayType = FullWindow | FullScreen | FixedSize Int Int
     
-    
--- | RegularOutput is output consisting of a shape to draw and a list of actions, an empty list implies no actions
--- | have to be taken
+-- | RegularOutput is output consisting of Maybe a 'Shape' to draw and a list of 'Action's, Nothing implies nothing
+--   should be changed on the canvas and an empty list implies no actions have to be taken
 type RegularOutput = (Maybe Shape, [Action])
 
 -- | Output is the return type of the handler. It is either a BlockingAction or RemoteOutput
--- | It can't have both a BlockingAction and a Shape to draw, because the BlockingAction will 
--- | trigger handler, which could then return also return a Shape, we then would not know
--- | which Shape to draw.
+--   It can't have both a BlockingAction and a Shape to draw, because the BlockingAction will 
+--   trigger handler, which could then return also return a Shape, we then would not know
+--   which Shape to draw.
 data Output = Block BlockingAction | Out RegularOutput
     
--- | Keymodifiers that can be enabled in a keyboard event
+-- | Modifier keys that could be held when pressing another key, for use in conjuncting with the 
+--   'KeyUp', 'KeyDown' and 'KeyClick' 'Event's. 
 data Modifier 
     = Shift | Ctrl | Alt
     deriving(Eq, Show)
 
--- | The events the user can expect to get as input
+-- | The events that can be triggered by CanvasHs. These could either be the result of user input (such as
+--   i.e. MouseDown or KeyUp) or could be triggered by an 'Action' such as FileLoaded or Tick, or could be 
+--   triggered by CanvasHs itself (StartEvent)
 data Event
     -- | A mousedown event consisting of a point and ID string of the interested object
     = MouseDown Point String
@@ -199,30 +214,34 @@ data Event
     -- TODO: Kan je ook in het niets draggen?
     -- | A mousedrag event with start and end, both consisting of a Point an ID string
     | MouseDrag Point String Point String
-    -- | A mouseover event, therefore both Point and an ID string are set.
+    -- | A mouseover event, consisting of a point and ID string of the interested object
     | MouseOver Point String
-    -- | A mouseout event, therefore both Point and an ID string are set.
+    -- | A mouseout event, consisting of a point and ID string of the interested object
     | MouseOut Point String
-    -- | A keydown event, consist of a keycharacter that was pressed and a list of modifiers that were active
+    -- | A keydown event, consist of a key that was pressed and a list of modifiers that were active
     | KeyDown String [Modifier]
-    -- | A keyup event, consist of a keycharacter that was pressed and a list of modifiers that were active
+    -- | A keyup event, consist of a key that was pressed and a list of modifiers that were active
     | KeyUp String [Modifier]
-    -- | A keyclick event, consist of a keycharacter that was pressed and a list of modifiers that were active
+    -- | A keyclick event, consist of a key that was pressed and a list of modifiers that were active
     | KeyClick String [Modifier]
-    -- | A scroll event consisting of an eventId (the shape that was scrolled) xdiff and a ydiff
+    -- | A scroll event consisting of an ID string of the interested object, 
+    --   a xdiff and an ydiff (how much was scrolled in the x and y direction)
     | Scroll String Int Int
-    -- | Start event is thrown when the server is started to notify user
+    -- | Start event is triggered when the server is started to notify user
     | StartEvent
-    -- | When a file requested using the LoadFileString Action has been loaded. Has a filepath and file contents as String
+    -- | When a file requested using the LoadFileString 'Action' has been loaded. 
+    --   Has a filepath and file contents as String
     | FileLoadedString String String
-    -- | When a file requested using the LoadFileString Action has been loaded. Has a filepath and file contents as ByteString
+    -- | When a file requested using the LoadFileBinary 'Action' has been loaded. 
+    --   Has a filepath and file contents as ByteString
     | FileLoadedBinary String BS.ByteString
-    -- | Tick event from a Timer. Has a string identifying the Timer
+    -- | Tick event from a Timer. Has a string identifying the 'Timer'
     | Tick String
-    -- | An upload has been completed. Has contents
+    -- | An upload has been completed. Has the contents of the file, both interpreted as String 
+    --   and as unencoded Lazy ByteString
     | UploadComplete (String, BS8.ByteString)
-    -- | A reseizewindoweventm has a new width and height
+    -- | A reseizewindowevent has a new width and height
     | WindowResize Int Int
-    -- | An response of the user to the prompt. Has a String of the response.
+    -- | A response of the user to the prompt. Has a String of the response.
     | PromptResponse String
     deriving(Eq, Show)
