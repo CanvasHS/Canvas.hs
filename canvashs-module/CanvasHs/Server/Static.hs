@@ -18,6 +18,10 @@
 -- USA
 
 {-# LANGUAGE OverloadedStrings #-}
+
+{- | 
+    This module exposes functions to search for directories and files and serve those files
+-}
 module CanvasHs.Server.Static where
 
 import Paths_canvashs 
@@ -36,7 +40,8 @@ import qualified Data.ByteString as BS
 ignoreFiles :: [String]
 ignoreFiles = ["..","."]
 
--- Serve static files
+-- | builds WAI responses for requests for static files with a WAI response containing the requested file 
+--   and its content/type, if the file is in the provided files list 
 httpget :: [([String], BS.ByteString)] -> WAI.Application
 httpget files req = return $ do WAI.ResponseBuilder status200 [("Content-Type", encoding)] $ BL.copyByteString page
                     where
@@ -53,7 +58,7 @@ httpget files req = return $ do WAI.ResponseBuilder status200 [("Content-Type", 
                         hasExtension extension = (takeLast (length extension) $ last $ request) == extension
                         takeLast n xs = (reverse . (take n) . reverse) xs
                 
--- Get directory names in a directory path
+-- | Gets all the directories in the given path
 getDirectories :: String -> IO [FilePath]
 getDirectories path = do
     dirPath <- getDataFileName path
@@ -62,7 +67,7 @@ getDirectories path = do
     directoryExists <- mapM doesDirectoryExist (map ((dirPath++"/")++) filesAndDirectories) --Check if directories exist
     return [ (path++"/")++(filesAndDirectories !! i) | i <- [0..(length filesAndDirectories-1)], directoryExists !! i ]
 
--- Get files in a directory
+-- | Gets all files within the given directory
 getDirectoryFiles :: String -> IO [([String], BS.ByteString)]
 getDirectoryFiles path = do
     dirPath <- getDataFileName path
