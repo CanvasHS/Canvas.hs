@@ -20,7 +20,7 @@
 {- |
     This module exposes a function which will launch a browser pointing to
     a given url on Windows (32 and 64 bits), OSX and multiple UNIX variants.
-    The launched brwoser will be the users default brwoser
+    The launched browser will be the users default browser
 -}
 module CanvasHs.Launch (launchBrowser) where
 

@@ -32,7 +32,7 @@ type Point = (Int, Int)
 -- | Represents a path as a list of 'Point's
 type Path = [Point]
 
--- | Represents an RGBA color a tuple of 3 Ints for RGB (value should range from 0 to 255) 
+-- | Represents a RGBA color as tuple of 3 Ints for RGB (value should range from 0 to 255) 
 --   and a float for A (value should range from 0 to 1.0), (r, g, b, a)
 --   these value ranges are not enforced by the encoding and values outside of the range will
 --   be send to the canvas unchanged and could result in unexpected behaviour.
@@ -77,7 +77,7 @@ data Alignment
     = AlignLeft 
     -- | Aligns the end of the text to the specified point.
     | AlignRight 
-    -- | Aligns the center of the text to the speciied point.
+    -- | Aligns the center of the text to the specified point.
     | AlignCenter
 		deriving (Eq, Show)
 
@@ -101,8 +101,8 @@ data TextData = TextData {
 instance Defaults TextData where
     defaults = TextData "Arial" 12 False False False AlignLeft
 
--- | All drawable Shapes and the transformations that can be applied to them. In practice these well be combined
---   in one big shape tree. By default shapes are drawn in black (0,0,0,1.0)
+-- | All drawable Shapes and the transformations that can be applied to them. In practice these will be combined
+--   in one big shape tree. By default shapes are filled in black (0,0,0,1.0)
 data Shape 
     -- | A rectangle. Has a startpoint (left upper corner) and width, height
     = Rect Point Int Int
@@ -116,21 +116,21 @@ data Shape
     -- | A polygon. Has a path containing its points, does connect start to end to form a closed shape
     | Polygon Path
     -- | Text. Has a point (how to align to that point is set using the alignment field in TextData)
-    --   a string containing the text to draw and TextData containing extra data on how to draw the text
+    --   a string containing the text to draw and 'TextData' containing extra data on how to draw the text
     | Text Point String TextData
-    -- | Applies fill. Has a color and a shape that the fillw ill be applied to.
+    -- | Applies fill. Has a 'Color' and a shape that the fill will be applied to.
     | Fill Color Shape
-    -- | Applies stroke. Has a color, a strokewidth and a shape that the stroke will be applied to.
+    -- | Applies stroke. Has a 'Color', a strokewidth and a shape that the stroke will be applied to.
     | Stroke Color Int Shape
     -- | Applies rotation. Has a rotation (counterclockwise) in degrees and a shape that needs to be rotated.
     | Rotate Int Shape
     -- | Applies translation. Has an xdiff and ydiff (how much the Shape should be moved in x an y direction)
     --   and a shape that needs to be translated.
     | Translate Int Int Shape
-    -- | Applies scale. Has xscale, yscale (how much the shaped should be scaled in width and height)
+    -- | Applies scale. Has xscale, yscale (how much the shape should be scaled in width and height)
     --   and a shape that needs to be scaled.
     | Scale Float Float Shape
-    -- | Indicated that the given shape is interested in Events. 'EventData' describes this interest 
+    -- | Indicates that the given shape is interested in Events. 'EventData' describes this interest 
     | Event EventData Shape
     -- | Overrides the normal rotationpoint or scalepoint with the one specified
     | Offset Point Shape
@@ -146,8 +146,9 @@ data BlockingAction
     -- | Loads a file in binary mode. Has a filepath to load from
     | LoadFileBinary String    
     
--- | an Action will instruct CanvasHs to do something on either the haskell side, such as saving a file or
---   starting a timer, or on the canvas side such as prompting for input or downloading a file.
+-- | An Action will instruct CanvasHs to do something on either the haskell side, such as saving a file or
+--   starting a timer, or on the canvas side such as prompting for input or downloading a file. These Actions 
+--   may or may not result in an 'Event' and could be done either by Haskell or the Canvas (javascript)
 data Action
     -- | Saves a file as string. Has a filepath to save to, and a String of the file contents. 
     --   If the file already has contents it will be overwritten
@@ -165,7 +166,7 @@ data Action
     --   Could result in one or multiple UploadComplete events
     --   is send to javascript
     | DragNDrop Bool Bool
-    -- | changes the window display type to the specified 'WindowDisplayType'
+    -- | Changes the window display type to the specified 'WindowDisplayType'
     --   is send to javascript
     | DisplayType WindowDisplayType
     -- | Sends a file to the javascript so the user can download it. Has the filename and filecontents as String
@@ -182,9 +183,8 @@ data Action
 -- | The window display type for use in conjunction with the 'DisplayType' 'Event'. FixedSize has a Width and Height
 data WindowDisplayType = FullWindow | FullScreen | FixedSize Int Int
     
-    
 -- | RegularOutput is output consisting of Maybe a 'Shape' to draw and a list of 'Action's, Nothing implies nothing
---   should be changed on the canvas an empty list implies no actions have to be taken
+--   should be changed on the canvas and an empty list implies no actions have to be taken
 type RegularOutput = (Maybe Shape, [Action])
 
 -- | Output is the return type of the handler. It is either a BlockingAction or RemoteOutput
@@ -225,14 +225,14 @@ data Event
     -- | A keyclick event, consist of a key that was pressed and a list of modifiers that were active
     | KeyClick String [Modifier]
     -- | A scroll event consisting of an ID string of the interested object, 
-    --   a xdiff and an ydiff (how much was scrilled in the x and y direction)
+    --   a xdiff and an ydiff (how much was scrolled in the x and y direction)
     | Scroll String Int Int
     -- | Start event is triggered when the server is started to notify user
     | StartEvent
-    -- | When a file requested using the LoadFileString Action has been loaded. 
+    -- | When a file requested using the LoadFileString 'Action' has been loaded. 
     --   Has a filepath and file contents as String
     | FileLoadedString String String
-    -- | When a file requested using the LoadFileString Action has been loaded. 
+    -- | When a file requested using the LoadFileBinary 'Action' has been loaded. 
     --   Has a filepath and file contents as ByteString
     | FileLoadedBinary String BS.ByteString
     -- | Tick event from a Timer. Has a string identifying the 'Timer'
@@ -240,8 +240,8 @@ data Event
     -- | An upload has been completed. Has the contents of the file, both interpreted as String 
     --   and as unencoded Lazy ByteString
     | UploadComplete (String, BS8.ByteString)
-    -- | A reseizewindoweventm has a new width and height
+    -- | A reseizewindowevent has a new width and height
     | WindowResize Int Int
-    -- | An response of the user to the prompt. Has a String of the response.
+    -- | A response of the user to the prompt. Has a String of the response.
     | PromptResponse String
     deriving(Eq, Show)

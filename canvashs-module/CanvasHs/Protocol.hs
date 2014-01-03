@@ -21,7 +21,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 {- |
-    The CanvasHs.Protocol module handles the transition from internal CanvasHs Datamodel to 
+    The CanvasHs.Protocol module handles the transition from internal CanvasHs Datamodel to the
     JSON data model and vice versa. It can encode 'RegularOutput' to a valid JSON string (using an UTF8 ByteString)
     with the encode function, and can decode incoming JSON messages (as UTF8 ByteStrings) to 
     'Event's using the decode function
@@ -45,7 +45,7 @@ import Data.Either (either)
 import Data.Maybe (fromMaybe)
 import Control.Applicative ((<$>))
 
--- | This datastructure represents an JSON Output string for Aeson
+-- | This datastructure represents a JSON Output string for Aeson
 data JSONOutput = JSONOutput {
         shape :: Maybe JSONShape,
         actions :: [JSONAction]
