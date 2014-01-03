@@ -20,7 +20,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 {- | 
-    The CanvasHs.Protocol.Input module exposes a FromJSON instance for for Event which allows
+    The CanvasHs.Protocol.Input module exposes a FromJSON instance for 'Event' which allows
     JOSN strings describing an event te bo decoded by Aeson
 -}
 module CanvasHs.Protocol.Input (FromJSON(..)) where
@@ -87,8 +87,8 @@ instance FromJSON JSONEventData where
     parseJSON _ = error "A toplevel JSON should be an object"
 
 -- | The FromJSON instance of 'Event' allows incoming JSON strings describing an event to be decoded by Aeson, 
---   incoming strings hold an event field identyfing the type of event and a datafield which decribes the event
---   bith of these are read by Aeson and read by the makeEvent function
+--   incoming strings hold an event field identyfing the type of event and a datafield which describes the event
+--   both of these are read by Aeson and read by the makeEvent function
 instance FromJSON Event where
     parseJSON (Object v) = do
         makeEvent <$>

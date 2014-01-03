@@ -72,7 +72,7 @@ serverHttp = do
                 forkIO $ WRP.run 8000 (httpget (concat dirFiles))
                 return ()
                 
--- | Starts the swebsockets server, which will handle incoming websockets data using the provided handler
+-- | Starts the websockets server, which will handle incoming websockets data using the provided handler
 websockets :: (T.Text -> IO (Maybe T.Text)) -> WS.PendingConnection -> IO ()
 websockets f rq = do
                     cn <- WS.acceptRequest rq
@@ -85,7 +85,7 @@ websockets f rq = do
                             Nothing -> return ()
                             Just m  -> WS.sendTextData cn m
 
--- | sends textdata over the webscokets connection, will trigge an error when the connection is not open                          
+-- | Sends textdata over the webscokets connection, will trigger an error when the connection is not open                          
 sendText :: T.Text -> IO ()
 sendText t = readIORef conn >>= (\c -> case c of
                 Nothing -> error "No open connection, cannot sendText"

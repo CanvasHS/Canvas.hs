@@ -22,7 +22,7 @@
 
 {- |
     The CanvasHs.Protocol.ActionOutput module exposes a function and a datatype used in encoding 
-    CanvasHs Data to JSON. It will encode the 'Action' to a JSONAction which derrives JSON so
+    CanvasHs "Data" to JSON. It will encode the 'Action' to a 'JSONAction' which derrives JSON so
     it can be encoded by Aeson
 -}
 module CanvasHs.Protocol.ActionOutput
@@ -62,14 +62,15 @@ data JSONActionData
         dplaceholder :: Maybe T.Text
     } deriving (Show)
     
--- | This templateHaskkel will make JSONAction derrive JSON and will drop 'action' from all the record fields
+-- | This templateHaskkel will make JSONAction derive JSON and will drop 'action' 
+--   from all the record fields in the encoded JSON
 $(deriveJSON defaultOptions{fieldLabelModifier = drop 6} ''JSONAction)
 
--- | This templateHaskell will make JSONActionData derrive JSON, will drop 'd' from all the record fields and 
+-- | This templateHaskell will make JSONActionData derive JSON, will drop 'd' from all the record fields and 
 --   will omit nothing fields in the encoded JSON
 $(deriveJSON defaultOptions{omitNothingFields=True, fieldLabelModifier = drop 1} ''JSONActionData)
 
--- | Converts Action to JSONAction which can be encoded by Aeson.
+-- | Converts an Action to a JSONAction which can be encoded by Aeson.
 actionEncode :: D.Action -> JSONAction
 actionEncode (D.Debug a)        = JSONAction{actionaction = "debugger"
                                             ,actiondata = emptyActionData{denabled = Just a}

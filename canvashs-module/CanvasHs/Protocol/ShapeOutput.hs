@@ -22,7 +22,7 @@
 
 {- |
     The CanvasHs.Protocol.ShapeOutput module exposes a function and a datatype used in encoding 
-    CanvasHs Data to JSON. It will encode the 'Shape' to a JSONShape which derrives JSON so
+    CanvasHs "Data" to JSON. It will encode the 'Shape' to a JSONShape which derrives JSON so
     it can be encoded by Aeson
 -}
 module CanvasHs.Protocol.ShapeOutput
@@ -48,7 +48,7 @@ data JSONShape
         shapechildren  :: Maybe [JSONShape]
     } deriving (Show)
 
--- | JSONShapeData is part of the JSONShape and represents the ShapeData as an object which can be encoded by Aeson    
+-- | JSONShapeData is part of the JSONShape and represents the 'ShapeData' as an object which can be encoded by Aeson 
 data JSONShapeData
     = JSONShapeData { 
         stroke         :: Maybe JSONRGBAColor, 
@@ -73,38 +73,39 @@ data JSONShapeData
         radius         :: Maybe Int 
     } deriving (Show)
 
--- | JSONEventData is part of the JSONShape and represents EventData as an object which can be encodede by Aeson    
+-- | JSONEventData is part of the JSONShape and represents 'EventData' as an object which can be encodede by Aeson
 data JSONEventData
     = JSONEventData { 
         eventId        :: Maybe T.Text, 
         listen         :: Maybe [T.Text]
     } deriving (Show)
 
--- | JSONRGBAColor is part of JSONShapeData and represents a RGBAColor as an object which can be encoded by AEson
+-- | JSONRGBAColor is part of JSONShapeData and represents a 'RGBAColor' as an object which can be encoded by Aeson
 data JSONRGBAColor
     = JSONRGBAColor {
-        colr :: Int,
+            -- Keep these exactly this way, 'col' is dropped in the ToJSON instance
+        colr :: Int, 
         colg :: Int,
         colb :: Int,
         cola :: Float
     } deriving (Show)
 
--- | This templateHaskell will make JSONShape derrive JSON, and will drop 'shape' 
+-- | This templateHaskell will make JSONShape derive JSON, and will drop 'shape' 
 --   from and omit empty fields from the resulting JSON    
 $(deriveJSON defaultOptions{omitNothingFields=True, fieldLabelModifier = drop 5} ''JSONShape)
 
--- | This templateHaskell will make JSONShapeData derrive JSON, and will omit empty fields from the resulting JSON   
+-- | This templateHaskell will make JSONShapeData derive JSON, and will omit empty fields from the resulting JSON   
 $(deriveJSON defaultOptions{omitNothingFields=True} ''JSONShapeData)
 
--- | This templateHaskell will make JSONEventData derrive JSON, and will omit empty fields from the resulting JSON   
+-- | This templateHaskell will make JSONEventData derive JSON, and will omit empty fields from the resulting JSON   
 $(deriveJSON defaultOptions{omitNothingFields=True} ''JSONEventData)
 
--- | This templateHaskell will make JSONShape derrive JSON, and will drop 'shape' from the resulting JSON
+-- | This templateHaskell will make JSONShape derive JSON, and will drop 'col' from the resulting JSON
 $(deriveJSON defaultOptions{omitNothingFields=True, fieldLabelModifier = drop 3} ''JSONRGBAColor)
 
 -- | Converts a 'Shape' to a 'JSONShape' which can be encoded by Aeson
 --   Note how only the primitives will result in an actual JSONShape, all others will
---   merely edit said shape
+--   merely edit said 'JSONShape'
 shapeEncode :: D.Shape -> JSONShape
 shapeEncode (D.Rect p w h)          = JSONShape {shapetype = "rect" 
                                             ,shapedata = (shapeEncodePoint p) {width = Just w, height = Just h}
@@ -176,7 +177,7 @@ shapeEncode (D.Container w h ss)    = JSONShape {shapetype = "container"
                                             ,shapechildren = Just $ map shapeEncode ss
                                             }
 
--- | a helper function which creates an JSONShapeData holding only a point and the default black fill
+-- | A helper function which creates an JSONShapeData holding only a point and the default black fill
 shapeEncodePoint :: D.Point -> JSONShapeData
 shapeEncodePoint (x',y')    
     = JSONShapeData { 
@@ -202,7 +203,7 @@ shapeEncodePoint (x',y')
         radius         = Nothing 
     }
 
--- | a helper function which creates an JSONShapeData holding only a list of points and the default black fill
+-- | A helper function which creates an JSONShapeData holding only a list of points and the default black fill
 shapeEncodePoints :: [D.Point] -> JSONShapeData
 shapeEncodePoints pts
     = JSONShapeData { 
@@ -228,12 +229,12 @@ shapeEncodePoints pts
         radius         = Nothing 
     }
         where
-            -- Deze functie zet alle punten achter elkaar
+            -- Flattens the list of points
             eps :: [(Int, Int)] -> [Int]
             eps []           = []        
             eps ((x',y'):ps) = x':y':(eps ps)
 
--- | a helper function which creates an JSONShapeData holding the given point, string to be drawn and textdata
+-- | A helper function which creates an JSONShapeData holding the given point, string to be drawn and textdata
 shapeEncodeTextData :: D.Point -> String -> D.TextData -> JSONShapeData
 shapeEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.alignment = a, D.bold = b, D.italic = i, D.underline = u}) = result
         where
@@ -247,7 +248,7 @@ shapeEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.alignment = a, D
             result = text{fontFamily=Just $ T.pack f, fontSize=Just si, align =al, bold=Just b, italic=Just i, underline=Just u}
 
 
--- | a helper function which encodes EventData into JSONEcentData, 
+-- | A helper function which encodes EventData into JSONEcentData, 
 --   it can either update an existing JSONEventData (Just e) or create a new one (Nothing)
 shapeEncodeEventData :: Maybe JSONEventData -> D.EventData -> JSONEventData
 shapeEncodeEventData Nothing e     = shapeEncodeEventData (Just (JSONEventData{eventId = Nothing, listen = Just []})) e

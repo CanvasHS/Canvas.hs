@@ -50,7 +50,7 @@ import qualified Network.WebSockets as WS
 -- | type of the user handler. It accepts a state and an 'Event' and produces a tuple of the new state and an 'Output'
 type Callback a = (a -> Event -> (a, Output))
 
--- | Our internal state, holds the user state and a refrence tot he user handler
+-- | Our internal state, holds the user state and a refrence to the user handler
 data State a =  State   {extState :: a
                         ,callback :: Callback a
                         }
@@ -59,7 +59,7 @@ data State a =  State   {extState :: a
                         
 -- | Registers an event handler and starts CanvasHs. This will start the needed servers (weboscket and http) and will open a browser window.
 installEventHandler :: 
-        Callback userState -- ^ event handler on current state and incoming event, that produces a tuple of the new user state and ouput to process
+        Callback userState -- ^ event handler on current state and incoming event, that produces a tuple of the new user state and ouput to process: (userState -> Event -> (userState, Output))
     ->  userState -- ^ start state
     ->  IO ()
 installEventHandler handl startState = do
@@ -89,15 +89,15 @@ handleEvent st e    = do
                         curState <- readIORef st
                         let
                             (newState, output) = (callback curState) (extState curState) e
-                        atomicModifyIORef st (\_ -> (curState{extState=newState}, ())) -- ^ update the state
+                        atomicModifyIORef st (\_ -> (curState{extState=newState}, ())) -- update the state
                         case output of 
                                (Out (s,a))  -> (doActions st a) >>= (\a' -> return $ Just $ encode (s,a')) 
-                                    -- ^ the 'Output' is a tuple of a 'Shape' to draw and a list of 'Action's to execute
+                                    -- the 'Output' is a tuple of a 'Shape' to draw and a list of 'Action's to execute
                                (Block a)    -> doBlockingAction a >>= (handleEvent st)
-                                    -- ^ the 'Output' is a 'BlockingAction'
+                                    -- the 'Output' is a 'BlockingAction'
                                
--- | handles non blocking 'Action's. The result will be a list of non blocking actions which were not handled by doActions
---   and should be sent to the javascript
+-- | handles non blocking 'Action's. The result will be a list of non blocking actions which were not handled by 
+--   doActions and which should be sent to the javascript
 doActions :: IORef (State a) -> [Action] -> IO [Action]
 doActions st [] = return []
 doActions st xs =  (sequence $ map doAction xs) >>= (return . catMaybes)
