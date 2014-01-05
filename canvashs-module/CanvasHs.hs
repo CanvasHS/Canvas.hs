@@ -41,9 +41,11 @@ import Control.Monad.Trans (liftIO, lift)
 import System.IO (readFile, writeFile)
 import qualified Data.ByteString as BS (readFile, writeFile)
 import Data.Maybe (catMaybes)
-import Control.Concurrent.Timer
+import Control.Concurrent.Timer as Timer
 import Control.Concurrent.Suspend (msDelay)
 import Control.Applicative ((<$>))
+import qualified Data.Map as Map
+import Control.Monad ((>=>))
 
 import qualified Network.WebSockets as WS
 
@@ -53,6 +55,7 @@ type Callback a = (a -> Event -> (a, Output))
 -- | Our internal state, holds the user state and a refrence to the user handler
 data State a =  State   {extState :: a
                         ,callback :: Callback a
+                        ,timers :: Map.Map String TimerIO
                         }
 
                       
@@ -63,7 +66,7 @@ installEventHandler ::
     ->  userState -- ^ start state
     ->  IO ()
 installEventHandler handl startState = do
-    store <- newIORef (State{extState=startState, callback=handl})
+    store <- newIORef (State{extState=startState, callback=handl, timers=Map.empty})
     launchBrowser "http://localhost:8000"
     start $ handleWSInput store
     return ()
@@ -106,11 +109,26 @@ doActions st xs =  (sequence $ map doAction xs) >>= (return . catMaybes)
                     doAction :: Action -> IO (Maybe Action)
                     doAction (SaveFileString p c)   = writeFile p c >> return Nothing
                     doAction (SaveFileBinary p c)   = BS.writeFile p c >> return Nothing
-                    doAction (Timer ms id)          = repeatedTimer (liftIO $ handleTick st id >> return ()) (msDelay $ fromIntegral ms) >> return Nothing
+                    doAction (Timer ms id)          = do 
+                                                        curState <- readIORef st
+                                                        let tms = timers curState
+                                                        if(Map.member id tms) then (stopTimer id tms) else (return ())
+                                                        repeatedTimer (liftIO $ handleTick st id >> return ()) (msDelay $ fromIntegral ms) >>=
+                                                            \timer -> let tms' = Map.insert id timer tms in
+                                                                            atomicModifyIORef st (\_ -> (curState{timers=tms'}, ()))
+                                                        return Nothing
+                    doAction (StopTimer id)         = do
+                                                        curState <- readIORef st
+                                                        let tms = timers curState
+                                                        stopTimer id tms
+                                                        atomicModifyIORef st (\_ -> (curState{timers=Map.delete id tms}, ()))
+                                                        return Nothing
                     -- Other actions fall through and should be handled by javascript
                     doAction a                      = return $ Just a
-                    
-                               
+                    stopTimer :: String -> Map.Map String TimerIO -> IO ()
+                    stopTimer id tms = case Map.lookup id tms of
+                                        Nothing -> return ()
+                                        Just t -> Timer.stopTimer t
 -- | handles blocking actions. The actions are executed and the corresponding Event is returned
 doBlockingAction :: BlockingAction -> IO (Event)
 doBlockingAction (LoadFileString p) = readFile p >>= (\c -> return (FileLoadedString p c))
