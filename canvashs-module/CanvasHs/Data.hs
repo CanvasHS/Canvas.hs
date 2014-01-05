@@ -158,6 +158,8 @@ data Action
     | SaveFileBinary String BS.ByteString
     -- | Starts a repeating Timer. Has a timeout in ms and a String identifying the Timer.
     | Timer Int String
+    -- | Stops a started timer, idintief by it's id. 
+    | StopTimer String
     -- | Turns the debug console on or off. Has a Bool, True means show, False means hide
     --   is send to javascript
     | Debug Bool
