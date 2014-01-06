@@ -9,8 +9,9 @@ import CanvasHs (shape)
 import CanvasHs.Protocol (encode)
 import CanvasHs.Data
 
-import qualified Data.Text as T
-import qualified Data.ByteString.Lazy.UTF8 as B
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BU
+import qualified Data.ByteString.Lazy as BSL
 import Data.Aeson (decode, Value)
 
 
@@ -165,16 +166,16 @@ spec = do
 ---------------------- HELPERS ----------------------
 
 -- convenience functions to decodeJson
-textDec :: T.Text -> Maybe Value
-textDec = (decode . B.fromString . T.unpack) --decode is from Aeson
+textDec :: BU.ByteString -> Maybe Value
+textDec s = (decode $ BSL.fromChunks [s]) --decode is from Aeson
 
 --textDec for when the text only holds a Shape
-shapeTextDec :: T.Text -> Maybe Value
-shapeTextDec t = textDec $ T.concat ["{\"shape\" : ", t, ", \"actions\":[]}"]
+shapeTextDec :: BU.ByteString -> Maybe Value
+shapeTextDec t = textDec $ BS.concat ["{\"shape\" : ", t, ", \"actions\":[]}"]
 
 --textDec for when the text only holds an Action (Note actions should include "[]"!
-actionsTextDec :: T.Text -> Maybe Value
-actionsTextDec t = textDec $ T.concat ["{\"actions\": ", t, "}"]
+actionsTextDec :: BU.ByteString -> Maybe Value
+actionsTextDec t = textDec $ BS.concat ["{\"actions\": ", t, "}"]
 
 dec :: Output -> Maybe Value
 dec o = textDec $ encode o' --encode is from CanvasHs.Protocol
