@@ -100,6 +100,7 @@ function openControlWindow(title, message) {
 }
 /**
  * Closes the control element
+ * @returns {undefined}
  */
 function closeControlWindow() {
     // Closes the control interface element
@@ -110,6 +111,9 @@ function closeControlWindow() {
 /**
  * Type is an enumeration where 0 is FizedSize 1 is FullWindow and 2 is FullScreen.
  * Width and height are required with FixedSize and are ignored with the other types.
+ * @param {type} displayType
+ * @param {type} attempt
+ * @returns {undefined}
  */
 function setWindowDisplayType(displayType, attempt)
 {
@@ -172,6 +176,11 @@ function setWindowDisplayType(displayType, attempt)
     };
 }
 
+/**
+ * Asks the user to go fullscreen.
+ * @param {type} attempt
+ * @returns {undefined}
+ */
 function requestFullscreen(attempt) {
     if(window.fullScreenApi.isFullScreen() == false) {
         openControlWindow("Switch to fullscreen?","<a href=\"#\" id=\"switchToFullscreen\">Yes</a> - <a href=\"#\" id=\"switchToFullwindow\">No</a>");    
@@ -228,6 +237,11 @@ function promptFileBrowser() {
     closeControlWindow();
 }
 
+/**
+ * Sets fluid proportions for the container.
+ * @param {type} container
+ * @returns {undefined}
+ */
 function setFluidProportions(container) {
     // Animate to fluid width and height
     container.animate({
@@ -241,6 +255,13 @@ function setFluidProportions(container) {
 
 }
 
+/**
+ * Sets fixed proportions for the container.
+ * @param {type} container
+ * @param {type} width The new fixed width of the container.
+ * @param {type} height The new fixed height of the container.
+ * @returns {undefined}
+ */
 function setFixedProportions(container,width,height) {
     // Animate to fixed width and height
     container.animate({
@@ -253,6 +274,11 @@ function setFixedProportions(container,width,height) {
     },{duration: 300,step:resizeCanvas});
 }
 
+/**
+ * Resizes the canvas.
+ * @param {type} event
+ * @returns {undefined}
+ */
 function resizeCanvas(event) {  
 
     $("#canvas canvas").css( "width", $("#canvas").width()+"px" );
@@ -279,7 +305,7 @@ function parseShapeData(data) {
 
 /**
  * Parses action data and execute the actions.
- * @param {type} action data
+ * @param {type} data
  * @returns {undefined}
  */
 function parseActionData(data) {
@@ -722,6 +748,11 @@ function shapeFromData(message) {
     return shape;
 }
 
+/**
+ * Converts rgba values to colors.
+ * @param {type} dict
+ * @returns {String}
+ */
 function rgbaDictToColor(dict){
     var res = "";
     if(dict["a"] != undefined){
@@ -788,6 +819,7 @@ var hideDebugConsole = function(){
     };
 /**
  * Flashes a shape when it is selected in the debugger.
+ * @returns {undefined}
  */
 var debugSelector = function () {
     debugCanClose = false;
@@ -872,6 +904,7 @@ function initCanvas(container, width, height) {
 
 /**
  * Makes a new layer to draw on.
+ * @returns {undefined}
  */
 function newDefaultLayer() {
     topLayerIdx++;

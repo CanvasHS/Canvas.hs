@@ -1,3 +1,6 @@
+{- | 
+    The CanvasHs.Colors module exposes 139 'Color' functions for frequently used colors
+-}
 module CanvasHs.Colors where
 default(Int, Float)
 aliceblue = (240, 248, 255, 1.0)
