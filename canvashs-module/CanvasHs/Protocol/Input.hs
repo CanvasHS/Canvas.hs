@@ -18,6 +18,11 @@
 -- USA
 
 {-# LANGUAGE OverloadedStrings #-}
+
+{- | 
+    The CanvasHs.Protocol.Input module exposes a FromJSON instance for 'Event' which allows
+    JOSN strings describing an event te bo decoded by Aeson
+-}
 module CanvasHs.Protocol.Input (FromJSON(..)) where
 
 
@@ -32,7 +37,8 @@ import qualified Data.ByteString.Base64.Lazy as B64
 
 import CanvasHs.Data
 
-
+-- | JSONEventData describes eventdata which could be incoming in a JSONstring as a record which can later be used
+--   to construct an 'Event'
 data JSONEventData = JSONEventData {
         jeventId :: Maybe BU.ByteString,
         x :: Maybe Int,
@@ -51,9 +57,12 @@ data JSONEventData = JSONEventData {
         ydelta :: Maybe Int,
         width :: Maybe Int,
         height :: Maybe Int,
-        filecontents :: Maybe BSL.ByteString
+        filename :: Maybe BSL.ByteString,
+        filecontents :: Maybe BSL.ByteString,
+        value :: Maybe BSL.ByteString
     } deriving(Eq, Show)
 
+-- | The FromJSON instance for JSONEventData allows the fromJSON instance of 'Event' to use parseJSON on the data field    
 instance FromJSON JSONEventData where
     parseJSON (Object v) = JSONEventData         <$>
                             v .:? "id"           <*>
@@ -73,9 +82,14 @@ instance FromJSON JSONEventData where
                             v .:? "ydelta"       <*>
                             v .:? "width"        <*>
                             v .:? "height"       <*>
-                            v .:? "filecontents"     -- Only for upload events
+                            v .:? "filename"     <*> -- Only for upload events
+                            v .:? "filecontents" <*> -- Only for upload events
+                            v .:? "value"
     parseJSON _ = error "A toplevel JSON should be an object"
 
+-- | The FromJSON instance of 'Event' allows incoming JSON strings describing an event to be decoded by Aeson, 
+--   incoming strings hold an event field identyfing the type of event and a datafield which describes the event
+--   both of these are read by Aeson and read by the makeEvent function
 instance FromJSON Event where
     parseJSON (Object v) = do
         makeEvent <$>
@@ -139,8 +153,13 @@ makeEvent "resizewindow"
     (JSONEventData{width = Just w, height = Just h})
         = WindowResize w h
 
+makeEvent "prompt"
+    (JSONEventData{value = Just val})
+        = PromptResponse (BUL.toString val)
+
 makeEvent _ _ = error "JSON did not match any event"
 
+-- | a helper function to make a modifierlist from the incoming JSON
 makeModifiers :: Bool -> Bool -> Bool -> [Modifier]
 makeModifiers ctrl alt shift = 
     (if ctrl then [Ctrl] else []) ++ 

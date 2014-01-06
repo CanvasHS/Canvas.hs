@@ -20,6 +20,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 
+{- |
+    The CanvasHs.Protocol.ActionOutput module exposes a function and a datatype used in encoding 
+    CanvasHs "Data" to JSON. It will encode the 'Action' to a 'JSONAction' which derrives JSON so
+    it can be encoded by Aeson
+-}
 module CanvasHs.Protocol.ActionOutput
 (   actionEncode
 ,   JSONAction
@@ -36,6 +41,7 @@ import qualified Data.ByteString.Base64.Lazy as B64
 
 import qualified CanvasHs.Data as D
 
+-- | JSONAction represents an 'Action' as an object which can be encoded by Aeson
 data JSONAction
     = JSONAction {
         --keep these exactly like this, 'action' is dropped in the ToJSON instance
@@ -43,6 +49,7 @@ data JSONAction
         actiondata :: JSONActionData
     } deriving (Show)
     
+-- | JSONActionData is part of the JSONAction and represents the ActionData as an object which can be encoded by Aeson
 data JSONActionData
     = JSONActionData {
         --keep these exactly like this, 'd' is dropped in the ToJSON instance
@@ -52,15 +59,20 @@ data JSONActionData
         denabled :: Maybe Bool,
         dmultiple :: Maybe Bool,
         dfilename :: Maybe BU.ByteString,
-        dfilecontents :: Maybe BSL.ByteString
+        dfilecontents :: Maybe BSL.ByteString,
+        dmessage :: Maybe BSL.ByteString,
+        dplaceholder :: Maybe BSL.ByteString
     } deriving (Show)
     
-   
+-- | This templateHaskkel will make JSONAction derive JSON and will drop 'action' 
+--   from all the record fields in the encoded JSON
 $(deriveJSON defaultOptions{fieldLabelModifier = drop 6} ''JSONAction)
 
+-- | This templateHaskell will make JSONActionData derive JSON, will drop 'd' from all the record fields and 
+--   will omit nothing fields in the encoded JSON
 $(deriveJSON defaultOptions{omitNothingFields=True, fieldLabelModifier = drop 1} ''JSONActionData)
 
--- | Converts Action to JSONAction, this can be used with Aeson
+-- | Converts an Action to a JSONAction which can be encoded by Aeson.
 actionEncode :: D.Action -> JSONAction
 actionEncode (D.Debug a)        = JSONAction{actionaction = "debugger"
                                             ,actiondata = emptyActionData{denabled = Just a}
@@ -82,6 +94,9 @@ actionEncode (D.Download fn fc)       = JSONAction{actionaction = "download"
 actionEncode (D.RequestUpload b)    = JSONAction{actionaction = "requestupload" 
                                                 ,actiondata = emptyActionData{dmultiple = Just b}
                                                 }
+actionEncode (D.Prompt q d)         = JSONAction{actionaction = "prompt"
+                                                ,actiondata = emptyActionData{dmessage = Just $ BUL.fromString q, dplaceholder = Just $ BUL.fromString d}
+                                                }
 
 wdtEncode :: D.WindowDisplayType -> JSONActionData
 wdtEncode (D.FixedSize w h) = emptyActionData   {dtype  = Just 0
@@ -90,16 +105,18 @@ wdtEncode (D.FixedSize w h) = emptyActionData   {dtype  = Just 0
                                                 }
 wdtEncode (D.FullWindow)    = emptyActionData   {dtype  = Just 1}
 wdtEncode (D.FullScreen)    = emptyActionData   {dtype  = Just 2}
-                                        
+         
+-- | emptyActionData is an empty ActionData record, used as a helper for actionEncode         
 emptyActionData :: JSONActionData
 emptyActionData
     = JSONActionData {
-            --keep these exactly like this, 'd' is dropped in the ToJSON instance
             dtype = Nothing,
             dwidth = Nothing,
             dheight = Nothing,
             denabled = Nothing,
             dmultiple = Nothing,
             dfilename = Nothing,
-            dfilecontents = Nothing
+            dfilecontents = Nothing,
+            dmessage = Nothing,
+            dplaceholder = Nothing
         }
