@@ -28,8 +28,13 @@ Library
                   aeson >= 0.6,
                   bytestring >= 0.10.0.2,
                   split,
-                  ghc-prim >= 0.2.0.0
-  Exposed-modules:	CanvasHs, CanvasHs.Data
+                  ghc-prim >= 0.2.0.0,
+                  base64-bytestring,
+                  timers >= 0.2.0.1,
+                  suspend >= 0.1.0.2,
+                  filepath
+
+  Exposed-modules:	CanvasHs, CanvasHs.Data, CanvasHs.Colors
   hs-source-dirs:	canvashs-module
   other-modules:  Paths_canvashs,
                   CanvasHs.Launch,
@@ -37,7 +42,8 @@ Library
                   CanvasHs.Server.Static,
                   CanvasHs.Protocol
                   CanvasHs.Protocol.Input
-                  CanvasHs.Protocol.Output
+                  CanvasHs.Protocol.ShapeOutput
+                  CanvasHs.Protocol.ActionOutput
   if flag(hpc)
     ghc-options: -fhpc
 

@@ -81,9 +81,9 @@ spec = do
                 property $ \control alt shift -> (decode $ pack $ buildKeyPF "keyup" key control alt shift) == (KeyUp (key:[]) $ makeModifiers control alt shift)
         describe "scroll event" $ do
             it "can decode a scroll event" $ do
-                (decode $ pack $ "{\"event\":\"scroll\", \"data\":{\"xdelta\": 10, \"ydelta\": 10}}") `shouldBe` (Scroll 10 10)
+                (decode $ pack $ "{\"event\":\"scroll\", \"data\":{\"id\": \"scrl\", \"xdelta\": 10, \"ydelta\": 10}}") `shouldBe` (Scroll "scrl" 10 10)
             it "can decond an *arbitrary* scroll event" $ do
-                property $ \xdiff ydiff -> (decode $ pack $ "{\"event\":\"scroll\", \"data\":{\"xdelta\":" ++ (show xdiff) ++ ", \"ydelta\": " ++ (show ydiff) ++ "}}") `shouldBe` (Scroll xdiff ydiff)
+                property $ \xdiff ydiff -> (decode $ pack $ "{\"event\":\"scroll\", \"data\":{\"id\": \"scrl\", \"xdelta\":" ++ (show xdiff) ++ ", \"ydelta\": " ++ (show ydiff) ++ "}}") `shouldBe` (Scroll "scrl" xdiff ydiff)
 
 
 -- | Convenience function for building json mouse event strings

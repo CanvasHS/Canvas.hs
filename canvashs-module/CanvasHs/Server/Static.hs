@@ -1,4 +1,27 @@
+-- Canvas.Hs, control javascript canvas with Haskell
+-- Copyright (C) 2013, Lennart Buit, Joost van Doorn, Pim Jager, Martijn Roo,
+-- Thijs Scheepers
+--
+-- This library is free software; you can redistribute it and/or
+-- modify it under the terms of the GNU Lesser General Public
+-- License as published by the Free Software Foundation; either
+-- version 2.1 of the License, or (at your option) any later version.
+-- 
+-- This library is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-- Lesser General Public License for more details.
+-- 
+-- You should have received a copy of the GNU Lesser General Public
+-- License along with this library; if not, write to the Free Software
+-- Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+-- USA
+
 {-# LANGUAGE OverloadedStrings #-}
+
+{- | 
+    This module exposes functions to search for directories and files and serve those files
+-}
 module CanvasHs.Server.Static where
 
 import Paths_canvashs 
@@ -17,7 +40,8 @@ import qualified Data.ByteString as BS
 ignoreFiles :: [String]
 ignoreFiles = ["..","."]
 
--- Serve static files
+-- | builds WAI responses for requests for static files with a WAI response containing the requested file 
+--   and its content/type, if the file is in the provided files list 
 httpget :: [([String], BS.ByteString)] -> WAI.Application
 httpget files req = return $ do WAI.ResponseBuilder status200 [("Content-Type", encoding)] $ BL.copyByteString page
                     where
@@ -34,7 +58,7 @@ httpget files req = return $ do WAI.ResponseBuilder status200 [("Content-Type", 
                         hasExtension extension = (takeLast (length extension) $ last $ request) == extension
                         takeLast n xs = (reverse . (take n) . reverse) xs
                 
--- Get directory names in a directory path
+-- | Gets all the directories in the given path
 getDirectories :: String -> IO [FilePath]
 getDirectories path = do
     dirPath <- getDataFileName path
@@ -43,7 +67,7 @@ getDirectories path = do
     directoryExists <- mapM doesDirectoryExist (map ((dirPath++"/")++) filesAndDirectories) --Check if directories exist
     return [ (path++"/")++(filesAndDirectories !! i) | i <- [0..(length filesAndDirectories-1)], directoryExists !! i ]
 
--- Get files in a directory
+-- | Gets all files within the given directory
 getDirectoryFiles :: String -> IO [([String], BS.ByteString)]
 getDirectoryFiles path = do
     dirPath <- getDataFileName path
