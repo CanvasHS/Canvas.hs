@@ -34,6 +34,7 @@ import CanvasHs.Data
 import CanvasHs.Server
 import CanvasHs.Launch
 import CanvasHs.Protocol
+import CanvasHs.Shutdown as Shutdown (addEnd)
 
 import qualified Data.Text as T
 import Data.IORef (IORef, newIORef, atomicModifyIORef, readIORef)
@@ -45,7 +46,6 @@ import Control.Concurrent.Timer as Timer
 import Control.Concurrent.Suspend (msDelay)
 import Control.Applicative ((<$>))
 import qualified Data.Map as Map
-import Control.Monad ((>=>))
 
 import qualified Network.WebSockets as WS
 
@@ -115,7 +115,8 @@ doActions st xs =  (sequence $ map doAction xs) >>= (return . catMaybes)
                                                         if(Map.member id tms) then (stopTimer id tms) else (return ())
                                                         repeatedTimer (liftIO $ handleTick st id >> return ()) (msDelay $ fromIntegral ms) >>=
                                                             \timer -> let tms' = Map.insert id timer tms in
-                                                                            atomicModifyIORef st (\_ -> (curState{timers=tms'}, ()))
+                                                                            atomicModifyIORef st (\_ -> (curState{timers=tms'}, timer)) >>=
+                                                            \timer -> Shutdown.addEnd $ Timer.stopTimer timer
                                                         return Nothing
                     doAction (StopTimer id)         = do
                                                         curState <- readIORef st
@@ -129,6 +130,7 @@ doActions st xs =  (sequence $ map doAction xs) >>= (return . catMaybes)
                     stopTimer id tms = case Map.lookup id tms of
                                         Nothing -> return ()
                                         Just t -> Timer.stopTimer t
+                                        
 -- | handles blocking actions. The actions are executed and the corresponding Event is returned
 doBlockingAction :: BlockingAction -> IO (Event)
 doBlockingAction (LoadFileString p) = readFile p >>= (\c -> return (FileLoadedString p c))
