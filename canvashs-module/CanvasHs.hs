@@ -39,6 +39,7 @@ import qualified Data.Text as T
 import Data.IORef (IORef, newIORef, atomicModifyIORef, readIORef)
 import Control.Monad.Trans (liftIO, lift)
 import System.IO (readFile, writeFile)
+import System.Environment (getArgs)
 import Data.Maybe (catMaybes)
 import Control.Concurrent.Timer
 import Control.Concurrent.Suspend (msDelay)
@@ -64,8 +65,11 @@ installEventHandler ::
     ->  userState -- ^ start state
     ->  IO ()
 installEventHandler handl startState = do
+    args <- getArgs
     store <- newIORef (State{extState=startState, callback=handl})
-    launchBrowser "http://localhost:8000"
+    if ("--prevent-browser-launch" `elem` args)
+        then return ()
+        else launchBrowser "http://localhost:8000"
     start $ handleWSInput store
     return ()
     
