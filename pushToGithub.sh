@@ -2,6 +2,7 @@ echo -e "Pushing build to github-pages"
 # move the distributed source to home
 cp dist/canvashs*.tar.gz $HOME/canvashs.tar.gz
 cp -R dist/doc/html/canvashs/ $HOME/docs
+cp -R jsdocs $HOME/jsdocs
 
 # move to home
 cd $HOME
@@ -23,16 +24,21 @@ cp $HOME/canvashs.tar.gz canvashs-${TRAVIS_BUILD_NUMBER}.tar.gz
 cd docs
 cp -R $HOME/docs $TRAVIS_BUILD_NUMBER
 
+cd ../jsdocs
+cp -R $HOME/jsdocs $TRAVIS_BUILD_NUMBER
+
 # Go back to the root of the repository
 cd $HOME/page
+
 echo "
 <tr>
     <td> #$TRAVIS_BUILD_NUMBER </td>
     <td> 0.1 </td> 
     <td> `date` </td>
     <td> <a href=\"dist/canvashs-$TRAVIS_BUILD_NUMBER.tar.gz\"> canvashs-$TRAVIS_BUILD_NUMBER.tar.gz </td> 
-    <td> <a href=\"dist/docs/$TRAVIS_BUILD_NUMBER/index.html\"> docs </a> </td>
-</tr>" >> _includes/list.html
+    <td> <a href=\"dist/docs/$TRAVIS_BUILD_NUMBER/index.html\"> hs docs </a> </td>
+    <td> <a href=\"dist/jsdocs/$TRAVIS_BUILD_NUMBER/index.html\"> js docs </a> </td>
+</tr>" | cat - _includes/list.html > tmpout && mv tmpout _includes/list.html
 
 # push the changes back to github pages
 git add .
