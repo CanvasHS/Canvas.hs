@@ -34,7 +34,8 @@ import CanvasHs.Data
 import CanvasHs.Server
 import CanvasHs.Launch
 import CanvasHs.Protocol
-import CanvasHs.Shutdown as Shutdown (addEnd)
+import CanvasHs.Shutdown as Shutdown (addEnd) 
+    -- the serverthread will call shutdown when exiting. We use this to stop the timers
 
 import qualified Data.Text as T
 import Data.IORef (IORef, newIORef, atomicModifyIORef, readIORef)
