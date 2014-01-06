@@ -39,6 +39,7 @@ Library
   hs-source-dirs:	canvashs-module
   other-modules:  Paths_canvashs,
                   CanvasHs.Launch,
+                  CanvasHs.Shutdown,
                   CanvasHs.Server,
                   CanvasHs.Server.Static,
                   CanvasHs.Protocol
