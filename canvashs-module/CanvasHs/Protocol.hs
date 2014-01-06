@@ -21,11 +21,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 {- |
-    Deze module handelt het omzetten van het interne datamodel naar het protocol af d.m.v. de
-    encode-functie en het omzetten de andere kant op d.m.v. de decode-functie
-    
-    Op dit moment is de module in dummy-staat om de inrichting van de code duidelijk te hebben,
-    de daadwerkelijke invulling (body) van de functies zal nog veranderen.
+    The CanvasHs.Protocol module handles the transition from internal CanvasHs Datamodel to the
+    JSON data model and vice versa. It can encode 'RegularOutput' to a valid JSON string (using an UTF8 ByteString)
+    with the encode function, and can decode incoming JSON messages (as UTF8 ByteStrings) to 
+    'Event's using the decode function
 -}
 module CanvasHs.Protocol
 (   encode
@@ -48,11 +47,14 @@ import Data.Either (either)
 import Data.Maybe (fromMaybe)
 import Control.Applicative ((<$>))
 
+-- | This datastructure represents a JSON Output string for Aeson
 data JSONOutput = JSONOutput {
         shape :: Maybe JSONShape,
         actions :: [JSONAction]
         } deriving (Show)
         
+-- | This templatehaskell will make JSONOutput derriving JSON, and will instruct Aeson to omit nothing fields
+--   in the resulting JSON
 $(deriveJSON defaultOptions{omitNothingFields=True} ''JSONOutput)
 
 {-  |

@@ -18,13 +18,20 @@
 -- USA
 
 {-# LANGUAGE OverloadedStrings #-}
+
+{- |
+    This module exposes the haskell server for CanvasHs, it functions as both the 
+    http server and the websockets server. The websocket server will be launched on port 8080
+    and the http server on 8000.
+    The module exposes a sendText function wich will send textdata (ByteString) over the websocket connection
+    and a start function which will start both servers and has a funtion argument which will be called
+    to handle incoming data over the websockets connection. 
+    The static files served by the http-server are dynamilcly loaded from the canvashs-client directory.
+-}
 module CanvasHs.Server (start, sendText) where
 
-import CanvasHs.Protocol
-import CanvasHs.Data
 import CanvasHs.Server.Static
 
--- Paths_canvashs is required to include static files
 import qualified Network.WebSockets as WS
 import Control.Monad (forever)
 import qualified Data.ByteString.UTF8 as BU
@@ -35,8 +42,7 @@ import Control.Concurrent
 import Control.Exception (finally)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.IORef (IORef, newIORef, atomicModifyIORef, readIORef)
-import Control.Monad.Trans (liftIO, lift)
-import Control.Applicative ((<$>))
+import Control.Monad.Trans (liftIO)
 
 -- | unsafePerformIO-hack function which is MVar of thread children
 children :: MVar [MVar ()]
@@ -59,17 +65,14 @@ conn = unsafePerformIO (newIORef Nothing)
 -}
 start :: (BU.ByteString -> IO (Maybe BU.ByteString)) -> IO ()
 start f =   do
-                forkChild serverHttp -- the httpserver servers static files
-                forkChild serverHandle -- runserver is a simple server for websockets   
-                waitForChildren -- wait until threads finish, this allows the process to be killed
+                forkChild serverHttp
+                forkChild $ liftIO $ WS.runServer "0.0.0.0" 8080 $ websockets f
+                waitForChildren --this blocks so both the websockets and httpserver will terminate when main terminates
                 return ()
-                where
-                    serverHandle = liftIO $ WS.runServer "0.0.0.0" 8080 $ websockets f
                 
-
+-- | Starts the httpserver, which will serve the static files from canvashs-client
 serverHttp :: IO ()
 serverHttp = do
-                -- Serve static files
                 dirFiles <- getDirectories "canvashs-client" >>= \dirs -> mapM getDirectoryFiles ("canvashs-client":dirs)
                 forkIO $ WRP.run 8000 (httpget (concat dirFiles))
                 return ()
