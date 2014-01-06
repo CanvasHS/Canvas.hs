@@ -40,7 +40,9 @@ import qualified Data.Text as T
 import Data.List (intercalate)
 import qualified Data.Aeson as Aeson (encode, eitherDecode)
 import Data.Aeson.TH
-import qualified Data.ByteString.Lazy.UTF8 as BU (fromString, toString)
+import qualified Data.ByteString.UTF8 as BU
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
 import Data.Either (either)
 import Data.Maybe (fromMaybe)
 import Control.Applicative ((<$>))
@@ -55,13 +57,15 @@ data JSONOutput = JSONOutput {
 --   in the resulting JSON
 $(deriveJSON defaultOptions{omitNothingFields=True} ''JSONOutput)
 
--- | encode encodes a RegularOutput to a JSON UTF8 ByteString
-encode :: RegularOutput -> T.Text
-encode o = T.pack $ BU.toString $ Aeson.encode (JSONOutput {shape=(shapeEncode <$> fst o), actions=(map actionEncode $ snd o)})
+{-  |
+    encode maakt van een Output een JSON-string (type Data.Text) die voldoet aan het protocol
+    @ensure \result is een valide JSON-object
+-}
+encode :: RegularOutput -> BU.ByteString
+encode o = BS.concat $ BSL.toChunks $ Aeson.encode (JSONOutput {shape=(shapeEncode <$> fst o), actions=(map actionEncode $ snd o)})
 
--- | decode decodes an incoming JSON UTF8 ByteString to an Event, 
---   handles the special case of the CanvasHs.Server "INIT" string (which indicates a connection has been established)
---   as a StartEvent
-decode :: T.Text -> Event
+-- | Ontsleuteld een inkomend bericht naar een event
+--   De daadwerkelijke code hiervoor staat in CanvasHs.Protocol.Output
+decode :: BU.ByteString -> Event
 decode "INIT"   = StartEvent
-decode s        = either (\b -> error $ "Aeson decode error: "++b) (\b -> b) $ Aeson.eitherDecode $ BU.fromString $ T.unpack s
+decode s        = either (\b -> error $ "Aeson decode error: "++b) (\b -> b) $ Aeson.eitherDecode $ BSL.fromChunks [s]
