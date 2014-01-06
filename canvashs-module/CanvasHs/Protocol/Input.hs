@@ -18,31 +18,38 @@
 -- USA
 
 {-# LANGUAGE OverloadedStrings #-}
+
+{- | 
+    The CanvasHs.Protocol.Input module exposes a FromJSON instance for 'Event' which allows
+    JOSN strings describing an event te bo decoded by Aeson
+-}
 module CanvasHs.Protocol.Input (FromJSON(..)) where
 
 
 import Data.Aeson ((.:), (.:?), FromJSON(..), Value(..))
 import Control.Applicative ((<$>), (<*>))
-import Data.Text
 import System.FilePath.Posix (takeExtension)
 
-import qualified Data.ByteString.Lazy.UTF8 as B
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.UTF8 as BU
+import qualified Data.ByteString.Lazy.UTF8 as BUL
 import qualified Data.ByteString.Base64.Lazy as B64
 
 import CanvasHs.Data
 
-
+-- | JSONEventData describes eventdata which could be incoming in a JSONstring as a record which can later be used
+--   to construct an 'Event'
 data JSONEventData = JSONEventData {
-        jeventId :: Maybe Text,
+        jeventId :: Maybe BU.ByteString,
         x :: Maybe Int,
         y :: Maybe Int,
         x1 :: Maybe Int, -- Only for mousedrag
         y1 :: Maybe Int, -- Only for mousedrag
-        jeventId1 :: Maybe Text, -- Only for mousedrag
+        jeventId1 :: Maybe BU.ByteString, -- Only for mousedrag
         x2 :: Maybe Int, -- Only for mousedrag
         y2 :: Maybe Int, -- Only for mousedrag
-        jeventId2 :: Maybe Text, -- Only for mousedrag
-        key :: Maybe Text,
+        jeventId2 :: Maybe BU.ByteString, -- Only for mousedrag
+        key :: Maybe BU.ByteString,
         control :: Maybe Bool,
         alt :: Maybe Bool,
         shift :: Maybe Bool,
@@ -50,11 +57,12 @@ data JSONEventData = JSONEventData {
         ydelta :: Maybe Int,
         width :: Maybe Int,
         height :: Maybe Int,
-        filename :: Maybe Text,
-        filecontents :: Maybe Text,
-        value :: Maybe Text
+        filename :: Maybe BSL.ByteString,
+        filecontents :: Maybe BSL.ByteString,
+        value :: Maybe BSL.ByteString
     } deriving(Eq, Show)
 
+-- | The FromJSON instance for JSONEventData allows the fromJSON instance of 'Event' to use parseJSON on the data field    
 instance FromJSON JSONEventData where
     parseJSON (Object v) = JSONEventData         <$>
                             v .:? "id"           <*>
@@ -79,6 +87,9 @@ instance FromJSON JSONEventData where
                             v .:? "value"
     parseJSON _ = error "A toplevel JSON should be an object"
 
+-- | The FromJSON instance of 'Event' allows incoming JSON strings describing an event to be decoded by Aeson, 
+--   incoming strings hold an event field identyfing the type of event and a datafield which describes the event
+--   both of these are read by Aeson and read by the makeEvent function
 instance FromJSON Event where
     parseJSON (Object v) = do
         makeEvent <$>
@@ -87,56 +98,56 @@ instance FromJSON Event where
     parseJSON _ = error "A toplevel JSON should be an object"
 
 -- Ooit gehoord van pattern matching, nou ik blijkbaar wel
-makeEvent :: Text -> JSONEventData -> Event
+makeEvent :: BU.ByteString -> JSONEventData -> Event
 makeEvent "mousedown" 
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y}) 
-        = MouseDown (x, y) (unpack $ eid)
+        = MouseDown (x, y) (BU.toString eid)
 
 makeEvent "mouseclick"
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})  
-        = MouseClick (x, y) (unpack $ eid)
+        = MouseClick (x, y) (BU.toString eid)
 
 makeEvent "mouseup" 
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
-         = MouseUp (x, y) (unpack $ eid)
+         = MouseUp (x, y) (BU.toString eid)
 
 makeEvent "mousedoubleclick"
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
-         = MouseDoubleClick (x, y) (unpack $ eid)
+         = MouseDoubleClick (x, y) (BU.toString eid)
 
 makeEvent "mousedrag"
     (JSONEventData{jeventId1 = Just eid1, x1 = Just x1, y1 = Just y1, jeventId2 = Just eid2, x2 = Just x2, y2 = Just y2})
-        = MouseDrag (x1, y1) (unpack $ eid1) (x2, y2) (unpack $ eid2)
+        = MouseDrag (x1, y1) (BU.toString eid1) (x2, y2) (BU.toString eid2)
 
 makeEvent "mouseover"
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
-         = MouseOver (x, y) (unpack $ eid)
+         = MouseOver (x, y) (BU.toString eid)
 
 makeEvent "mouseout"
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
-         = MouseOut (x, y) (unpack $ eid)
+         = MouseOut (x, y) (BU.toString eid)
 
 makeEvent "keydown"
     (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh})
-        = KeyDown (unpack $ k) (makeModifiers c a sh)
+        = KeyDown (BU.toString k) (makeModifiers c a sh)
 
 makeEvent "keyclick"
     (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh})
-        = KeyClick (unpack $ k) (makeModifiers c a sh)
+        = KeyClick (BU.toString k) (makeModifiers c a sh)
 
 makeEvent "keyup"
     (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh})
-        = KeyUp (unpack $ k) (makeModifiers c a sh)
+        = KeyUp (BU.toString k) (makeModifiers c a sh)
 
 makeEvent "scroll"
     (JSONEventData{jeventId = Just eid, xdelta = Just xd, ydelta = Just yd})
-        = Scroll (unpack $ eid) xd yd
+        = Scroll (BU.toString eid) xd yd
 
 makeEvent "upload"
     (JSONEventData{filecontents = Just fc})
-        = UploadComplete (B.toString $ b, b)
+        = UploadComplete (BUL.toString $ b, b)
         where
-            (Right b) = B64.decode $ B.fromString $ unpack $ fc
+            (Right b) = B64.decode fc
             
 makeEvent "resizewindow"
     (JSONEventData{width = Just w, height = Just h})
@@ -144,10 +155,11 @@ makeEvent "resizewindow"
 
 makeEvent "prompt"
     (JSONEventData{value = Just val})
-        = PromptResponse (unpack val)
+        = PromptResponse (BUL.toString val)
 
 makeEvent _ _ = error "JSON did not match any event"
 
+-- | a helper function to make a modifierlist from the incoming JSON
 makeModifiers :: Bool -> Bool -> Bool -> [Modifier]
 makeModifiers ctrl alt shift = 
     (if ctrl then [Ctrl] else []) ++ 
