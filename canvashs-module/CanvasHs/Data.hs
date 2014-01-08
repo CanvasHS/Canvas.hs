@@ -23,8 +23,7 @@
 -}
 module CanvasHs.Data where
 
-import qualified Data.ByteString.Lazy.UTF8 as BS8
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
 
 -- | Represents a Point on the canvas as a tuple of two Ints: (x, y) 
 type Point = (Int, Int)
@@ -108,10 +107,9 @@ data Shape
     = Rect Point Int Int
     -- | A circle. Has a centerpoint and a radius
     | Circle Point Int
-    -- | An arch. Has a centerpoint, radius, startangle and endangle (counterclockwise)
-    -- | Not yet implemented
-    | Arc Point Int Int Int
-    -- | A line. Has a path containing its points, doesn't connect start to end.
+    -- | An arch. Has a centerpoint, radius and angle, rotation is done by Rotate.
+    | Arc Point Int Int
+    -- | A line. Has a path containing its points, doesn't connect start and end.
     | Line Path
     -- | A polygon. Has a path containing its points, does connect start to end to form a closed shape
     | Polygon Path
@@ -153,9 +151,8 @@ data Action
     -- | Saves a file as string. Has a filepath to save to, and a String of the file contents. 
     --   If the file already has contents it will be overwritten
     = SaveFileString String String
-     -- | Saves a file in binary mode. Has a filepath to save to, and a ByteString of the file contents. 
-     --   If the file already has contents it will be overwritten
-    | SaveFileBinary String BS.ByteString
+     -- | Saves a file in binary mode. Has a filepath to save to, and a ByteString of the file contents. When the file already has contents it will be overwritten
+    | SaveFileBinary String BSL.ByteString
     -- | Starts a repeating Timer. Has a timeout in ms and a String identifying the Timer.
     | Timer Int String
     -- | Stops a started timer, idintief by it's id. 
@@ -234,15 +231,14 @@ data Event
     -- | When a file requested using the LoadFileString 'Action' has been loaded. 
     --   Has a filepath and file contents as String
     | FileLoadedString String String
-    -- | When a file requested using the LoadFileBinary 'Action' has been loaded. 
-    --   Has a filepath and file contents as ByteString
-    | FileLoadedBinary String BS.ByteString
-    -- | Tick event from a Timer. Has a string identifying the 'Timer'
+    -- | When a file requested using the LoadFileString Action has been loaded. Has a filepath and file contents as ByteString
+    | FileLoadedBinary String BSL.ByteString
+    -- | Tick event from a Timer. Has a string identifying the Timer
     | Tick String
-    -- | An upload has been completed. Has the contents of the file, both interpreted as String 
-    --   and as unencoded Lazy ByteString
-    | UploadComplete (String, BS8.ByteString)
-    -- | A reseizewindowevent has a new width and height
+    -- | An upload has been completed. Has contents
+    | UploadComplete (String, BSL.ByteString)
+    -- | A reseizewindoweventm has a new width and height
+
     | WindowResize Int Int
     -- | A response of the user to the prompt. Has a String of the response.
     | PromptResponse String
