@@ -110,7 +110,7 @@ doActions st xs =  (sequence $ map doAction xs) >>= (return . catMaybes)
                 where
                     doAction :: Action -> IO (Maybe Action)
                     doAction (SaveFileString p c)   = writeFile p c >> return Nothing
-                    doAction (SaveFileBinary p c)   = BS.writeFile p c >> return Nothing
+                    doAction (SaveFileBinary p c)   = BSL.writeFile p c >> return Nothing
                     doAction (Timer ms id)          = do 
                                                         curState <- readIORef st
                                                         let tms = timers curState
