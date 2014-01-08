@@ -31,6 +31,7 @@
 module CanvasHs.Server (start, sendText) where
 
 import CanvasHs.Server.Static
+import CanvasHs.Shutdown (shutdown) -- other modules can add functions which should be executed when start terminates
 
 import qualified Network.WebSockets as WS
 import Control.Monad (forever)
@@ -44,15 +45,15 @@ import System.IO.Unsafe (unsafePerformIO)
 import Data.IORef (IORef, newIORef, atomicModifyIORef, readIORef)
 import Control.Monad.Trans (liftIO)
 
--- | unsafePerformIO-hack function which is MVar of thread children
-children :: MVar [MVar ()]
-{-# NOINLINE children #-}
-children = unsafePerformIO (newMVar [])
-
 -- | unsafePerformIO-hack function which is IORef of connection
 conn :: IORef (Maybe WS.Connection)
 {-# NOINLINE conn #-}
 conn = unsafePerformIO (newIORef Nothing)
+
+-- | unsafePerformIO-hack function which is MVar of thread children
+children :: MVar [MVar ()]
+{-# NOINLINE children #-}
+children = unsafePerformIO (newMVar [])
 
 {- | 
     Starts the server, this starts a httpserver on 8000 which will serve the static content
@@ -67,7 +68,8 @@ start :: (BU.ByteString -> IO (Maybe BU.ByteString)) -> IO ()
 start f =   do
                 forkChild serverHttp
                 forkChild $ liftIO $ WS.runServer "0.0.0.0" 8080 $ websockets f
-                waitForChildren --this blocks so both the websockets and httpserver will terminate when main terminates
+                waitForChildren --this blocks so both the websockets and httpserver will terminate when start terminates
+                shutdown -- see CanvasHs.Shutdown import
                 return ()
                 
 -- | Starts the httpserver, which will serve the static files from canvashs-client
@@ -93,8 +95,8 @@ sendText :: BU.ByteString -> IO ()
 sendText t = readIORef conn >>= (\c -> case c of
                 Nothing -> error "No open connection, cannot sendText"
                 Just cn -> WS.sendTextData cn t
-             )
-                            
+             )      
+             
 -- Code below manages the threads so all threads stop when the main thread is stopped
 waitForChildren :: IO ()
 waitForChildren = do
