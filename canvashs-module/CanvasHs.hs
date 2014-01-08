@@ -37,7 +37,6 @@ import CanvasHs.Protocol
 import CanvasHs.Shutdown as Shutdown (addEnd) 
     -- the serverthread will call shutdown when exiting. We use this to stop the timers
 
-import Data.IORef (IORef, newIORef, atomicModifyIORef, readIORef)
 import Control.Monad.Trans (liftIO, lift)
 import System.IO (readFile, writeFile)
 import System.Environment (getArgs)
