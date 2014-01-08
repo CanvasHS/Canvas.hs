@@ -98,9 +98,8 @@ handleEvent st e    = do
                             (userState, output) = (callback cst) (extState cst) e
                             cst' = cst{extState = userState}
                         case output of 
-                               (Out (s,acs)) -> do -- (doActions st cst' a) >>= \(a', cst'') -> (putMVar st cst'' >> return $ Just $ encode (s,a'))
+                               (Out (s,acs)) -> do
                                                     (acs', cst'') <- doActions st cst' acs
-                                                    -- (State{extState=2, callback=(\a -> \b -> (2, Out(Nothing, []))), timers=Map.empty})
                                                     putMVar st cst''
                                                     return $ Just $ encode (s,acs')
                                     -- the 'Output' is a tuple of a 'Shape' to draw and a list of 'Action's to execute
@@ -122,7 +121,6 @@ doActions st cst xs = S.runStateT (ap xs) cst >>= \(ma, cst') -> return (catMayb
                         S.put st'
                         rst <- ap acs
                         return $ m : rst
-                        -- S.get >>= \st -> liftIO $ doAction st a >>= \(m, st') -> (S.put st' >> return $ m : ap acs)
         doAction :: State a -> Action -> IO (Maybe Action, State a)
         doAction cst (SaveFileString p c)   = writeFile p c >> return (Nothing, cst)
         doAction cst (SaveFileBinary p c)   = BSL.writeFile p c >> return (Nothing, cst)
