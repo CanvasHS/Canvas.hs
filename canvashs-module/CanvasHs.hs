@@ -48,6 +48,8 @@ import Control.Applicative ((<$>))
 import qualified Data.Map as Map
 import qualified Data.ByteString.Lazy as BSL (readFile, writeFile)
 import qualified Data.ByteString.UTF8 as BU
+import Control.Concurrent.MVar
+import qualified Control.Monad.State.Strict as S (runStateT, StateT, get, put)
 
 import qualified Network.WebSockets as WS
 
@@ -68,11 +70,11 @@ installEventHandler ::
     ->  userState -- ^ start state
     ->  IO ()
 installEventHandler handl startState = do
-    store <- newIORef (State{extState=startState, callback=handl, timers=Map.empty})
     args <- getArgs
     if ("--prevent-browser-launch" `elem` args)
         then return ()
         else launchBrowser "http://localhost:8000"
+    store <- newMVar (State{extState=startState, callback=handl, timers=Map.empty})
     start $ handleWSInput store
     return ()
     
@@ -85,53 +87,62 @@ actions :: [Action] -> Output
 actions a = Out (Nothing, a)
 
 -- | handles input from the canvas
-handleWSInput :: IORef (State a) -> BU.ByteString -> IO (Maybe BU.ByteString)
+handleWSInput :: MVar (State a) -> BU.ByteString -> IO (Maybe BU.ByteString)
 handleWSInput st ip = handleEvent st $ decode ip
 
 -- | handles an event, it is fed through the handler, the newstate is saved and the resulting 
-handleEvent :: IORef (State a) -> Event -> IO (Maybe BU.ByteString)
+handleEvent :: MVar (State a) -> Event -> IO (Maybe BU.ByteString)
 handleEvent st e    = do
-                        curState <- readIORef st
+                        cst <- takeMVar st
                         let
-                            (newState, output) = (callback curState) (extState curState) e
-                        atomicModifyIORef st (\_ -> (curState{extState=newState}, ())) -- update the state
+                            (userState, output) = (callback cst) (extState cst) e
+                            cst' = cst{extState = userState}
                         case output of 
-                               (Out (s,a))  -> (doActions st a) >>= (\a' -> return $ Just $ encode (s,a')) 
+                               (Out (s,acs)) -> do -- (doActions st cst' a) >>= \(a', cst'') -> (putMVar st cst'' >> return $ Just $ encode (s,a'))
+                                                    (acs', cst'') <- doActions st cst' acs
+                                                    -- (State{extState=2, callback=(\a -> \b -> (2, Out(Nothing, []))), timers=Map.empty})
+                                                    putMVar st cst''
+                                                    return $ Just $ encode (s,acs')
                                     -- the 'Output' is a tuple of a 'Shape' to draw and a list of 'Action's to execute
-                               (Block a)    -> doBlockingAction a >>= (handleEvent st)
+                               (Block a)    -> putMVar st cst' >> doBlockingAction a >>= (handleEvent st)
                                     -- the 'Output' is a 'BlockingAction'
                                
 -- | handles non blocking 'Action's. The result will be a list of non blocking actions which were not handled by 
 --   doActions and which should be sent to the javascript
-doActions :: IORef (State a) -> [Action] -> IO [Action]
-doActions st [] = return []
-doActions st xs =  (sequence $ map doAction xs) >>= (return . catMaybes)
-                    --the above line, sequence: [IO Maybe Action] -> IO [Maybe Action], catMaybes: [Maybe Action] -> [Action] (discards Nothings)
-                where
-                    doAction :: Action -> IO (Maybe Action)
-                    doAction (SaveFileString p c)   = writeFile p c >> return Nothing
-                    doAction (SaveFileBinary p c)   = BSL.writeFile p c >> return Nothing
-                    doAction (Timer ms id)          = do 
-                                                        curState <- readIORef st
-                                                        let tms = timers curState
-                                                        if(Map.member id tms) then (stopTimer id tms) else (return ())
-                                                        repeatedTimer (liftIO $ handleTick st id >> return ()) (msDelay $ fromIntegral ms) >>=
-                                                            \timer -> let tms' = Map.insert id timer tms in
-                                                                            atomicModifyIORef st (\_ -> (curState{timers=tms'}, timer)) >>=
-                                                            \timer -> Shutdown.addEnd $ Timer.stopTimer timer
-                                                        return Nothing
-                    doAction (StopTimer id)         = do
-                                                        curState <- readIORef st
-                                                        let tms = timers curState
-                                                        stopTimer id tms
-                                                        atomicModifyIORef st (\_ -> (curState{timers=Map.delete id tms}, ()))
-                                                        return Nothing
-                    -- Other actions fall through and should be handled by javascript
-                    doAction a                      = return $ Just a
-                    stopTimer :: String -> Map.Map String TimerIO -> IO ()
-                    stopTimer id tms = case Map.lookup id tms of
-                                        Nothing -> return ()
-                                        Just t -> Timer.stopTimer t
+--   The MVar on state is passed to the Timer actions, and will only be used in speerate (timer) threads
+doActions :: MVar (State a) -> State a -> [Action] -> IO ([Action], State a)
+doActions st cst [] = return ([], cst)
+doActions st cst xs = S.runStateT (ap xs) cst >>= \(ma, cst') -> return (catMaybes ma, cst')                 
+    where
+        ap :: [Action] -> S.StateT (State a) IO [Maybe Action]
+        ap []       = return []
+        ap (a:acs)  = do 
+                        st <- S.get
+                        (m, st') <- liftIO $ doAction st a
+                        S.put st'
+                        rst <- ap acs
+                        return $ m : rst
+                        -- S.get >>= \st -> liftIO $ doAction st a >>= \(m, st') -> (S.put st' >> return $ m : ap acs)
+        doAction :: State a -> Action -> IO (Maybe Action, State a)
+        doAction cst (SaveFileString p c)   = writeFile p c >> return (Nothing, cst)
+        doAction cst (SaveFileBinary p c)   = BSL.writeFile p c >> return (Nothing, cst)
+        doAction cst (Timer ms id)          = do 
+                                                let tms = timers $ cst
+                                                if(Map.member id tms) then (stopTimer id tms) else (return ())
+                                                timer <- liftIO $ repeatedTimer (handleTick st id) (msDelay $ fromIntegral ms)
+                                                liftIO $ Shutdown.addEnd $ Timer.stopTimer timer
+                                                return (Nothing, cst{timers=Map.insert id timer tms})
+        doAction cst (StopTimer id)         = do
+                                                let tms = timers cst
+                                                liftIO $ stopTimer id tms
+                                                return (Nothing, cst{timers=Map.delete id tms})
+            -- Other actions fall through and should be handled by javascript
+        doAction cst a                      = return (Just a, cst)
+            --stopTimer will stop a timer from the timermap
+        stopTimer :: String -> Map.Map String TimerIO -> IO ()
+        stopTimer id tms = case Map.lookup id tms of
+                            Nothing -> return ()
+                            Just t -> Timer.stopTimer t
                                         
 -- | handles blocking actions. The actions are executed and the corresponding Event is returned
 doBlockingAction :: BlockingAction -> IO (Event)
@@ -140,7 +151,7 @@ doBlockingAction (LoadFileBinary p) = BSL.readFile p >>= (\c -> return (FileLoad
 
 -- | Handles a Tick from a Timer by calling handleEvent with a Tick event and sending the result (if any)
 --   to javascript
-handleTick :: IORef (State a) -> String -> IO ()
+handleTick :: MVar (State a) -> String -> IO ()
 handleTick st id = handleEvent st (Tick id) >>= (\mt -> case mt of
                                                         Nothing -> return ()
                                                         Just t -> sendText t
