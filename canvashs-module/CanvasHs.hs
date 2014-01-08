@@ -37,7 +37,6 @@ import CanvasHs.Protocol
 import CanvasHs.Shutdown as Shutdown (addEnd) 
     -- the serverthread will call shutdown when exiting. We use this to stop the timers
 
-import qualified Data.Text as T
 import Data.IORef (IORef, newIORef, atomicModifyIORef, readIORef)
 import Control.Monad.Trans (liftIO, lift)
 import System.IO (readFile, writeFile)
@@ -46,12 +45,9 @@ import Data.Maybe (catMaybes)
 import Control.Concurrent.Timer as Timer
 import Control.Concurrent.Suspend (msDelay)
 import Control.Applicative ((<$>))
-<<<<<<< HEAD
 import qualified Data.Map as Map
-=======
 import qualified Data.ByteString.Lazy as BSL (readFile, writeFile)
 import qualified Data.ByteString.UTF8 as BU
->>>>>>> origin/dev
 
 import qualified Network.WebSockets as WS
 
@@ -72,16 +68,11 @@ installEventHandler ::
     ->  userState -- ^ start state
     ->  IO ()
 installEventHandler handl startState = do
-<<<<<<< HEAD
     store <- newIORef (State{extState=startState, callback=handl, timers=Map.empty})
-    launchBrowser "http://localhost:8000"
-=======
     args <- getArgs
-    store <- newIORef (State{extState=startState, callback=handl})
     if ("--prevent-browser-launch" `elem` args)
         then return ()
         else launchBrowser "http://localhost:8000"
->>>>>>> origin/dev
     start $ handleWSInput store
     return ()
     
