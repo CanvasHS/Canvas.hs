@@ -71,7 +71,8 @@ data JSONShapeData
         y              :: Maybe Int,
         width          :: Maybe Int, 
         height         :: Maybe Int, 
-        radius         :: Maybe Int 
+        radius         :: Maybe Int, 
+        angleDeg       :: Maybe Int
     } deriving (Show)
 
 -- | JSONEventData is part of the JSONShape and represents 'EventData' as an object which can be encodede by Aeson
@@ -131,6 +132,14 @@ shapeEncode (D.Polygon ps)          = JSONShape {shapetype = "polygon"
                                             }
 shapeEncode (D.Text p s td)         = JSONShape { shapetype = "text"
                                             ,shapedata = shapeEncodeTextData p s td
+                                            ,shapeeventData = Nothing
+                                            ,shapechildren = Nothing
+                                            }
+shapeEncode (D.Arc p r a)         = JSONShape { shapetype = "arc"
+                                            , shapedata = (shapeEncodePoint p) {
+                                                radius = Just r, 
+                                                angleDeg = Just a
+                                            }
                                             ,shapeeventData = Nothing
                                             ,shapechildren = Nothing
                                             }
@@ -201,7 +210,8 @@ shapeEncodePoint (x',y')
         y              = Just y', 
         width          = Nothing, 
         height         = Nothing, 
-        radius         = Nothing 
+        radius         = Nothing,
+        angleDeg       = Nothing 
     }
 
 -- | A helper function which creates an JSONShapeData holding only a list of points and the default black fill
@@ -227,7 +237,8 @@ shapeEncodePoints pts
         y              = Nothing, 
         width          = Nothing, 
         height         = Nothing, 
-        radius         = Nothing 
+        radius         = Nothing,
+        angleDeg       = Nothing
     }
         where
             -- Flattens the list of points

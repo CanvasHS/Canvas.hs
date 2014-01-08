@@ -2,6 +2,7 @@
     The CanvasHs.Colors module exposes 139 'Color' functions for frequently used colors
 -}
 module CanvasHs.Colors where
+default(Int, Float)
 aliceblue = (240, 248, 255, 1.0)
 antiquewhite = (250, 235, 215, 1.0)
 aqua = (0, 255, 255, 1.0)
