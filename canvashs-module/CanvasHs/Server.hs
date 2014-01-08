@@ -35,7 +35,8 @@ import CanvasHs.Shutdown (shutdown) -- other modules can add functions which sho
 
 import qualified Network.WebSockets as WS
 import Control.Monad (forever)
-import qualified Data.Text as T
+import qualified Data.ByteString.UTF8 as BU
+import Data.Maybe (isNothing)
 import qualified Network.Wai.Handler.Warp as WRP (run)
 import Data.Monoid
 import Control.Concurrent
@@ -54,12 +55,16 @@ children :: MVar [MVar ()]
 {-# NOINLINE children #-}
 children = unsafePerformIO (newMVar [])
 
--- | Starts the server, this starts a httpserver on 8000 which will serve the static content
---   And will start the websocket server which will handle the trafic between canvas and user haskell
---
---   The function argument is the function to be called when receiving data over a websocket
---   It should return data to be send back, or Nothing if there is no data to send to the canvas.
-start :: (T.Text -> IO (Maybe T.Text)) -> IO ()
+{- | 
+    Starts the server, this starts a httpserver on 8000 which will serve the static content
+    And will start the websocket server which will handle the trafic between canvasses and user haskell
+
+    The function argument is the function to be called when receiving data over a websocket
+    It should return data to be send back, or Nothing if there is no data to send to the canvas
+    note that when Nothing is returned to only way to send data over the websocket is to wait for
+    input from the websocket
+-}
+start :: (BU.ByteString -> IO (Maybe BU.ByteString)) -> IO ()
 start f =   do
                 forkChild serverHttp
                 forkChild $ liftIO $ WS.runServer "0.0.0.0" 8080 $ websockets f
@@ -73,22 +78,20 @@ serverHttp = do
                 dirFiles <- getDirectories "canvashs-client" >>= \dirs -> mapM getDirectoryFiles ("canvashs-client":dirs)
                 forkIO $ WRP.run 8000 (httpget (concat dirFiles))
                 return ()
-                
--- | Starts the websockets server, which will handle incoming websockets data using the provided handler
-websockets :: (T.Text -> IO (Maybe T.Text)) -> WS.PendingConnection -> IO ()
+
+websockets :: (BU.ByteString -> IO (Maybe BU.ByteString)) -> WS.PendingConnection -> IO ()
 websockets f rq = do
                     cn <- WS.acceptRequest rq
                     atomicModifyIORef conn (\_ -> (Just cn, ()))
-                    (Just initial) <- f $ T.pack "INIT" -- Tell the handler that the websockets connection has opened
+                    (Just initial) <- f "INIT"
                     WS.sendTextData cn initial
                     forever $ do
                         resp <- WS.receiveData cn >>= f
                         case resp of
                             Nothing -> return ()
                             Just m  -> WS.sendTextData cn m
-
--- | Sends textdata over the webscokets connection, will trigger an error when the connection is not open                          
-sendText :: T.Text -> IO ()
+                            
+sendText :: BU.ByteString -> IO ()
 sendText t = readIORef conn >>= (\c -> case c of
                 Nothing -> error "No open connection, cannot sendText"
                 Just cn -> WS.sendTextData cn t

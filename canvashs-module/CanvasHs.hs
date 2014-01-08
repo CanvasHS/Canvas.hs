@@ -41,12 +41,17 @@ import qualified Data.Text as T
 import Data.IORef (IORef, newIORef, atomicModifyIORef, readIORef)
 import Control.Monad.Trans (liftIO, lift)
 import System.IO (readFile, writeFile)
-import qualified Data.ByteString as BS (readFile, writeFile)
+import System.Environment (getArgs)
 import Data.Maybe (catMaybes)
 import Control.Concurrent.Timer as Timer
 import Control.Concurrent.Suspend (msDelay)
 import Control.Applicative ((<$>))
+<<<<<<< HEAD
 import qualified Data.Map as Map
+=======
+import qualified Data.ByteString.Lazy as BSL (readFile, writeFile)
+import qualified Data.ByteString.UTF8 as BU
+>>>>>>> origin/dev
 
 import qualified Network.WebSockets as WS
 
@@ -67,8 +72,16 @@ installEventHandler ::
     ->  userState -- ^ start state
     ->  IO ()
 installEventHandler handl startState = do
+<<<<<<< HEAD
     store <- newIORef (State{extState=startState, callback=handl, timers=Map.empty})
     launchBrowser "http://localhost:8000"
+=======
+    args <- getArgs
+    store <- newIORef (State{extState=startState, callback=handl})
+    if ("--prevent-browser-launch" `elem` args)
+        then return ()
+        else launchBrowser "http://localhost:8000"
+>>>>>>> origin/dev
     start $ handleWSInput store
     return ()
     
@@ -79,16 +92,13 @@ shape s = Out (Just s, [])
 -- | convenience function to create an 'Output' of just a list of 'Action's
 actions :: [Action] -> Output
 actions a = Out (Nothing, a)
-    
--- | handles input from the canvas over the websockets
-handleWSInput :: IORef (State a) -> T.Text -> IO (Maybe T.Text)
+
+-- | handles input from the canvas
+handleWSInput :: IORef (State a) -> BU.ByteString -> IO (Maybe BU.ByteString)
 handleWSInput st ip = handleEvent st $ decode ip
 
--- | Handles an incoming 'Event' by reading the current state, calling the user handler with 
---   the current user state, then processing the output by first doing the local Actions 
---   and will result in an valid JSON string of the shape and actions which should be
---   processed by javascript.
-handleEvent :: IORef (State a) -> Event -> IO (Maybe T.Text)
+-- | handles an event, it is fed through the handler, the newstate is saved and the resulting 
+handleEvent :: IORef (State a) -> Event -> IO (Maybe BU.ByteString)
 handleEvent st e    = do
                         curState <- readIORef st
                         let
@@ -135,7 +145,7 @@ doActions st xs =  (sequence $ map doAction xs) >>= (return . catMaybes)
 -- | handles blocking actions. The actions are executed and the corresponding Event is returned
 doBlockingAction :: BlockingAction -> IO (Event)
 doBlockingAction (LoadFileString p) = readFile p >>= (\c -> return (FileLoadedString p c))
-doBlockingAction (LoadFileBinary p) = BS.readFile p >>= (\c -> return (FileLoadedBinary p c))
+doBlockingAction (LoadFileBinary p) = BSL.readFile p >>= (\c -> return (FileLoadedBinary p c))
 
 -- | Handles a Tick from a Timer by calling handleEvent with a Tick event and sending the result (if any)
 --   to javascript
