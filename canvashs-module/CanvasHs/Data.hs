@@ -107,16 +107,9 @@ data Shape
     = Rect Point Int Int
     -- | A circle. Has a centerpoint and a radius
     | Circle Point Int
-<<<<<<< HEAD
     -- | An arch. Has a centerpoint, radius and angle, rotation is done by Rotate.
     | Arc Point Int Int
     -- | A line. Has a path containing its points, doesn't connect start and end.
-=======
-    -- | An arch. Has a centerpoint, radius, startangle and endangle (counterclockwise)
-    -- | Not yet implemented
-    | Arc Point Int Int Int
-    -- | A line. Has a path containing its points, doesn't connect start to end.
->>>>>>> origin/dev
     | Line Path
     -- | A polygon. Has a path containing its points, does connect start to end to form a closed shape
     | Polygon Path
