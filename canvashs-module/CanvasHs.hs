@@ -34,16 +34,18 @@ import CanvasHs.Data
 import CanvasHs.Server
 import CanvasHs.Launch
 import CanvasHs.Protocol
+import CanvasHs.Shutdown as Shutdown (addEnd) 
+    -- the serverthread will call shutdown when exiting. We use this to stop the timers
 
-import qualified Data.Text as T
 import Data.IORef (IORef, newIORef, atomicModifyIORef, readIORef)
 import Control.Monad.Trans (liftIO, lift)
 import System.IO (readFile, writeFile)
 import System.Environment (getArgs)
 import Data.Maybe (catMaybes)
-import Control.Concurrent.Timer
+import Control.Concurrent.Timer as Timer
 import Control.Concurrent.Suspend (msDelay)
 import Control.Applicative ((<$>))
+import qualified Data.Map as Map
 import qualified Data.ByteString.Lazy as BSL (readFile, writeFile)
 import qualified Data.ByteString.UTF8 as BU
 
@@ -55,6 +57,7 @@ type Callback a = (a -> Event -> (a, Output))
 -- | Our internal state, holds the user state and a refrence to the user handler
 data State a =  State   {extState :: a
                         ,callback :: Callback a
+                        ,timers :: Map.Map String TimerIO
                         }
 
                       
@@ -65,8 +68,8 @@ installEventHandler ::
     ->  userState -- ^ start state
     ->  IO ()
 installEventHandler handl startState = do
+    store <- newIORef (State{extState=startState, callback=handl, timers=Map.empty})
     args <- getArgs
-    store <- newIORef (State{extState=startState, callback=handl})
     if ("--prevent-browser-launch" `elem` args)
         then return ()
         else launchBrowser "http://localhost:8000"
@@ -108,11 +111,28 @@ doActions st xs =  (sequence $ map doAction xs) >>= (return . catMaybes)
                     doAction :: Action -> IO (Maybe Action)
                     doAction (SaveFileString p c)   = writeFile p c >> return Nothing
                     doAction (SaveFileBinary p c)   = BSL.writeFile p c >> return Nothing
-                    doAction (Timer ms id)          = repeatedTimer (liftIO $ handleTick st id >> return ()) (msDelay $ fromIntegral ms) >> return Nothing
+                    doAction (Timer ms id)          = do 
+                                                        curState <- readIORef st
+                                                        let tms = timers curState
+                                                        if(Map.member id tms) then (stopTimer id tms) else (return ())
+                                                        repeatedTimer (liftIO $ handleTick st id >> return ()) (msDelay $ fromIntegral ms) >>=
+                                                            \timer -> let tms' = Map.insert id timer tms in
+                                                                            atomicModifyIORef st (\_ -> (curState{timers=tms'}, timer)) >>=
+                                                            \timer -> Shutdown.addEnd $ Timer.stopTimer timer
+                                                        return Nothing
+                    doAction (StopTimer id)         = do
+                                                        curState <- readIORef st
+                                                        let tms = timers curState
+                                                        stopTimer id tms
+                                                        atomicModifyIORef st (\_ -> (curState{timers=Map.delete id tms}, ()))
+                                                        return Nothing
                     -- Other actions fall through and should be handled by javascript
                     doAction a                      = return $ Just a
-                    
-                               
+                    stopTimer :: String -> Map.Map String TimerIO -> IO ()
+                    stopTimer id tms = case Map.lookup id tms of
+                                        Nothing -> return ()
+                                        Just t -> Timer.stopTimer t
+                                        
 -- | handles blocking actions. The actions are executed and the corresponding Event is returned
 doBlockingAction :: BlockingAction -> IO (Event)
 doBlockingAction (LoadFileString p) = readFile p >>= (\c -> return (FileLoadedString p c))

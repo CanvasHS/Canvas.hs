@@ -32,12 +32,14 @@ Library
                   base64-bytestring,
                   timers >= 0.2.0.1,
                   suspend >= 0.1.0.2,
-                  filepath
+                  filepath, 
+                  containers >= 0.4.0.0
 
   Exposed-modules:	CanvasHs, CanvasHs.Data, CanvasHs.Colors
   hs-source-dirs:	canvashs-module
   other-modules:  Paths_canvashs,
                   CanvasHs.Launch,
+                  CanvasHs.Shutdown,
                   CanvasHs.Server,
                   CanvasHs.Server.Static,
                   CanvasHs.Protocol
