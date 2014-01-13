@@ -32,6 +32,7 @@ module CanvasHs.Server (start, sendText) where
 
 import CanvasHs.Server.Static
 import CanvasHs.Shutdown (shutdown) -- other modules can add functions which should be executed when start terminates
+import Data.Time.Clock
 
 import qualified Network.WebSockets as WS
 import Control.Monad (forever)
@@ -44,7 +45,7 @@ import Control.Exception (finally)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.IORef (IORef, newIORef, atomicModifyIORef, readIORef)
 import Control.Monad.Trans (liftIO)
-
+import Debug.Trace
 -- | unsafePerformIO-hack function which is IORef of connection
 conn :: IORef (Maybe WS.Connection)
 {-# NOINLINE conn #-}
@@ -68,7 +69,8 @@ start :: (BU.ByteString -> IO (Maybe BU.ByteString)) -> IO ()
 start f =   do
                 forkChild serverHttp
                 forkChild $ liftIO $ WS.runServer "0.0.0.0" 8080 $ websockets f
-                waitForChildren --this blocks so both the websockets and httpserver will terminate when start terminates
+                time <- getCurrentTime
+                waitForChildren time --this blocks so both the websockets and httpserver will terminate when start terminates
                 shutdown -- see CanvasHs.Shutdown import
                 return ()
                 
@@ -98,15 +100,18 @@ sendText t = readIORef conn >>= (\c -> case c of
              )      
              
 -- Code below manages the threads so all threads stop when the main thread is stopped
-waitForChildren :: IO ()
-waitForChildren = do
-    cs <- takeMVar children
-    case cs of
-        []   -> return ()
-        m:ms -> do
-           putMVar children ms
-           takeMVar m
-           waitForChildren
+waitForChildren :: UTCTime -> IO ()
+waitForChildren timeStarted = do
+    time <- getCurrentTime
+--    cs <- takeMVar children
+    if (diffUTCTime time timeStarted > 30) 
+        then trace "Stopping!" $ return () 
+        else  -- $ case cs of
+--                []   -> return ()
+--              m:ms -> do
+--              putMVar children ms
+--              takeMVar m
+                waitForChildren timeStarted
 
 forkChild :: IO () -> IO ThreadId
 forkChild io = do
