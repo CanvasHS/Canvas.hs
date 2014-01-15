@@ -692,7 +692,7 @@ function shapeFromData(message) {
             debugMessage += "x:"+data.x+" y:"+data.y;
             break;
         case "text":
-            var fontStyle;
+            var fontStyle = new String();
             if(data.bold) {
                 fontStyle = "bold";
                 delete data.bold;
