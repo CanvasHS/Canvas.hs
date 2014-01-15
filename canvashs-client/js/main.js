@@ -668,6 +668,11 @@ function shapeFromData(message) {
         generadedShapeIdIdx++;
     }
 
+    // Hackfix so that kinetic rotates counterlockwise
+    if(data["rotationDeg"]){
+        data["rotationDeg"] *= -1;
+    }
+
     debugMessage = "Drawing <a data-sid=\"" + data["id"] + "\" class=\"debugSelector\">" + message.type + " (" + data["id"] + ")</a> ";
 
     // Init shape based on type
