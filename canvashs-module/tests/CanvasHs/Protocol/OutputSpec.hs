@@ -9,8 +9,9 @@ import CanvasHs (shape)
 import CanvasHs.Protocol (encode)
 import CanvasHs.Data
 
-import qualified Data.Text as T
-import qualified Data.ByteString.Lazy.UTF8 as B
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BU
+import qualified Data.ByteString.Lazy as BSL
 import Data.Aeson (decode, Value)
 
 
@@ -46,7 +47,7 @@ spec = do
             it "can encode proper Circles" $ do
                 shapeDec (Circle (1,2) 3) `shouldBe` shapeTextDec "{\"type\": \"circle\", \"data\": {\"x\": 1, \"y\": 2, \"radius\": 3, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}}}"
             it "can encode proper Arcs" $ do
-                pendingWith "Arcs not yet implemented"
+                shapeDec (Arc (1, 2) 3 4) `shouldBe` shapeTextDec "{\"type\": \"arc\", \"data\": {\"x\": 1, \"y\": 2, \"radius\": 3, \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}, \"angleDeg\":4 }}"
             it "can encode proper Lines" $ do
                 shapeDec (Line [(1,2),(3,4),(5,6),(7,8)]) `shouldBe` shapeTextDec "{\"type\": \"line\", \"data\": {\"points\": [1,2,3,4,5,6,7,8], \"fill\": {\"r\":0,\"g\":0,\"b\":0,\"a\":1.0}}}"
             it "can encode proper Polygons" $ do
@@ -165,16 +166,16 @@ spec = do
 ---------------------- HELPERS ----------------------
 
 -- convenience functions to decodeJson
-textDec :: T.Text -> Maybe Value
-textDec = (decode . B.fromString . T.unpack) --decode is from Aeson
+textDec :: BU.ByteString -> Maybe Value
+textDec s = (decode $ BSL.fromChunks [s]) --decode is from Aeson
 
 --textDec for when the text only holds a Shape
-shapeTextDec :: T.Text -> Maybe Value
-shapeTextDec t = textDec $ T.concat ["{\"shape\" : ", t, ", \"actions\":[]}"]
+shapeTextDec :: BU.ByteString -> Maybe Value
+shapeTextDec t = textDec $ BS.concat ["{\"shape\" : ", t, ", \"actions\":[]}"]
 
 --textDec for when the text only holds an Action (Note actions should include "[]"!
-actionsTextDec :: T.Text -> Maybe Value
-actionsTextDec t = textDec $ T.concat ["{\"actions\": ", t, "}"]
+actionsTextDec :: BU.ByteString -> Maybe Value
+actionsTextDec t = textDec $ BS.concat ["{\"actions\": ", t, "}"]
 
 dec :: Output -> Maybe Value
 dec o = textDec $ encode o' --encode is from CanvasHs.Protocol

@@ -34,16 +34,20 @@ import CanvasHs.Data
 import CanvasHs.Server
 import CanvasHs.Launch
 import CanvasHs.Protocol
+import CanvasHs.Shutdown as Shutdown (addEnd) 
+    -- the serverthread will call shutdown when exiting. We use this to stop the timers
 
-import qualified Data.Text as T
 import Data.IORef (IORef, newIORef, atomicModifyIORef, readIORef)
 import Control.Monad.Trans (liftIO, lift)
 import System.IO (readFile, writeFile)
-import qualified Data.ByteString as BS (readFile, writeFile)
+import System.Environment (getArgs)
 import Data.Maybe (catMaybes)
-import Control.Concurrent.Timer
+import Control.Concurrent.Timer as Timer
 import Control.Concurrent.Suspend (msDelay)
 import Control.Applicative ((<$>))
+import qualified Data.Map as Map
+import qualified Data.ByteString.Lazy as BSL (readFile, writeFile)
+import qualified Data.ByteString.UTF8 as BU
 
 import qualified Network.WebSockets as WS
 
@@ -53,6 +57,7 @@ type Callback a = (a -> Event -> (a, Output))
 -- | Our internal state, holds the user state and a refrence to the user handler
 data State a =  State   {extState :: a
                         ,callback :: Callback a
+                        ,timers :: Map.Map String TimerIO
                         }
 
                       
@@ -63,8 +68,11 @@ installEventHandler ::
     ->  userState -- ^ start state
     ->  IO ()
 installEventHandler handl startState = do
-    store <- newIORef (State{extState=startState, callback=handl})
-    launchBrowser "http://localhost:8000"
+    store <- newIORef (State{extState=startState, callback=handl, timers=Map.empty})
+    args <- getArgs
+    if ("--prevent-browser-launch" `elem` args)
+        then return ()
+        else launchBrowser "http://localhost:8000"
     start $ handleWSInput store
     return ()
     
@@ -75,16 +83,13 @@ shape s = Out (Just s, [])
 -- | convenience function to create an 'Output' of just a list of 'Action's
 actions :: [Action] -> Output
 actions a = Out (Nothing, a)
-    
--- | handles input from the canvas over the websockets
-handleWSInput :: IORef (State a) -> T.Text -> IO (Maybe T.Text)
+
+-- | handles input from the canvas
+handleWSInput :: IORef (State a) -> BU.ByteString -> IO (Maybe BU.ByteString)
 handleWSInput st ip = handleEvent st $ decode ip
 
--- | Handles an incoming 'Event' by reading the current state, calling the user handler with 
---   the current user state, then processing the output by first doing the local Actions 
---   and will result in an valid JSON string of the shape and actions which should be
---   processed by javascript.
-handleEvent :: IORef (State a) -> Event -> IO (Maybe T.Text)
+-- | handles an event, it is fed through the handler, the newstate is saved and the resulting 
+handleEvent :: IORef (State a) -> Event -> IO (Maybe BU.ByteString)
 handleEvent st e    = do
                         curState <- readIORef st
                         let
@@ -105,16 +110,33 @@ doActions st xs =  (sequence $ map doAction xs) >>= (return . catMaybes)
                 where
                     doAction :: Action -> IO (Maybe Action)
                     doAction (SaveFileString p c)   = writeFile p c >> return Nothing
-                    doAction (SaveFileBinary p c)   = BS.writeFile p c >> return Nothing
-                    doAction (Timer ms id)          = repeatedTimer (liftIO $ handleTick st id >> return ()) (msDelay $ fromIntegral ms) >> return Nothing
+                    doAction (SaveFileBinary p c)   = BSL.writeFile p c >> return Nothing
+                    doAction (Timer ms id)          = do 
+                                                        curState <- readIORef st
+                                                        let tms = timers curState
+                                                        if(Map.member id tms) then (stopTimer id tms) else (return ())
+                                                        repeatedTimer (liftIO $ handleTick st id >> return ()) (msDelay $ fromIntegral ms) >>=
+                                                            \timer -> let tms' = Map.insert id timer tms in
+                                                                            atomicModifyIORef st (\_ -> (curState{timers=tms'}, timer)) >>=
+                                                            \timer -> Shutdown.addEnd $ Timer.stopTimer timer
+                                                        return Nothing
+                    doAction (StopTimer id)         = do
+                                                        curState <- readIORef st
+                                                        let tms = timers curState
+                                                        stopTimer id tms
+                                                        atomicModifyIORef st (\_ -> (curState{timers=Map.delete id tms}, ()))
+                                                        return Nothing
                     -- Other actions fall through and should be handled by javascript
                     doAction a                      = return $ Just a
-                    
-                               
+                    stopTimer :: String -> Map.Map String TimerIO -> IO ()
+                    stopTimer id tms = case Map.lookup id tms of
+                                        Nothing -> return ()
+                                        Just t -> Timer.stopTimer t
+                                        
 -- | handles blocking actions. The actions are executed and the corresponding Event is returned
 doBlockingAction :: BlockingAction -> IO (Event)
 doBlockingAction (LoadFileString p) = readFile p >>= (\c -> return (FileLoadedString p c))
-doBlockingAction (LoadFileBinary p) = BS.readFile p >>= (\c -> return (FileLoadedBinary p c))
+doBlockingAction (LoadFileBinary p) = BSL.readFile p >>= (\c -> return (FileLoadedBinary p c))
 
 -- | Handles a Tick from a Timer by calling handleEvent with a Tick event and sending the result (if any)
 --   to javascript

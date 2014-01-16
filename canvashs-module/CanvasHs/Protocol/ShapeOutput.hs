@@ -35,6 +35,7 @@ import Data.Aeson (ToJSON, toJSON, object, (.=))
 import Data.Aeson.TH
 import qualified Data.Text as T
 import Control.Applicative ((<$>))
+import qualified Data.ByteString.UTF8 as BU
 
 import qualified CanvasHs.Data as D
 
@@ -58,9 +59,9 @@ data JSONShapeData
         scaleY         :: Maybe Float, 
         rotationDeg    :: Maybe Int, 
         fontSize       :: Maybe Int, 
-        fontFamily     :: Maybe T.Text,
-        text           :: Maybe T.Text,
-        align          :: Maybe T.Text,
+        fontFamily     :: Maybe BU.ByteString,
+        text           :: Maybe BU.ByteString,
+        align          :: Maybe BU.ByteString,
         bold           :: Maybe Bool,
         italic         :: Maybe Bool,
         underline      :: Maybe Bool,
@@ -70,14 +71,15 @@ data JSONShapeData
         y              :: Maybe Int,
         width          :: Maybe Int, 
         height         :: Maybe Int, 
-        radius         :: Maybe Int 
+        radius         :: Maybe Int, 
+        angleDeg       :: Maybe Int
     } deriving (Show)
 
 -- | JSONEventData is part of the JSONShape and represents 'EventData' as an object which can be encodede by Aeson
 data JSONEventData
     = JSONEventData { 
-        eventId        :: Maybe T.Text, 
-        listen         :: Maybe [T.Text]
+        eventId        :: Maybe BU.ByteString, 
+        listen         :: Maybe [BU.ByteString]
     } deriving (Show)
 
 -- | JSONRGBAColor is part of JSONShapeData and represents a 'RGBAColor' as an object which can be encoded by Aeson
@@ -130,6 +132,14 @@ shapeEncode (D.Polygon ps)          = JSONShape {shapetype = "polygon"
                                             }
 shapeEncode (D.Text p s td)         = JSONShape { shapetype = "text"
                                             ,shapedata = shapeEncodeTextData p s td
+                                            ,shapeeventData = Nothing
+                                            ,shapechildren = Nothing
+                                            }
+shapeEncode (D.Arc p r a)         = JSONShape { shapetype = "arc"
+                                            , shapedata = (shapeEncodePoint p) {
+                                                radius = Just r, 
+                                                angleDeg = Just a
+                                            }
                                             ,shapeeventData = Nothing
                                             ,shapechildren = Nothing
                                             }
@@ -200,7 +210,8 @@ shapeEncodePoint (x',y')
         y              = Just y', 
         width          = Nothing, 
         height         = Nothing, 
-        radius         = Nothing 
+        radius         = Nothing,
+        angleDeg       = Nothing 
     }
 
 -- | A helper function which creates an JSONShapeData holding only a list of points and the default black fill
@@ -226,7 +237,8 @@ shapeEncodePoints pts
         y              = Nothing, 
         width          = Nothing, 
         height         = Nothing, 
-        radius         = Nothing 
+        radius         = Nothing,
+        angleDeg       = Nothing
     }
         where
             -- Flattens the list of points
@@ -244,15 +256,15 @@ shapeEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.alignment = a, D
                         D.AlignCenter -> Just "center"
                         D.AlignRight -> Just "right"
 
-            text = pointData{text= Just $ T.pack $ s}
-            result = text{fontFamily=Just $ T.pack f, fontSize=Just si, align =al, bold=Just b, italic=Just i, underline=Just u}
+            text = pointData{text= Just $ BU.fromString $ s}
+            result = text{fontFamily=Just $ BU.fromString f, fontSize=Just si, align =al, bold=Just b, italic=Just i, underline=Just u}
 
 
 -- | A helper function which encodes EventData into JSONEcentData, 
 --   it can either update an existing JSONEventData (Just e) or create a new one (Nothing)
 shapeEncodeEventData :: Maybe JSONEventData -> D.EventData -> JSONEventData
 shapeEncodeEventData Nothing e     = shapeEncodeEventData (Just (JSONEventData{eventId = Nothing, listen = Just []})) e
-shapeEncodeEventData (Just j) e = j {eventId = Just $ T.pack $ D.eventId e
+shapeEncodeEventData (Just j) e = j {eventId = Just $ BU.fromString $ D.eventId e
                                 ,listen = (++ mklisten e) <$> listen j
                                 }
                                 where
