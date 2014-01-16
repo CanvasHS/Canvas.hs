@@ -111,7 +111,7 @@ describe("Draw elements", function() {
   	it("draws a polygon", function() {
   		runs(function() {
   			// Draw in the Canvas.hs canvas
-	  		connectionDataReceived({ "data":'{"shape":{    "type": "polygon",    "data": {        "id": "polygon_nr_23",        "points": [73, 192, 73, 160, 340, 23, 500, 109, 499, 139, 342, 93],        "stroke": {"r":255,"g":255,"b":255,"a":1},        "strokeWidth": 2,        "fill": {"r":255,"g":100,"b":100,"a":1},        "rotationDeg": 40    }}}'});
+	  		connectionDataReceived({ "data":'{"shape":{    "type": "polygon",    "data": {        "id": "polygon_nr_23",        "points": [73, 192, 73, 160, 340, 23, 500, 109, 499, 139, 342, 93],        "stroke": {"r":255,"g":255,"b":255,"a":1},        "strokeWidth": 2,        "fill": {"r":255,"g":100,"b":100,"a":1},        "rotationDeg": -40    }}}'});
 	 		stage.batchDraw();
 	 		stage.draw();
 	 	});
