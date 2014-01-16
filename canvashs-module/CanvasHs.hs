@@ -50,6 +50,8 @@ import qualified Data.ByteString.Lazy as BSL (readFile, writeFile)
 import qualified Data.ByteString.UTF8 as BU
 
 import qualified Network.WebSockets as WS
+import Control.Exception
+
 
 -- | type of the user handler. It accepts a state and an 'Event' and produces a tuple of the new state and an 'Output'
 type Callback a = (a -> Event -> (a, Output))
@@ -92,8 +94,7 @@ handleWSInput st ip = handleEvent st $ decode ip
 handleEvent :: IORef (State a) -> Event -> IO (Maybe BU.ByteString)
 handleEvent st e    = do
                         curState <- readIORef st
-                        let
-                            (newState, output) = (callback curState) (extState curState) e
+                        (newState, output) <- catch (return ((callback curState) (extState curState) e)) (catchSafeExceptions curState)
                         atomicModifyIORef st (\_ -> (curState{extState=newState}, ())) -- update the state
                         case output of 
                                (Out (s,a))  -> (doActions st a) >>= (\a' -> return $ Just $ encode (s,a')) 
@@ -101,6 +102,13 @@ handleEvent st e    = do
                                (Block a)    -> doBlockingAction a >>= (handleEvent st)
                                     -- the 'Output' is a 'BlockingAction'
                                
+-- Catch exceptions that we want to avoid
+catchSafeExceptions :: st -> SomeException -> IO ((st, Output))
+catchSafeExceptions curState e =  do
+        case fromException e of
+                Just (PatternMatchFail x) -> putStrLn "[Non fatal exception]"
+                                            >> print x >> return (curState, Out (Nothing, []))
+                nothing -> return (curState, Out (Nothing, []))
 -- | handles non blocking 'Action's. The result will be a list of non blocking actions which were not handled by 
 --   doActions and which should be sent to the javascript
 doActions :: IORef (State a) -> [Action] -> IO [Action]

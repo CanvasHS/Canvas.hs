@@ -86,10 +86,11 @@ websockets f rq = do
                     (Just initial) <- f "INIT"
                     WS.sendTextData cn initial
                     forever $ do
-                        resp <- WS.receiveData cn >>= f
-                        case resp of
-                            Nothing -> return ()
-                            Just m  -> WS.sendTextData cn m
+                            resp <- WS.receiveData cn >>= f
+                            case resp of
+                                Nothing -> return ()
+                                Just m  -> WS.sendTextData cn m
+                        
                             
 sendText :: BU.ByteString -> IO ()
 sendText t = readIORef conn >>= (\c -> case c of
@@ -97,6 +98,9 @@ sendText t = readIORef conn >>= (\c -> case c of
                 Just cn -> WS.sendTextData cn t
              )      
              
+
+
+
 -- Code below manages the threads so all threads stop when the main thread is stopped
 waitForChildren :: IO ()
 waitForChildren = do
