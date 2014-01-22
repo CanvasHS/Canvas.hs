@@ -662,6 +662,7 @@ function shapeFromData(message) {
     if(data["stroke"]){
         data["stroke"] = rgbaDictToColor(data["stroke"]);
     }
+
     // Debug message
     if(!data["id"] && debugOn) {
         data["id"] = "sid" + generadedShapeIdIdx;
@@ -678,7 +679,12 @@ function shapeFromData(message) {
     // Init shape based on type
     switch (message.type) {
         case "line":
-            shape = new Kinetic.Line(data);
+            if(data.points != undefined && data.points.length != 0) {
+                console.log("Data points")
+                console.log(data.points.length);
+                console.log(data.points);
+                shape = new Kinetic.Line(data);
+            }
             debugMessage += "with points: " + data.points;
             break;
         case "polygon":
@@ -721,7 +727,6 @@ function shapeFromData(message) {
                 var offsetX = shape.getOffsetX();
                 var width = shape.getWidth();
 
-                console.log(width);
                 
                 if(align == 'center'){
                     offsetX = offsetX + (width / 2);
@@ -739,7 +744,10 @@ function shapeFromData(message) {
             data.clip = [0, 0, data.width, data.height];
             shape = new Kinetic.Group(data);
             message.children.forEach(function(child) {
-                shape.add(parseShapeData(child));
+                shapeAdd = parseShapeData(child);
+                if(shapeAdd != undefined) {
+                    shape.add(shapeAdd);
+                }
             });
             break;
         default:
@@ -747,8 +755,9 @@ function shapeFromData(message) {
             printDebugMessage("Unrecognized JSON message received from server.",2);
     }
 
-    if(debugMessage)
+    if(debugMessage) {
         printDebugMessage(debugMessage,0);
+    }
 
     return shape;
 }
