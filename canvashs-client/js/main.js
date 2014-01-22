@@ -50,7 +50,9 @@ function connectionDataReceived(event) {
         }
 
         // Draw on current layer
-        layerList[topLayerIdx].add(shape);
+        if(shape != undefined) {
+            layerList[topLayerIdx].add(shape);
+        }
         layerList[topLayerIdx].batchDraw();
     }
     else {
