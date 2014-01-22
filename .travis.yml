@@ -6,6 +6,7 @@ after_success:
 - cabal sdist
 - runhaskell tests/SetupTests.hs
 - runhaskell tests/JavascriptTests.hs
+- cat lib/jasmine/lib/jasmine-core/jasmine.js
 - cabal haddock
 - ./pushToGithub.sh
 notifications:
