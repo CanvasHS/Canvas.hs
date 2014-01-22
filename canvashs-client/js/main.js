@@ -682,9 +682,6 @@ function shapeFromData(message) {
     switch (message.type) {
         case "line":
             if(data.points != undefined && data.points.length != 0) {
-                console.log("Data points")
-                console.log(data.points.length);
-                console.log(data.points);
                 shape = new Kinetic.Line(data);
             }
             debugMessage += "with points: " + data.points;
