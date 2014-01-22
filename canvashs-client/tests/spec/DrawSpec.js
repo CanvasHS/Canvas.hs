@@ -52,6 +52,19 @@ describe("Parse elements", function() {
   		expect(container.getChildren().length).toBe(2);
   		expect(container.nodeType).toBe("Group");
   	});
+  	it("parses a line", function() {
+  		// Parse line and check output
+  		var line = parseShapeData({    "type": "line",    "data": {        "points": [ 10, 0, 10, 10 ]    }});
+  		expect(line).toBeDefined();
+  		expect(line.attrs.points).toBeDefined();
+  		expect(line.attrs.points.length).toBe(2);
+  		expect(line.className).toBe("Line");
+  	});
+  	it("parses an empty line", function() {
+  		// Parse an empty line and check output is null
+  		var line = parseShapeData({    "type": "line",    "data": {        "points": []    }});
+  		expect(line).toBeNull();
+  	});
 });
 describe("Draw elements", function() {
 	var flag;
