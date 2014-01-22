@@ -52,6 +52,10 @@ describe("Parse elements", function() {
   		expect(container.getChildren().length).toBe(2);
   		expect(container.nodeType).toBe("Group");
   	});
+  	it("should let travis fail", function() {
+  		// This is a test to see if the configuration is correct on Travis
+  		expect(true).toBe(false);
+  	});
 });
 describe("Draw elements", function() {
 	var flag;
