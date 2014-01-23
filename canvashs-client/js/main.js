@@ -27,7 +27,7 @@ var mouseMoveRateLimit = 90; // The mousemove interval limit
 
 /**
  * Handles data received from the websocket connection.
- * @param {type} event
+ * @param {MessageEvent} event
  * @returns {undefined}
  */
 function connectionDataReceived(event) {
@@ -316,7 +316,7 @@ function parseActionData(data) {
         var actionProperties = data.data;
 
         switch (data.action) {
-            case "windowdisplaytype": // To chacnge the display type
+            case "windowdisplaytype": // To change the display type
                 if(hasProperty(actionProperties,"type") && actionProperties.type != undefined) {
                     
                     // First set the global width and height var's if action contains them
