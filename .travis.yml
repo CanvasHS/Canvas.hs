@@ -7,8 +7,6 @@ after_success:
 - mkdir jsdocs
 - jsdoc canvashs-client/js/main.js canvashs-client/js/utils.js -d jsdocs --verbose
 - cabal sdist
-- runhaskell tests/SetupTests.hs
-- runhaskell tests/JavascriptTests.hs
 - cabal haddock
 - ./pushToGithub.sh
 notifications:
