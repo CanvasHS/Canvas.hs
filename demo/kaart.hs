@@ -147,7 +147,7 @@ drawCityPopup :: String -> [Shape]
 drawCityPopup name = (map (\(n, (x, y)) ->
             Translate (x - 50)  (y-30) $ Container 100 30 [
                 Stroke (0, 0, 0, 1.0) 1 $ Fill (255, 255, 255, 1.0) $ Polygon [(0,0), (100,0), (100, 20), (60,20), (50,30), (40, 20), (0,20)],
-                Text (50, 2) n defaults{font="Cantarell", alignment=Center, size=15}
+                Text (50, 2) n defaults{font="Cantarell", alignment=AlignCenter, size=15}
             ]) cities)
     where
         popup = Stroke (0, 0, 0, 1.0) 1 $ Fill (255, 255, 255, 1.0) $ Polygon [(0,0), (100,0), (100, 20), (60,20), (50,30), (40, 20), (0,20)]
