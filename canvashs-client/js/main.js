@@ -11,7 +11,7 @@ var canvasWindowHeight = 600;
 var canvas = undefined;
 
 var generadedShapeIdIdx = 0;
-var debugOn = false;
+var debugOn = true;
 var debugAnnimatingShapes = [];
 var debugCanClose = true;
 
@@ -69,8 +69,6 @@ function connectionDataReceived(event) {
     else {
         printDebugMessage("No actions recieved",0);
     }
-
-
 }
 
 /**
@@ -85,23 +83,50 @@ function connectionError(error) {
 function connectionClosed(error) {
     printDebugMessage("Connection closed " + error,0);
 
+    openControlWindow("Connection lost");
+}
+/**
+ * Opens a control element with a title and a message
+ * @param {type} title The title of the message (required)
+ * @param {type} message The contents of the message (optional)
+ * @returns {undefined}
+ */
+function openControlWindow(title, message) {
+    // Opens the control interface element
+    message = message == undefined ? "" : message;
     $("#control-wrapper").addClass('display');
     $("#control-window").addClass('display');
-    $("#control-window").html("<div class=\"control-content\"><p><strong>Connection lost</strong><br /><!--Retrying in 3... <a>reconnect</a>--></p></div>");
+    $("#control-window").html("<div class=\"control-content\"><p><strong>"+title+"</strong><br />"+message+"</p></div>");   
+}
+/**
+ * Closes the control element
+ * @returns {undefined}
+ */
+function closeControlWindow() {
+    // Closes the control interface element
+    $("#control-wrapper").removeClass('display');
+    $("#control-window").removeClass('display');
 }
 
 /**
  * Type is an enumeration where 0 is FizedSize 1 is FullWindow and 2 is FullScreen.
  * Width and height are required with FixedSize and are ignored with the other types.
+ * @param {type} displayType
+ * @param {type} attempt
+ * @returns {undefined}
  */
-function setWindowDisplayType(displayType)
+function setWindowDisplayType(displayType, attempt)
 {
+    attempt = attempt != undefined ? attempt : 1;
+
     switch (displayType) {
-        case 0: // FizedSize
+        case 0: // FixedSize
+
+            window.fullScreenApi.cancelFullScreen(document.getElementById('wrapper'));
 
             $("body").removeClass('fullscreen');
             $("body").removeClass('fullwindow');
-            
+
             // Animate the kinetic container
             $("#canvas div").animate({
                 width: canvasWindowWidth+'px',
@@ -111,8 +136,12 @@ function setWindowDisplayType(displayType)
         break;
         case 1: // FullWindow
 
+            window.fullScreenApi.cancelFullScreen(document.getElementById('wrapper'));
+
             $("body").addClass('fullwindow');
             $("body").removeClass('fullscreen');
+
+            closeControlWindow();
 
             setFluidProportions($("#canvas,#canvas div"));
             $(window).resize(resizeCanvas);
@@ -120,19 +149,99 @@ function setWindowDisplayType(displayType)
         break;
         case 2: // FullScreen
 
+            window.fullScreenApi.requestFullScreen(document.getElementById('wrapper'));
+
             $("body").addClass('fullscreen');
             $("body").removeClass('fullwindow');
+            
+            closeControlWindow();
 
             setFluidProportions($("#canvas,#canvas div"));
             $(window).resize(resizeCanvas);
             resizeCanvas(); // Resizes the canvas
-
+            // If this did not result in a full screen window then request it from the user.
+            if(window.fullScreenApi.isFullScreen() == false) {
+                if(attempt > 2) {
+                    // Show a message if it was not possible to switch to full screen
+                    openControlWindow("Failed to switch to fullscreen"); 
+                    setTimeout(closeControlWindow, 2400);   
+                }
+                else {
+                    setTimeout(requestFullscreen.bind(undefined, attempt+1), 100*attempt);
+                }
+            }
         break;
         default:
             printDebugMessage("Window display type not supported ("+displayType+")",0);
+    };
+}
+
+/**
+ * Asks the user to go fullscreen.
+ * @param {type} attempt
+ * @returns {undefined}
+ */
+function requestFullscreen(attempt) {
+    if(window.fullScreenApi.isFullScreen() == false) {
+        openControlWindow("Switch to fullscreen?","<a href=\"#\" id=\"switchToFullscreen\">Yes</a> - <a href=\"#\" id=\"switchToFullwindow\">No</a>");    
+        $("#switchToFullscreen").off('click');
+        $("#switchToFullwindow").off('click');
+        $("#switchToFullscreen").click(setWindowDisplayType.bind(undefined, 2, attempt));
+        $("#switchToFullwindow").click(setWindowDisplayType.bind(undefined, 1, attempt));
     }
 }
 
+/**
+ * Opens a prompt to ask if a file should be uploaded. When clicked on "Yes" a file selecion browser will be opened.
+ * @returns {undefined}
+ */
+function requestUpload() {
+    
+    openControlWindow("Upload a file?","<a href=\"#\" id=\"acceptPrompt\">Yes</a> - <a href=\"#\" id=\"closePrompt\">No</a>");    
+    $("#acceptPrompt").off('click');
+    $("#closePrompt").off('click');
+    $("#acceptPrompt").click(promptFileBrowser.bind(undefined));
+    $("#closePrompt").click(closeControlWindow.bind(undefined));
+}
+
+/**
+ * Opens a file browser in which you can select a file. This function should be called directly through user input
+ * and not through a websocket for example. Browsers have built in protection to prevent this, the promt will not show.
+ * @returns {undefined}
+ */
+function promptFileBrowser() {
+
+    $('#fileUpload').trigger('click');
+    $('#fileUpload').change(function() {
+        if ( this.files && this.files[0] ) {
+            var FR= new FileReader();
+            FR.onload = function(e) {
+                printDebugMessage("Uploading file: "+e.target.result,0);
+
+                //e.target.result contains the base64 filecontents, but with a mimetype prepended (which we don't want)
+                parts = e.target.result.split("base64,");
+                mimetype = parts[0]; //not used
+                contents = parts[1];
+                
+                connection.send(JSON.stringify({
+                    "event":"upload",
+                    "data":{
+                        "filecontents": contents
+                    }
+                }));
+            };       
+            FR.readAsDataURL( this.files[0] );
+        }
+    });
+
+    closeControlWindow();
+}
+
+/**
+ * Sets fluid proportions for the container.
+ * @param {type} container
+ * @returns {undefined}
+ */
 function setFluidProportions(container) {
     // Animate to fluid width and height
     container.animate({
@@ -146,6 +255,13 @@ function setFluidProportions(container) {
 
 }
 
+/**
+ * Sets fixed proportions for the container.
+ * @param {type} container
+ * @param {type} width The new fixed width of the container.
+ * @param {type} height The new fixed height of the container.
+ * @returns {undefined}
+ */
 function setFixedProportions(container,width,height) {
     // Animate to fixed width and height
     container.animate({
@@ -158,17 +274,27 @@ function setFixedProportions(container,width,height) {
     },{duration: 300,step:resizeCanvas});
 }
 
+/**
+ * Resizes the canvas.
+ * @param {type} event
+ * @returns {undefined}
+ */
 function resizeCanvas(event) {  
 
-    $("#wrapper").css( "min-width", $("#canvas").outerWidth()+"px" );
-    $("#wrapper").css( "min-height", $("#canvas").outerHeight()+"px" );
+    $("#canvas canvas").css( "width", $("#canvas").width()+"px" );
+    $("#canvas canvas").css( "height", $("#canvas").height()+"px" );
 
     if(stage != undefined) {
-        stage.setSize($("#canvas").outerWidth(),$("#canvas").outerHeight());
+        stage.setSize($("#canvas").width(),$("#canvas").height());
         stage.batchDraw(); // Redraw Canvas
     }
 }
 
+/**
+ * Parses shape data and returns an object kinetic accepts. Also coupling to event handlers is done.
+ * @param {type} shape data
+ * @returns {Kinetic.Group|shapeFromData.shape|Kinetic.Circle|Kinetic.Line|Kinetic.Polygon|Kinetic.Text|Kinetic.Rect}
+ */
 function parseShapeData(data) {
 
     var shape = shapeFromData(data);
@@ -177,6 +303,11 @@ function parseShapeData(data) {
     return shape;
 }
 
+/**
+ * Parses action data and execute the actions.
+ * @param {type} data
+ * @returns {undefined}
+ */
 function parseActionData(data) {
     if(hasProperty(data,"action") && data.action != undefined &&
        hasProperty(data,"data") && data.data != undefined) {
@@ -223,11 +354,7 @@ function parseActionData(data) {
                     else
                          $('#fileUpload').removeProp('multiple');
 
-                    $('#fileUpload').trigger('click');
-                    $('#fileUpload').change(function() {
-                        printDebugMessage("Tries to upload file",0);
-                    });
-
+                    requestUpload();
                 }
                 else {
                     printDebugMessage("Request upload action recieved without multiple attribute",2);
@@ -244,6 +371,32 @@ function parseActionData(data) {
                 }
                 else {
                     printDebugMessage("Download action recieved without file data",2);
+                }
+                
+
+            break;
+            case "prompt":
+
+                if(hasProperty(actionProperties,"message") && actionProperties.message != undefined) {
+
+                    var result;
+                    if(hasProperty(actionProperties,"placeholder"))
+                        result = prompt(actionProperties.message,actionProperties.placeholder);
+                    else
+                        result = prompt(actionProperties.message,"");
+
+                    if(result != undefined)
+                    {
+                        connection.send(JSON.stringify({
+                            "event":"prompt",
+                            "data":{
+                                "value": result
+                            }
+                        }));
+                    }
+                }
+                else {
+                    printDebugMessage("Prompt action recieved without file data",2);
                 }
                 
 
@@ -295,13 +448,17 @@ function enableEventHandlers(shape, message) {
         }
     }
 }
-
 function clickEventHandler(id, event) { mouseEvent("mouseclick", id, event); }
 function doubleClickEventHandler(id, event) { mouseEvent("mousedoubleclick", id, event); }
 function mouseDownEventHandler(id, event) { mouseEvent("mousedown", id, event); }
 function mouseUpEventHandler(id, event) { mouseEvent("mouseup", id, event); }
 function mouseOverEventHandler(id, event) { mouseEvent("mouseover", id, event); }
-function mouseOutEventHandler(id, event) { mouseEvent("mouseout", id, event); }
+function mouseOutEventHandler(id, event) { 
+    // Needed, otherwhise redraw fires mouseOut event
+    if(event.targetNode.getParent() != undefined) {
+        mouseEvent("mouseout", id, event); 
+    } 
+}
 function mouseMoveEventHandler(id, event) { mouseEvent("mousemove", id, event); }
 
 /**
@@ -329,6 +486,7 @@ function mouseDragStartEventHandler(id, event) {
     // Cancel event bubbling
     event.cancelBubble = true;
 }
+
 /**
  * Handles mouse drag events.
  * @param {type} id The id of the shape the event handler listens on.
@@ -349,6 +507,7 @@ function mouseDragEndEventHandler(id, event) {
     // Cancel event bubbling
     event.cancelBubble = true;
 }
+
 /**
  * Sends information belonging to a mouse drag event.
  * @param {type} id The id of the shape the drag occurs on.
@@ -384,6 +543,7 @@ function mouseDragEventHandler(id, event) {
     // Cancel event bubbling
     event.cancelBubble = true;
 }
+
 /**
  * Sends information about mouse events.
  * @param {type} eventName The name of the event as send to the server.
@@ -444,6 +604,7 @@ function realY(y) {
     var canvasPos = $("#canvas").position();
     return y-canvasPos.top-parseInt($("#canvas").css("margin-top"));
 }
+
 /**
  * Sends a scroll event to the server.
  * @param {Number} deltaX How far is scrolled in horizontal direction.
@@ -463,18 +624,23 @@ function sendScrollEvent(deltaX,deltaY) {
     }));
 }
 
+/**
+ * Sends a window resize event to the server.
+ * @param {Number} width How wide the window has become.
+ * @param {Number} height How high the window has become.
+ * @returns {undefined}
+ */
 function sendWindowResizeEvent(width,height) {
 
     printDebugMessage("Window Resize (width:"+width+" height:"+height+")",0);
 
-    // Not yet implemented in haskell
-    // connection.send(JSON.stringify({
-    //     "event":"resizewindow",
-    //     "data":{
-    //         "width": width,
-    //         "height": height
-    //     }
-    // }));
+    connection.send(JSON.stringify({
+        "event":"resizewindow",
+        "data":{
+            "width": width,
+            "height": height
+        }
+    }));
 }
 
 /**
@@ -502,6 +668,11 @@ function shapeFromData(message) {
         generadedShapeIdIdx++;
     }
 
+    // Hackfix so that kinetic rotates counterlockwise
+    if(data["rotationDeg"]){
+        data["rotationDeg"] *= -1;
+    }
+
     debugMessage = "Drawing <a data-sid=\"" + data["id"] + "\" class=\"debugSelector\">" + message.type + " (" + data["id"] + ")</a> ";
 
     // Init shape based on type
@@ -521,7 +692,22 @@ function shapeFromData(message) {
             shape = new Kinetic.Rect(data);
             debugMessage += "width x:"+data.x+" y:"+data.y+" width:"+data.width+" height:"+data.height;
             break;
+        case "arc":
+            shape = new CanvasHs.Arc(data);
+            debugMessage += "x:"+data.x+" y:"+data.y;
+            break;
         case "text":
+            var fontStyle = new String();
+            if(data.bold) {
+                fontStyle = "bold";
+                delete data.bold;
+            }
+            if(data.italic) {
+                fontStyle += " italic";
+                delete data.italic;
+            }
+
+            data.fontStyle = fontStyle;
             shape = new Kinetic.Text(data);
 
             // As haskell has no idea about textsizes this code wil fix align
@@ -567,6 +753,11 @@ function shapeFromData(message) {
     return shape;
 }
 
+/**
+ * Converts rgba values to colors.
+ * @param {type} dict
+ * @returns {String}
+ */
 function rgbaDictToColor(dict){
     var res = "";
     if(dict["a"] != undefined){
@@ -633,6 +824,7 @@ var hideDebugConsole = function(){
     };
 /**
  * Flashes a shape when it is selected in the debugger.
+ * @returns {undefined}
  */
 var debugSelector = function () {
     debugCanClose = false;
@@ -717,6 +909,7 @@ function initCanvas(container, width, height) {
 
 /**
  * Makes a new layer to draw on.
+ * @returns {undefined}
  */
 function newDefaultLayer() {
     topLayerIdx++;

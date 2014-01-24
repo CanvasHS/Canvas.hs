@@ -21,11 +21,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 {- |
-    Deze module handelt het omzetten van het interne datamodel naar het protocol af d.m.v. de
-    encode-functie en het omzetten de andere kant op d.m.v. de decode-functie
-    
-    Op dit moment is de module in dummy-staat om de inrichting van de code duidelijk te hebben,
-    de daadwerkelijke invulling (body) van de functies zal nog veranderen.
+    The CanvasHs.Protocol module handles the transition from internal CanvasHs Datamodel to the
+    JSON data model and vice versa. It can encode 'RegularOutput' to a valid JSON string (using an UTF8 ByteString)
+    with the encode function, and can decode incoming JSON messages (as UTF8 ByteStrings) to 
+    'Event's using the decode function
 -}
 module CanvasHs.Protocol
 (   encode
@@ -41,27 +40,32 @@ import qualified Data.Text as T
 import Data.List (intercalate)
 import qualified Data.Aeson as Aeson (encode, eitherDecode)
 import Data.Aeson.TH
-import qualified Data.ByteString.Lazy.UTF8 as BU (fromString, toString)
+import qualified Data.ByteString.UTF8 as BU
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
 import Data.Either (either)
 import Data.Maybe (fromMaybe)
 import Control.Applicative ((<$>))
 
+-- | This datastructure represents a JSON Output string for Aeson
 data JSONOutput = JSONOutput {
         shape :: Maybe JSONShape,
         actions :: [JSONAction]
         } deriving (Show)
         
+-- | This templatehaskell will make JSONOutput derriving JSON, and will instruct Aeson to omit nothing fields
+--   in the resulting JSON
 $(deriveJSON defaultOptions{omitNothingFields=True} ''JSONOutput)
 
 {-  |
     encode maakt van een Output een JSON-string (type Data.Text) die voldoet aan het protocol
     @ensure \result is een valide JSON-object
 -}
-encode :: RegularOutput -> T.Text
-encode o = T.pack $ BU.toString $ Aeson.encode (JSONOutput {shape=(shapeEncode <$> fst o), actions=(map actionEncode $ snd o)})
+encode :: RegularOutput -> BU.ByteString
+encode o = BS.concat $ BSL.toChunks $ Aeson.encode (JSONOutput {shape=(shapeEncode <$> fst o), actions=(map actionEncode $ snd o)})
 
 -- | Ontsleuteld een inkomend bericht naar een event
 --   De daadwerkelijke code hiervoor staat in CanvasHs.Protocol.Output
-decode :: T.Text -> Event
+decode :: BU.ByteString -> Event
 decode "INIT"   = StartEvent
-decode s        = either (\b -> error $ "Aeson decode error: "++b) (\b -> b) $ Aeson.eitherDecode $ BU.fromString $ T.unpack s
+decode s        = either (\b -> error $ "Aeson decode error: "++b) (\b -> b) $ Aeson.eitherDecode $ BSL.fromChunks [s]
