@@ -47,7 +47,7 @@ describe("Draw elements to test event handling", function() {
   });
     it("testing message after mouseclick event", function() {
       // Draw in the Canvas.hs canvas
-      connectionDataReceived({"data":'{"shape":{"type": "circle", "data": {"id": "circle_nr_2", "x": 20, "y": 20, "radius": 5, "stroke": {"r": 255,"g": 255,"b": 255,"a": 1 }, "strokeWidth": 2, "fill": {"r":255,"g":0,"b":0,"a":1}}, "eventData": {"listen" : ["mousedown","mouseclick","mouseup","mousedoubleclick","mousedrag","mouseover", "mouseout"]}}}'});
+      connectionDataReceived({"data":'{"shape":{"type": "circle", "data": {"x": 20, "y": 20, "radius": 5, "stroke": {"r": 255,"g": 255,"b": 255,"a": 1 }, "strokeWidth": 2, "fill": {"r":255,"g":0,"b":0,"a":1}}, "eventData": {"eventId": "circle_nr_2", "listen" : ["mousedown","mouseclick","mouseup","mousedoubleclick","mousedrag","mouseover", "mouseout"]}}}'});
       stage.batchDraw();
       stage.draw();
 
@@ -57,8 +57,8 @@ describe("Draw elements to test event handling", function() {
       // Test if mouseEvent method is called after 
       // click event on circle but not before.
       expect(connection.send.callCount).toBe(0);
-      stage.find('#circle_nr_2')[0].fire('click');
-      expect(connection.send).toHaveBeenCalled();
+      stage.find('Circle')[0].fire('click');
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseclick","data":{"id":"circle_nr_2","x":null,"y":null}}');
     });
   afterEach(function(){
     // Remove the canvas elements used for testing and reset variables
