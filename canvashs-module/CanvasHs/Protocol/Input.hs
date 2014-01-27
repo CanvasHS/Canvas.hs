@@ -73,7 +73,6 @@ instance FromJSON JSONEventData where
                             v .:? "id1"          <*> -- Only for mousedrag
                             v .:? "x2"           <*> -- Only for mousedrag
                             v .:? "y2"           <*> -- Only for mousedrag
-                            v .:? "id2"          <*> -- Only for mousedrag
                             v .:? "key"          <*>
                             v .:? "control"      <*>
                             v .:? "alt"          <*>
@@ -116,8 +115,8 @@ makeEvent "mousedoubleclick"
          = MouseDoubleClick (x, y) (BU.toString eid)
 
 makeEvent "mousedrag"
-    (JSONEventData{jeventId1 = Just eid1, x1 = Just x1, y1 = Just y1, jeventId2 = Just eid2, x2 = Just x2, y2 = Just y2})
-        = MouseDrag (x1, y1) (BU.toString eid1) (x2, y2) (BU.toString eid2)
+    (JSONEventData{jeventId1 = Just eid1, x1 = Just x1, y1 = Just y1, x2 = Just x2, y2 = Just y2})
+        = MouseDrag (x1, y1) (BU.toString eid1) (x2, y2)
 
 makeEvent "mouseover"
     (JSONEventData{jeventId = Just eid, x = Just x, y = Just y})
