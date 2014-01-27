@@ -436,9 +436,6 @@ function enableEventHandlers(shape, message) {
         if(message.eventData.listen.indexOf("mouseover") != -1) {
             shape.on('mouseover', mouseOverEventHandler.bind(undefined, message.eventData.eventId));
         }
-        if(message.eventData.listen.indexOf("mousemove") != -1) {
-            shape.on('mousemove', mouseMoveEventHandler.bind(undefined, message.eventData.eventId));
-        }
         if(message.eventData.listen.indexOf("mouseout") != -1) {
             shape.on('mouseout', mouseOutEventHandler.bind(undefined, message.eventData.eventId));
         }
@@ -459,7 +456,6 @@ function mouseOutEventHandler(id, event) {
         mouseEvent("mouseout", id, event); 
     } 
 }
-function mouseMoveEventHandler(id, event) { mouseEvent("mousemove", id, event); }
 
 /**
  * Starts the mouse drag event handler.
