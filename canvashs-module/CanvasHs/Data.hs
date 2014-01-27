@@ -210,9 +210,8 @@ data Event
     | MouseUp Point String
     -- | A mousedoubleclick event consisting of a point and ID string of the interested object
     | MouseDoubleClick Point String
-    -- TODO: Kan je ook in het niets draggen?
     -- | A mousedrag event with start and end, both consisting of a Point an ID string
-    | MouseDrag Point String Point String
+    | MouseDrag Point String Point
     -- | A mouseover event, consisting of a point and ID string of the interested object
     | MouseOver Point String
     -- | A mouseout event, consisting of a point and ID string of the interested object
