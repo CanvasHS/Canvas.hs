@@ -64,6 +64,12 @@ spec = do
             it "can decode *arbitrary* mouseout event" $ do
                 JSONString eid <- arbitrary
                 property $ \x y -> (decode $ buildMousePF "mouseout" x y eid) == (MouseOut (x, y) eid)
+        describe "mousedrag event" $ do
+            it "can decode a mousedrag event" $ do
+                (decode $ buildMouseDragPF "mousedrag" 150 200 "myAwesomeShape" 200 225) `shouldBe` (MouseDrag (150, 200) "myAwesomeShape" (200, 225))
+            it "can decode *arbitrary* mouseout event" $ do
+                JSONString eid <- arbitrary
+                property $ \x y -> (decode $ buildMousePF "mouseout" x y eid) == (MouseOut (x, y) eid)
         describe "keydown event" $ do
             it "can decode a keydown event" $ do
                 (decode $ buildKeyPF "keydown" 'c' True True True) `shouldBe` (KeyDown "c" [Ctrl, Alt, Shift])
@@ -93,6 +99,11 @@ spec = do
 buildMousePF :: String -> Int -> Int -> String -> BU.ByteString
 buildMousePF event x y eid = 
     BU.fromString $ printf "{\"event\":\"%s\", \"data\":{\"id\": \"%s\", \"x\": %d , \"y\": %d }}" event eid x y
+
+-- | Convenience function for building json mouse event strings
+buildMouseDragPF :: String -> Int -> Int -> String -> Int -> Int -> BU.ByteString
+buildMouseDragPF event x1 y1 eid x2 y2 = 
+    BU.fromString $ printf "{\"event\":\"%s\", \"data\":{\"id\": \"%s\", \"x1\": %d , \"y1\": %d, \"x2\": %d, \"y2\": %d }}" event eid x1 y1 x2 y2
 
 -- | Convenience function for building json key event strings
 buildKeyPF :: String -> Char -> Bool -> Bool -> Bool -> BU.ByteString
