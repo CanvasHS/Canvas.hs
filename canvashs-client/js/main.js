@@ -559,7 +559,6 @@ function mouseDragEventHandler(id, event) {
                 "id1": id,
                 "x1": x1, 
                 "y1": y1,
-                "id2": id,
                 "x2": x2, 
                 "y2": y2
             }
