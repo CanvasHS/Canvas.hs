@@ -157,6 +157,34 @@ describe("Draw elements", function() {
             expect(canvas).toImageDiffEqual(canvas_compare);
         });
     });
+    it("draws an arc", function() {
+        runs(function() {
+            // Draw in the Canvas.hs canvas
+            connectionDataReceived({"data": '{"shape":{ "type": "arc", "data": {    "id": "arc_nr_1",    "x": 100,    "y": 200,    "radius":70,  "fill": {"r":255,"g":100,"b":100,"a":1}, "angleDeg": 360, "rotationDeg": -90, "stroke": {"r":255,"g":255,"b":255,"a":1}, "strokeWidth": 5 }}}'});
+            stage.batchDraw();
+            stage.draw();
+        });
+        runs(function() {
+            // Draw in the comparison Canvas
+            layer = compare_stage.getChildren().toArray()[0];
+            var arc = new CanvasHs.Arc({
+                radius: 70,
+                stroke: 'rgba(255,255,255,1)',
+                strokeWidth: 5,
+                fill: 'rgba(255,100,100,1)',
+                angleDeg: 360,
+                rotationDeg: 90,
+                x: 100,
+                y: 200
+            });
+            layer.add(arc);
+            compare_stage.batchDraw();
+        });
+        runs(function() {
+            // Compare the results
+            expect(canvas).toImageDiffEqual(canvas_compare);
+        });
+    });
     it("draws a circle (using rgb)", function() {
         runs(function() {
             // Draw in the Canvas.hs canvas
