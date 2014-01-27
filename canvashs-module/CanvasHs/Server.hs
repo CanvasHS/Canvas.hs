@@ -37,6 +37,8 @@ import System.IO.Unsafe (unsafePerformIO)
 import Data.IORef (IORef, newIORef, atomicModifyIORef, readIORef)
 import Control.Monad.Trans (liftIO, lift)
 import Control.Applicative ((<$>))
+import Debug.Trace
+import Data.Time.Clock
 
 -- | unsafePerformIO-hack function which is MVar of thread children
 children :: MVar [MVar ()]
@@ -60,8 +62,9 @@ conn = unsafePerformIO (newIORef Nothing)
 start :: (T.Text -> IO (Maybe T.Text)) -> IO ()
 start f =   do
                 forkChild serverHttp -- the httpserver servers static files
-                forkChild serverHandle -- runserver is a simple server for websockets   
-                waitForChildren -- wait until threads finish, this allows the process to be killed
+                forkChild serverHandle -- runserver is a simple server for websockets
+                time <- getCurrentTime   
+                waitForChildren time -- wait until threads finish, this allows the process to be killed
                 return ()
                 where
                     serverHandle = liftIO $ WS.runServer "0.0.0.0" 8080 $ websockets f
@@ -93,15 +96,18 @@ sendText t = readIORef conn >>= (\c -> case c of
              )
                             
 -- Code below manages the threads so all threads stop when the main thread is stopped
-waitForChildren :: IO ()
-waitForChildren = do
-    cs <- takeMVar children
-    case cs of
-        []   -> return ()
-        m:ms -> do
-           putMVar children ms
-           takeMVar m
-           waitForChildren
+waitForChildren :: UTCTime -> IO ()
+waitForChildren timeStarted = do
+    time <- getCurrentTime
+--    cs <- takeMVar children
+    if (diffUTCTime time timeStarted > 30) 
+        then trace "Stopping!" $ return () 
+        else  -- $ case cs of
+--                []   -> return ()
+--              m:ms -> do
+--              putMVar children ms
+--              takeMVar m
+                waitForChildren timeStarted
 
 forkChild :: IO () -> IO ThreadId
 forkChild io = do

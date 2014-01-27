@@ -28,6 +28,7 @@ Library
                   aeson >= 0.6,
                   bytestring >= 0.10.0.2,
                   split,
+                  time,
                   ghc-prim >= 0.2.0.0,
                   base64-bytestring,
                   timers >= 0.2.0.1,
