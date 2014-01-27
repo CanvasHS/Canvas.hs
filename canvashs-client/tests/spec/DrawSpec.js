@@ -212,7 +212,7 @@ describe("Draw elements", function() {
     it("draws text", function() {
         runs(function() {
             // Draw in the Canvas.hs canvas
-            connectionDataReceived({"data": '{"shape":{ "type": "text", "data": {    "id": "text",    "x": 25,    "y": 20,    "text": "Simple Text",    "fontSize": 30,    "fontFamily": "Helvetica", "bold": true, "italic": true, "fill": {"r":200,"g":10,"b":10,"a":0.8} }}}'});
+            connectionDataReceived({"data": '{"shape":{ "type": "text", "data": {    "id": "text",    "x": 200,    "y": 20,    "text": "Simple Text",    "fontSize": 30,    "fontFamily": "Helvetica", "bold": true, "italic": true, "align":"center", "fill": {"r":200,"g":10,"b":10,"a":0.8} }}}'});
             stage.batchDraw();
             stage.draw();
         });
@@ -220,7 +220,7 @@ describe("Draw elements", function() {
             // Draw in the comparison Canvas
             layer = compare_stage.getChildren().toArray()[0];
             var text = new Kinetic.Text({
-                x: 25,
+                x: 200,
                 y: 20,
                 text: "Simple Text",
                 fontSize: 30,
@@ -228,6 +228,8 @@ describe("Draw elements", function() {
                 fontFamily: "Helvetica",
                 fill: 'rgba(200,10,10,0.8)'
             });
+
+            text.setOffsetX(text.getOffsetX() + text.getWidth()/2);
             layer.add(text);
             compare_stage.batchDraw();
         });
