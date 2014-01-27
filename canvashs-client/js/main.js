@@ -67,7 +67,7 @@ function connectionDataReceived(event) {
         }
     }
     else {
-        printDebugMessage("No actions recieved",0);
+        printDebugMessage("No actions received",0);
     }
 }
 
@@ -192,7 +192,7 @@ function requestFullscreen(attempt) {
 }
 
 /**
- * Opens a prompt to ask if a file should be uploaded. When clicked on "Yes" a file selecion browser will be opened.
+ * Opens a prompt to ask if a file should be uploaded. When clicked on "Yes" a file selection browser will be opened.
  * @returns {undefined}
  */
 function requestUpload() {
@@ -206,7 +206,7 @@ function requestUpload() {
 
 /**
  * Opens a file browser in which you can select a file. This function should be called directly through user input
- * and not through a websocket for example. Browsers have built in protection to prevent this, the promt will not show.
+ * and not through a websocket for example. Browsers have built in protection to prevent this, the prompt will not show.
  * @returns {undefined}
  */
 function promptFileBrowser() {
@@ -218,7 +218,7 @@ function promptFileBrowser() {
             FR.onload = function(e) {
                 printDebugMessage("Uploading file: "+e.target.result,0);
 
-                //e.target.result contains the base64 filecontents, but with a mimetype prepended (which we don't want)
+                //e.target.result contains the base64 file contents, but with a mimetype prepended (which we don't want)
                 parts = e.target.result.split("base64,");
                 mimetype = parts[0]; //not used
                 contents = parts[1];
@@ -329,7 +329,7 @@ function parseActionData(data) {
                     setWindowDisplayType(actionProperties.type);
                 }
                 else {
-                    printDebugMessage("Window Display Type action recieved without type",2);
+                    printDebugMessage("Window Display Type action received without type",2);
                 }
 
             break;
@@ -342,7 +342,7 @@ function parseActionData(data) {
                         debugOff();
                 }
                 else {
-                    printDebugMessage("Debugger action recieved without enabled",2);
+                    printDebugMessage("Debugger action received without enabled",2);
                 }
             break;
             case "requestupload":
@@ -357,7 +357,7 @@ function parseActionData(data) {
                     requestUpload();
                 }
                 else {
-                    printDebugMessage("Request upload action recieved without multiple attribute",2);
+                    printDebugMessage("Request upload action received without multiple attribute",2);
                 }
             
             break;
@@ -370,7 +370,7 @@ function parseActionData(data) {
                          encodeURIComponent(atob(actionProperties.filecontents));
                 }
                 else {
-                    printDebugMessage("Download action recieved without file data",2);
+                    printDebugMessage("Download action received without file data",2);
                 }
                 
 
@@ -396,7 +396,7 @@ function parseActionData(data) {
                     }
                 }
                 else {
-                    printDebugMessage("Prompt action recieved without file data",2);
+                    printDebugMessage("Prompt action received without file data",2);
                 }
                 
 
@@ -405,7 +405,7 @@ function parseActionData(data) {
 
             break;
             default:
-                printDebugMessage("Unkown action type: "+data.action,1);
+                printDebugMessage("Unknown action type: "+data.action,1);
         }
     }
     else {
@@ -454,7 +454,7 @@ function mouseDownEventHandler(id, event) { mouseEvent("mousedown", id, event); 
 function mouseUpEventHandler(id, event) { mouseEvent("mouseup", id, event); }
 function mouseOverEventHandler(id, event) { mouseEvent("mouseover", id, event); }
 function mouseOutEventHandler(id, event) { 
-    // Needed, otherwhise redraw fires mouseOut event
+    // Needed, otherwise redraw fires mouseOut event
     if(event.targetNode.getParent() != undefined) {
         mouseEvent("mouseout", id, event); 
     } 
@@ -668,7 +668,7 @@ function shapeFromData(message) {
         generadedShapeIdIdx++;
     }
 
-    // Hackfix so that kinetic rotates counterlockwise
+    // Hackfix so that kinetic rotates counterclockwise
     if(data["rotationDeg"]){
         data["rotationDeg"] *= -1;
     }
@@ -710,7 +710,7 @@ function shapeFromData(message) {
             data.fontStyle = fontStyle;
             shape = new Kinetic.Text(data);
 
-            // As haskell has no idea about textsizes this code wil fix align
+            // As Haskell has no idea about text sizes this code will fix align
             // it will make sure that the offset is set at the middle/end of the
             // text.
             // It does keep align set, that way kinetic knows what to do with
@@ -891,7 +891,7 @@ function debugOff() {
  */
 function initCanvas(container, width, height) {
     // Only init canvas when there is a container
-    // Container is provided for testing purposes and extesibility
+    // Container is provided for testing purposes and extensibility
     if(container.exists()) {
         setFixedProportions(container,width,height);
 
@@ -947,7 +947,7 @@ $(document).ready(function () {
     connection.onerror = connectionError;
     // Indicate disconnected connection
     connection.onclose = connectionClosed;
-    // Callback for recieving data
+    // Callback for receiving data
     connection.onmessage = connectionDataReceived;
 
     // Begin to listen for keys
