@@ -18,7 +18,7 @@ data State = State {
     searchText :: String
 }
 
-emptyState = State 0 0 0.4 False ""
+emptyState = State (600) (768) 0.4 False "" 
 
 main = installEventHandler handl emptyState
 
@@ -63,6 +63,15 @@ handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom,searchText = s} (MouseOut (x,
             Text (500, 100) "Ik doe shit en ben daar mega gelukkig over" defaults{font="Cantarell", size=20}
         ])
 -}
+
+
+handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseDoubleClick (xAbs,yAbs) _) = trace (show (xAbs, yAbs, xRel, yRel)) $ (newState, shape $ drawAll newState)
+
+    where
+        (xRel, yRel) = (xDiff + (round $ fromIntegral (xAbs) / zoom) , yDiff + (round $ fromIntegral (yAbs) / zoom))
+        newState = st{xDiff=xRel, yDiff=yRel}
+        
+        
 handl st@State{searchHasFocus = focus, searchText = s} (KeyDown a b) = (newState, shape $ drawAll newState)
     where
         newS = case a of
@@ -93,7 +102,7 @@ drawBackground :: Shape
 drawBackground = Fill (135,206,235,1.0) $ Rect (0,0) 900 600
 
 drawMap :: (Int, Int) -> Float -> String -> Shape   
-drawMap (xDiff, yDiff) zoom searchText = Translate (450 + xDiff) (300 + yDiff) $ Scale zoom zoom $ Offset (600, 768) $ Event defaults{eventId="rootcontainer", mouseDrag=True} $ Container 1200 1536 (nederland ++ steden ++ (if (length searchText > 0) then (drawCityPopup searchText) else []))
+drawMap (xDiff, yDiff) zoom searchText = Translate 450 300 $ Scale zoom zoom $ Offset (xDiff, yDiff) $ Event defaults{eventId="rootcontainer", mouseDoubleClick=True} $ Container 1200 1536 (nederland ++ steden ++ (if (length searchText > 0) then (drawCityPopup searchText) else []))
 
 drawControls :: Float -> Bool -> String -> Shape
 drawControls zl hasFocus s =
