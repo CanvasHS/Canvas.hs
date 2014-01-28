@@ -64,7 +64,6 @@ data JSONShapeData
         align          :: Maybe BU.ByteString,
         bold           :: Maybe Bool,
         italic         :: Maybe Bool,
-        underline      :: Maybe Bool,
         points         :: Maybe [Int],
         offset         :: Maybe [Int],
         x              :: Maybe Int, 
@@ -203,7 +202,6 @@ shapeEncodePoint (x',y')
         align          = Nothing,
         bold           = Nothing,
         italic         = Nothing,
-        underline      = Nothing,
         points         = Nothing,
         offset         = Nothing,
         x              = Just x', 
@@ -230,7 +228,6 @@ shapeEncodePoints pts
         align          = Nothing,
         bold           = Nothing,
         italic         = Nothing,
-        underline      = Nothing,
         points         = Just $ eps pts,
         offset         = Nothing,
         x              = Nothing, 
@@ -248,7 +245,7 @@ shapeEncodePoints pts
 
 -- | A helper function which creates an JSONShapeData holding the given point, string to be drawn and textdata
 shapeEncodeTextData :: D.Point -> String -> D.TextData -> JSONShapeData
-shapeEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.alignment = a, D.bold = b, D.italic = i, D.underline = u}) = result
+shapeEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.alignment = a, D.bold = b, D.italic = i}) = result
         where
             pointData = shapeEncodePoint ps
             al = case a of 
@@ -257,7 +254,7 @@ shapeEncodeTextData ps s (D.TextData{D.font = f, D.size = si, D.alignment = a, D
                         D.AlignRight -> Just "right"
 
             text = pointData{text= Just $ BU.fromString $ s}
-            result = text{fontFamily=Just $ BU.fromString f, fontSize=Just si, align =al, bold=Just b, italic=Just i, underline=Just u}
+            result = text{fontFamily=Just $ BU.fromString f, fontSize=Just si, align =al, bold=Just b, italic=Just i}
 
 
 -- | A helper function which encodes EventData into JSONEcentData, 
