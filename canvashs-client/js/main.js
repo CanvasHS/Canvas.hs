@@ -4,6 +4,8 @@ var layerList = new Array();
 var stage = undefined;
 var connection = new WebSocket('ws://localhost:8080');
 
+// Keep track of scrollable shapes.
+var scrollShapes = new Array();
 var canvasWindowWidth = 900;
 var canvasWindowHeight = 600;
 
@@ -27,7 +29,7 @@ var mouseMoveRateLimit = 90; // The mousemove interval limit
 
 /**
  * Handles data received from the websocket connection.
- * @param {MessageEvent} event
+ * @param {type} event The event received from the server side.
  * @returns {undefined}
  */
 function connectionDataReceived(event) {
@@ -40,6 +42,9 @@ function connectionDataReceived(event) {
     // handle the shape data
     if(hasProperty(dataObject,"shape") && dataObject.shape != undefined) {
         var shape = parseShapeData(dataObject.shape);
+        
+        // Reset tracking of scrollable shapes
+        scrollShapes = new Array();
 
         // Clear screen
         layerList[topLayerIdx].destroyChildren();
@@ -50,7 +55,9 @@ function connectionDataReceived(event) {
         }
 
         // Draw on current layer
-        layerList[topLayerIdx].add(shape);
+        if(shape != undefined) {
+            layerList[topLayerIdx].add(shape);
+        }
         layerList[topLayerIdx].batchDraw();
     }
     else {
@@ -73,7 +80,7 @@ function connectionDataReceived(event) {
 
 /**
  * Prints a message to the console when a connection error occurs.
- * @param {type} error
+ * @param {type} error The error message.
  * @returns {undefined}
  */
 function connectionError(error) {
@@ -443,6 +450,11 @@ function enableEventHandlers(shape, message) {
             mouseDragFound = mouseDragFound || message.eventData["eventId"]==mouseDragId; // Used to disable mousedrag when no longer this event is requested
             shape.on('mousedown', mouseDragStartEventHandler.bind(undefined, message.eventData.eventId));
         }
+        if(message.eventData.listen.indexOf("scroll") != -1) {
+            // Start listening for scroll events using mousewheel.js
+            shape["id"] = message.eventData.eventId;
+            scrollShapes.push(shape);
+        }
     }
 }
 function clickEventHandler(id, event) { mouseEvent("mouseclick", id, event); }
@@ -457,6 +469,21 @@ function mouseOutEventHandler(id, event) {
     } 
 }
 
+
+function scrollEventHandler(event) {
+    // Find out which of the scrollable images is scrolled on, if any.
+    var shape = null;
+    for (i = 0; i < scrollShapes.length; i++) {
+        if(scrollShapes[i].intersects(realX(event.pageX),realY(event.pageY))) {
+            shape = scrollShapes[i];
+            break;
+        }
+    }
+    if(shape != null) {
+        event.preventDefault();
+        sendScrollEvent(shape.id, event.deltaX, event.deltaY);
+    }
+}
 /**
  * Starts the mouse drag event handler.
  * @param {type} id The id of the shape the event handler will listen on.
@@ -611,11 +638,12 @@ function realY(y) {
  */
 function sendScrollEvent(deltaX,deltaY) {
 
-    printDebugMessage("ScrollEvent (deltaX:"+deltaX+" deltaY:"+deltaY+")",0);
+    printDebugMessage("ScrollEvent (id:"+id+" deltaX:"+deltaX+" deltaY:"+deltaY+")",0);
 
     connection.send(JSON.stringify({
         "event":"scroll",
         "data":{
+            "id": id,
             "xdelta": deltaX,
             "ydelta": deltaY
         }
@@ -660,6 +688,7 @@ function shapeFromData(message) {
     if(data["stroke"]){
         data["stroke"] = rgbaDictToColor(data["stroke"]);
     }
+
     // Debug message
     if(!data["id"] && debugOn) {
         data["id"] = "sid" + generadedShapeIdIdx;
@@ -676,7 +705,9 @@ function shapeFromData(message) {
     // Init shape based on type
     switch (message.type) {
         case "line":
-            shape = new Kinetic.Line(data);
+            if(data.points != undefined && data.points.length != 0) {
+                shape = new Kinetic.Line(data);
+            }
             debugMessage += "with points: " + data.points;
             break;
         case "polygon":
@@ -719,7 +750,6 @@ function shapeFromData(message) {
                 var offsetX = shape.getOffsetX();
                 var width = shape.getWidth();
 
-                console.log(width);
                 
                 if(align == 'center'){
                     offsetX = offsetX + (width / 2);
@@ -737,7 +767,10 @@ function shapeFromData(message) {
             data.clip = [0, 0, data.width, data.height];
             shape = new Kinetic.Group(data);
             message.children.forEach(function(child) {
-                shape.add(parseShapeData(child));
+                shapeAdd = parseShapeData(child);
+                if(shapeAdd != undefined) {
+                    shape.add(shapeAdd);
+                }
             });
             break;
         default:
@@ -745,8 +778,9 @@ function shapeFromData(message) {
             printDebugMessage("Unrecognized JSON message received from server.",2);
     }
 
-    if(debugMessage)
+    if(debugMessage) {
         printDebugMessage(debugMessage,0);
+    }
 
     return shape;
 }
@@ -931,8 +965,11 @@ $(document).ready(function () {
 
     // Init canvas
     initCanvas($('#canvas'),canvasWindowWidth,canvasWindowHeight);
-
     
+    // Start listening for scroll events using mousewheel.js
+    canvas.mousewheel(scrollEventHandler);
+            
+ 
     if(debugOn) {
         initDebug();
     }
