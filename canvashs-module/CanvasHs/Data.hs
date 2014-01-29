@@ -90,15 +90,13 @@ data TextData = TextData {
                     bold :: Bool,
                     -- | Toggles italic.
                     italic :: Bool,
-                    -- | Toggles underline. Note that as of yet underline is not implemented by the canvas
-                    underline :: Bool,
                     -- | Specifies how to align this text.
                     alignment :: Alignment
                 } deriving (Eq, Show)
 
 -- | The 'Defaults' for 'TextData', has Arial 12, is left Aligned and is not bold, italic, or underlined.
 instance Defaults TextData where
-    defaults = TextData "Arial" 12 False False False AlignLeft
+    defaults = TextData "Arial" 12 False False AlignLeft
 
 -- | All drawable Shapes and the transformations that can be applied to them. In practice these will be combined
 --   in one big shape tree. By default shapes are filled in black (0,0,0,1.0)

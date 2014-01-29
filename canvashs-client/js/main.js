@@ -258,7 +258,7 @@ function setFluidProportions(container) {
         height: '100%',
         marginTop: "0px",
         marginLeft: "0px"
-    },{duration: 300,step:resizeCanvas});
+    },{duration: 300,step:resizeCanvasWithoutEvent, done:resizeCanvas});
 
 }
 
@@ -278,7 +278,7 @@ function setFixedProportions(container,width,height) {
         height: height+'px',
         marginTop: "-"+height/2+"px",
         marginLeft: "-"+width/2+"px"
-    },{duration: 300,step:resizeCanvas});
+    },{duration: 300, step:resizeCanvasWithoutEvent, done:resizeCanvas});
 }
 
 /**
@@ -288,6 +288,23 @@ function setFixedProportions(container,width,height) {
  */
 function resizeCanvas(event) {  
 
+    $("#canvas canvas").css( "width", $("#canvas").width()+"px" );
+    $("#canvas canvas").css( "height", $("#canvas").height()+"px" );
+
+    if(stage != undefined) {
+        stage.setSize($("#canvas").width(),$("#canvas").height());
+        stage.batchDraw(); // Redraw Canvas
+    }
+
+    sendWindowResizeEvent($("#canvas").width(),$("#canvas").height());
+
+    
+}
+
+/**
+* Resizes the canvas without sending an event, so that the connection doesn't get filled with resize messages
+*/
+function resizeCanvasWithoutEvent(event) {
     $("#canvas canvas").css( "width", $("#canvas").width()+"px" );
     $("#canvas canvas").css( "height", $("#canvas").height()+"px" );
 
@@ -661,13 +678,15 @@ function sendWindowResizeEvent(width,height) {
 
     printDebugMessage("Window Resize (width:"+width+" height:"+height+")",0);
 
-    connection.send(JSON.stringify({
-        "event":"resizewindow",
-        "data":{
-            "width": width,
-            "height": height
-        }
-    }));
+    if(connection.readyState === 1) {
+        connection.send(JSON.stringify({
+            "event":"resizewindow",
+            "data":{
+                "width": width,
+                "height": height
+            }
+        }));
+    }
 }
 
 /**
