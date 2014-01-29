@@ -58,6 +58,11 @@ describe("Draw elements to test event handling", function() {
   var flag;
   var canvas;
   beforeEach(function(){
+    // Make jasmine spies
+    spyOn(connection, 'send');
+    spyOn(window, 'realX').andReturn(100);
+    spyOn(window, 'realY').andReturn(200);
+
     // Setup canvas of Canvas.Hs
     canvas_wrapper = document.createElement("div");
     canvas_wrapper.id='canvas';
@@ -72,15 +77,14 @@ describe("Draw elements to test event handling", function() {
       stage.batchDraw();
       stage.draw();
 
-      spyOn(connection, 'send');
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
       expect(connection.send.callCount).toBe(0);
       var event = new Event("mousedown");
       event.pageX = 20;
-      event.pageY = 20;
+      event.pageY = 200;
       stage.find('Circle')[0].fire('mousedown', event);
-      expect(connection.send).toHaveBeenCalledWith('{"event":"mousedown","data":{"id":"circle_nr_2","x":20,"y":realY(20)}}');
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mousedown","data":{"id":"circle_nr_2","x":'+realX(20)+',"y":'+realY(200)+'}}');
     });
     it("testing message after mouseclick event", function() {
       // Draw in the Canvas.hs canvas
@@ -88,15 +92,14 @@ describe("Draw elements to test event handling", function() {
       stage.batchDraw();
       stage.draw();
 
-      spyOn(connection, 'send');
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
       expect(connection.send.callCount).toBe(0);
       var event = new Event("click");
       event.pageX = 20;
-      event.pageY = 126;
+      event.pageY = 200;
       stage.find('Circle')[0].fire('click', event);
-      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseclick","data":{"id":"circle_nr_2","x":20,"y":20}}');
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseclick","data":{"id":"circle_nr_2","x":'+realX(20)+',"y":'+realY(200)+'}}');
     });
     it("testing message after mouseup event", function() {
       // Draw in the Canvas.hs canvas
@@ -104,15 +107,14 @@ describe("Draw elements to test event handling", function() {
       stage.batchDraw();
       stage.draw();
 
-      spyOn(connection, 'send');
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
       expect(connection.send.callCount).toBe(0);
       var event = new Event("mouseup");
       event.pageX = 20;
-      event.pageY = 126;
+      event.pageY = 200;
       stage.find('Circle')[0].fire('mouseup', event);
-      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseup","data":{"id":"circle_nr_2","x":20,"y":20}}');
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseup","data":{"id":"circle_nr_2","x":'+realX(20)+',"y":'+realY(200)+'}}');
     });
     it("testing message after mousedoubleclick event", function() {
       // Draw in the Canvas.hs canvas
@@ -120,15 +122,14 @@ describe("Draw elements to test event handling", function() {
       stage.batchDraw();
       stage.draw();
 
-      spyOn(connection, 'send');
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
       expect(connection.send.callCount).toBe(0);
       var event = new Event("dblclick");
       event.pageX = 20;
-      event.pageY = 126;
+      event.pageY = 200;
       stage.find('Circle')[0].fire('dblclick', event);
-      expect(connection.send).toHaveBeenCalledWith('{"event":"mousedoubleclick","data":{"id":"circle_nr_2","x":20,"y":20}}');
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mousedoubleclick","data":{"id":"circle_nr_2","x":'+realX(20)+',"y":'+realY(200)+'}}');
     });
     it("testing message after mouseover event", function() {
       // Draw in the Canvas.hs canvas
@@ -136,15 +137,14 @@ describe("Draw elements to test event handling", function() {
       stage.batchDraw();
       stage.draw();
 
-      spyOn(connection, 'send');
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
       expect(connection.send.callCount).toBe(0);
       var event = new Event("mouseover");
       event.pageX = 20;
-      event.pageY = 126;
+      event.pageY = 200;
       stage.find('Circle')[0].fire('mouseover', event);
-      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseover","data":{"id":"circle_nr_2","x":20,"y":20}}');
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseover","data":{"id":"circle_nr_2","x":'+realX(20)+',"y":'+realY(200)+'}}');
     });
     it("testing message after mouseout event", function() {
       // Draw in the Canvas.hs canvas
@@ -152,22 +152,20 @@ describe("Draw elements to test event handling", function() {
       stage.batchDraw();
       stage.draw();
 
-      spyOn(connection, 'send');
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
       expect(connection.send.callCount).toBe(0);
       var event = new Event("mouseout");
       event.pageX = 20;
-      event.pageY = 126;
+      event.pageY = 200;
       event.targetNode = stage.find('Circle')[0];
       stage.find('Circle')[0].fire('mouseout', event);
-      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseout","data":{"id":"circle_nr_2","x":20,"y":20}}');
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseout","data":{"id":"circle_nr_2","x":'+realX(20)+',"y":'+realY(200)+'}}');
     });
     it("testing message after mousedrag event", function() {
       spyOn(window, 'mouseDragStartEventHandler').andCallThrough();
       spyOn(window, 'mouseDragEventHandler').andCallThrough();
       spyOn(window, 'mouseDragEndEventHandler').andCallThrough();
-      spyOn(connection, 'send');
 
       // Draw in the Canvas.hs canvas
       connectionDataReceived({"data":'{"shape":{"type": "circle", "data": {"x": 20, "y": 20, "radius": 5, "stroke": {"r": 255,"g": 255,"b": 255,"a": 1 }, "strokeWidth": 2, "fill": {"r":255,"g":0,"b":0,"a":1}}, "eventData": {"eventId": "circle_nr_2", "listen" : ["mousedrag"]}}}'});
@@ -190,22 +188,22 @@ describe("Draw elements to test event handling", function() {
       expect(window.mouseDragEventHandler.callCount).toBe(0);
       $(canvas).trigger(event);
       expect(window.mouseDragEventHandler).toHaveBeenCalled();
-      expect(connection.send).toHaveBeenCalledWith('{"event":"mousedrag","data":{"id1":"circle_nr_2","x1":20,"y1":-86,"id2":"circle_nr_2","x2":100,"y2":94}}');
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mousedrag","data":{"id1":"circle_nr_2","x1":100,"y1":200,"id2":"circle_nr_2","x2":100,"y2":200}}');
 
       expect(window.mouseDragEndEventHandler.callCount).toBe(0);
       $(canvas).trigger('mouseup');
       expect(window.mouseDragEndEventHandler).toHaveBeenCalled();
     });
   afterEach(function(){
-  // Remove the canvas elements used for testing and reset variables
-  $(canvas_wrapper).remove();
-  canvas = null;
-  canvas_wrapper = null;
-  // Reset variables of Canvas.hs
-  var topLayerIdx = 0;
-  var layerList = new Array();
-  var stage = undefined;
-  var connection = new WebSocket('ws://localhost:8080');
-  var open = false;
+    // Remove the canvas elements used for testing and reset variables
+    $(canvas_wrapper).remove();
+    canvas = null;
+    canvas_wrapper = null;
+    // Reset variables of Canvas.hs
+    var topLayerIdx = 0;
+    var layerList = new Array();
+    var stage = undefined;
+    var connection = new WebSocket('ws://localhost:8080');
+    var open = false;
   });
 });
