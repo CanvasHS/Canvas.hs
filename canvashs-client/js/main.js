@@ -621,12 +621,12 @@ function sendKeyEvent(eventName, event) {
 }
 
 function realX(x) {
-    var canvasPos = $("#canvas").position();
+    var canvasPos = $(canvas).position();
     return x-canvasPos.left-parseInt($("#canvas").css("margin-left"));
 }
 
 function realY(y) {
-    var canvasPos = $("#canvas").position();
+    var canvasPos = $(canvas).position();
     return y-canvasPos.top-parseInt($("#canvas").css("margin-top"));
 }
 
