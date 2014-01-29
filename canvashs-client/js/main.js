@@ -26,6 +26,7 @@ var enableDragHandler = true;
 var prevMousePosX = 0;
 var prevMousePosY = 0;
 var mouseMoveRateLimit = 90; // The mousemove interval limit
+var animated = false;
 
 /**
  * Handles data received from the websocket connection.
@@ -137,7 +138,7 @@ function setWindowDisplayType(displayType, attempt)
             // Animate the kinetic container
             $("#canvas div").animate({
                 width: canvasWindowWidth+'px',
-                height: canvasWindowHeight+'px'},300);
+                height: canvasWindowHeight+'px'},(animated ? 300 : 0));
             setFixedProportions($("#canvas"), canvasWindowWidth, canvasWindowHeight);
             resizeCanvas(); // Resizes the canvas
         break;
@@ -258,7 +259,7 @@ function setFluidProportions(container) {
         height: '100%',
         marginTop: "0px",
         marginLeft: "0px"
-    },{duration: 300,step:resizeCanvas});
+    },{duration: (animated ? 300 : 0),step:resizeCanvas});
 
 }
 
@@ -278,7 +279,7 @@ function setFixedProportions(container,width,height) {
         height: height+'px',
         marginTop: "-"+height/2+"px",
         marginLeft: "-"+width/2+"px"
-    },{duration: 300,step:resizeCanvas});
+    },{duration: (animated ? 300 : 0),step:resizeCanvas});
 }
 
 /**
@@ -844,13 +845,13 @@ var hideDebugConsole = function(){
             {
                 $(this).animate({
                     width: 350
-                },300);
+                },(animated ? 300 : 0));
             }
             else
             {
                 $(this).animate({
                     width: 20
-                },300);
+                },(animated ? 300 : 0));
             }
         }
     };
@@ -968,6 +969,9 @@ $(document).ready(function () {
     
     // Start listening for scroll events using mousewheel.js
     canvas.mousewheel(scrollEventHandler);
+
+    // Turn off animation
+    animated = true;
             
  
     if(debugOn) {
