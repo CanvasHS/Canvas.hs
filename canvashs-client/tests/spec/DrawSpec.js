@@ -118,6 +118,14 @@ describe("Draw elements", function() {
 	 	});
 	    runs(function() {
 	    	// Compare the results
+	    	
+    var
+      height = canvas.height,
+      width = canvas.width,
+      context = canvas.getContext('2d');
+    console.log(context);
+    console.log(width);
+    console.log(height);
 	    	expect(canvas).toImageDiffEqual(canvas_compare);
   		});
   	});
@@ -143,6 +151,14 @@ describe("Draw elements", function() {
 	 	});
 	    runs(function() {
 	    	// Compare the results
+	    	
+    var
+      height = canvas.height,
+      width = canvas.width,
+      context = canvas.getContext('2d');
+    console.log(context);
+    console.log(width);
+    console.log(height);
 	    	expect(canvas).toImageDiffEqual(canvas_compare);
   		});
   	});
@@ -169,6 +185,14 @@ describe("Draw elements", function() {
 	 	});
 	    runs(function() {
 	    	// Compare the results
+	    	
+    var
+      height = canvas.height,
+      width = canvas.width,
+      context = canvas.getContext('2d');
+    console.log(context);
+    console.log(width);
+    console.log(height);
 	    	expect(canvas).toImageDiffEqual(canvas_compare);
   		});
   	});
@@ -195,6 +219,14 @@ describe("Draw elements", function() {
 	 	});
 	    runs(function() {
 	    	// Compare the results
+	    	
+    var
+      height = canvas.height,
+      width = canvas.width,
+      context = canvas.getContext('2d');
+    console.log(context);
+    console.log(width);
+    console.log(height);
 	    	expect(canvas).toImageDiffEqual(canvas_compare);
   		});
   	});
@@ -221,6 +253,14 @@ describe("Draw elements", function() {
 	 	});
 	    runs(function() {
 	    	// Compare the results
+	    	
+    var
+      height = canvas.height,
+      width = canvas.width,
+      context = canvas.getContext('2d');
+    console.log(context);
+    console.log(width);
+    console.log(height);
 	    	expect(canvas).toImageDiffEqual(canvas_compare);
   		});
   	});
@@ -271,6 +311,22 @@ describe("Draw elements", function() {
 	 	});
 	    runs(function() {
 	    	// Compare the results
+	    	console.log(canvas);
+    var
+      height = canvas.height,
+      width = canvas.width,
+      context = canvas.getContext('2d');
+    console.log(context);
+    console.log(width);
+    console.log(height);
+    
+    var
+      height = canvas.height,
+      width = canvas.width,
+      context = canvas.getContext('2d');
+    console.log(context);
+    console.log(width);
+    console.log(height);
 	    	expect(canvas).toImageDiffEqual(canvas_compare);
   		});
   	});
@@ -322,6 +378,14 @@ describe("Draw elements", function() {
 //	 	});
 //	    runs(function() {
 //	    	// Compare the results
+
+    var
+      height = canvas.height,
+      width = canvas.width,
+      context = canvas.getContext('2d');
+    console.log(context);
+    console.log(width);
+    console.log(height);
 //	    	expect(canvas).toImageDiffEqual(canvas_compare);
 //  		});
 //  	});
