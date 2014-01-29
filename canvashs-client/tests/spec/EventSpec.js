@@ -63,7 +63,7 @@ describe("Draw elements to test event handling", function() {
     canvas_wrapper.id='canvas';
     $(document.body).append(canvas_wrapper);
     initCanvas($(canvas_wrapper), 900, 600); // Init canvas
-    canvas = $(canvas_wrapper); // Get canvas element
+    canvas = $(canvas_wrapper).find('canvas')[0]; // Get canvas element
     var layer = new Kinetic.Layer();
   });
     it("testing message after mousedown event", function() {
@@ -72,7 +72,6 @@ describe("Draw elements to test event handling", function() {
       stage.batchDraw();
       stage.draw();
 
-      // Create spy for mouseEvent method
       spyOn(connection, 'send');
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
@@ -89,7 +88,6 @@ describe("Draw elements to test event handling", function() {
       stage.batchDraw();
       stage.draw();
 
-      // Create spy for mouseEvent method
       spyOn(connection, 'send');
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
@@ -106,7 +104,6 @@ describe("Draw elements to test event handling", function() {
       stage.batchDraw();
       stage.draw();
 
-      // Create spy for mouseEvent method
       spyOn(connection, 'send');
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
@@ -123,7 +120,6 @@ describe("Draw elements to test event handling", function() {
       stage.batchDraw();
       stage.draw();
 
-      // Create spy for mouseEvent method
       spyOn(connection, 'send');
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
@@ -140,7 +136,6 @@ describe("Draw elements to test event handling", function() {
       stage.batchDraw();
       stage.draw();
 
-      // Create spy for mouseEvent method
       spyOn(connection, 'send');
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
@@ -157,7 +152,6 @@ describe("Draw elements to test event handling", function() {
       stage.batchDraw();
       stage.draw();
 
-      // Create spy for mouseEvent method
       spyOn(connection, 'send');
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
@@ -169,50 +163,46 @@ describe("Draw elements to test event handling", function() {
       stage.find('Circle')[0].fire('mouseout', event);
       expect(connection.send).toHaveBeenCalledWith('{"event":"mouseout","data":{"id":"circle_nr_2","x":20,"y":20}}');
     });
-    // it("testing message after mousedrag event", function() {
-    //   // Draw in the Canvas.hs canvas
-    //   connectionDataReceived({"data":'{"shape":{"type": "circle", "data": {"x": 20, "y": 20, "radius": 5, "stroke": {"r": 255,"g": 255,"b": 255,"a": 1 }, "strokeWidth": 2, "fill": {"r":255,"g":0,"b":0,"a":1}}, "eventData": {"eventId": "circle_nr_2", "listen" : ["mousedrag"]}}}'});
-    //   stage.batchDraw();
-    //   stage.draw();
+    it("testing message after mousedrag event", function() {
+      spyOn(window, 'mouseDragStartEventHandler').andCallThrough();
+      spyOn(window, 'mouseDragEventHandler').andCallThrough();
+      spyOn(window, 'mouseDragEndEventHandler').andCallThrough();
+      spyOn(connection, 'send');
 
-    //   var clickSpy = jasmine.createSpy();
-    //   // Create spy for mouseEvent method
-    //   spyOn(connection, 'send');
-    //   // Test if mouseEvent method is called after 
-    //   // click event on circle but not before.
-    //   expect(connection.send.callCount).toBe(0);
-    //   stage.find('Circle')[0].fire('mousedown');
+      // Draw in the Canvas.hs canvas
+      connectionDataReceived({"data":'{"shape":{"type": "circle", "data": {"x": 20, "y": 20, "radius": 5, "stroke": {"r": 255,"g": 255,"b": 255,"a": 1 }, "strokeWidth": 2, "fill": {"r":255,"g":0,"b":0,"a":1}}, "eventData": {"eventId": "circle_nr_2", "listen" : ["mousedrag"]}}}'});
+      stage.batchDraw();
+      stage.draw();
 
-    //   var event = jQuery.Event( "mousedrag" );
-    //   event.pageX = 100;
-    //   event.pageY = 200;
-    //   canvas.trigger(event);
-    //   expect(connection.send).toHaveBeenCalled();
+      var mousedownEvent = jQuery.Event( "mousedown" );
+      mousedownEvent.pageX = 20;
+      mousedownEvent.pageY = 20;
+      expect(window.mouseDragStartEventHandler.callCount).toBe(0);
+      expect(window.mouseDragEndEventHandler.callCount).toBe(0);
+      expect(connection.send.callCount).toBe(0);
+      stage.find('Circle')[0].fire('mousedown', mousedownEvent);
+      expect(window.mouseDragStartEventHandler).toHaveBeenCalled();
+      expect(window.mouseDragEndEventHandler.callCount).toBe(0);
 
-      // expect(canvas.eventListeners).toBeDefined();
-      // // mouseout made because of mousedrag
-      // expect(canvas.eventListeners.mouseout).toBeDefined();
-      // expect(canvas.eventListeners.mouseout[0]).toBeDefined();
-      // expect(canvas.eventListeners.mouseout[0].handler).toBeDefined();
-      // // mouseup made because of mousedrag
-      // expect(canvas.eventListeners.mouseup).toBeDefined();
-      // expect(canvas.eventListeners.mouseup[0]).toBeDefined();
-      // expect(canvas.eventListeners.mouseup[0].handler).toBeDefined();
-      // // mousemove made because of mousedrag
-      // expect(canvas.eventListeners.mousemove).toBeDefined();
-      // expect(canvas.eventListeners.mousemove[0]).toBeDefined();
-      // expect(canvas.eventListeners.mousemove[0].handler).toBeDefined();
-    // });
+      var event = jQuery.Event( "mousemove" );
+      event.pageX = 100;
+      event.pageY = 200;
+      expect(window.mouseDragEventHandler.callCount).toBe(0);
+      $(canvas).trigger(event);
+      expect(window.mouseDragEndEventHandler.callCount).toBe(0);
+      expect(window.mouseDragEventHandler).toHaveBeenCalled();
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mousedrag","data":{"id1":"circle_nr_2","x1":20,"y1":-86,"id2":"circle_nr_2","x2":100,"y2":94}}');
+    });
   afterEach(function(){
-    // Remove the canvas elements used for testing and reset variables
-    $(canvas_wrapper).remove();
-    canvas = null;
-    canvas_wrapper = null;
-    // Reset variables of Canvas.hs
-    var topLayerIdx = 0;
-    var layerList = new Array();
-    var stage = undefined;
-    var connection = new WebSocket('ws://localhost:8080');
-    var open = false;
+  // Remove the canvas elements used for testing and reset variables
+  $(canvas_wrapper).remove();
+  canvas = null;
+  canvas_wrapper = null;
+  // Reset variables of Canvas.hs
+  var topLayerIdx = 0;
+  var layerList = new Array();
+  var stage = undefined;
+  var connection = new WebSocket('ws://localhost:8080');
+  var open = false;
   });
 });

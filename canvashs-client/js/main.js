@@ -490,6 +490,7 @@ function mouseDragStartEventHandler(id, event) {
  * @returns {undefined}
  */
 function mouseDragEndEventHandler(id, event) {
+    console.log("end");
     canvas.off('mouseout', mouseDragEndHandler);
     canvas.off('mouseup', mouseDragEndHandler);
     canvas.off('mousemove', mouseDragHandler);
@@ -511,6 +512,7 @@ function mouseDragEndEventHandler(id, event) {
  * @returns {undefined}
  */
 function mouseDragEventHandler(id, event) {
+    console.log("test");
     if (enableDragHandler) {
         // Compensate for the position of the canvas
         var x1 = prevMousePosX; // Fix me
@@ -900,6 +902,15 @@ function initCanvas(container, width, height) {
         // Create new layer to draw on
         newDefaultLayer();
 
+        // Assign the canvas global variable for mousedrag
+        canvas = container.find("canvas");
+        
+        // Start listening for scroll events using mousewheel.js
+        canvas.mousewheel(function(event) {
+            sendScrollEvent(event.deltaX,event.deltaY);
+            return false; // Prevent browser default behavior
+        });
+
     }
 }
 
@@ -920,13 +931,7 @@ $(document).ready(function () {
 
     // Init canvas
     initCanvas($('#canvas'),canvasWindowWidth,canvasWindowHeight);
-    canvas = $("#canvas canvas");
 
-    // Start listening for scroll events using mousewheel.js
-    canvas.mousewheel(function(event) {
-        sendScrollEvent(event.deltaX,event.deltaY);
-        return false; // Prevent browser default behavior
-    });
     
     if(debugOn) {
         initDebug();
