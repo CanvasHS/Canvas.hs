@@ -78,9 +78,9 @@ describe("Draw elements to test event handling", function() {
       expect(connection.send.callCount).toBe(0);
       var event = new Event("mousedown");
       event.pageX = 20;
-      event.pageY = 126;
+      event.pageY = 20;
       stage.find('Circle')[0].fire('mousedown', event);
-      expect(connection.send).toHaveBeenCalledWith('{"event":"mousedown","data":{"id":"circle_nr_2","x":20,"y":20}}');
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mousedown","data":{"id":"circle_nr_2","x":20,"y":realY(20)}}');
     });
     it("testing message after mouseclick event", function() {
       // Draw in the Canvas.hs canvas
