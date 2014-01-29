@@ -160,7 +160,7 @@ describe("Draw elements", function() {
     it("draws an arc", function() {
         runs(function() {
             // Draw in the Canvas.hs canvas
-            connectionDataReceived({"data": '{"shape":{ "type": "arc", "data": {    "id": "arc_nr_1",    "x": 100,    "y": 200,    "radius":70,  "fill": {"r":255,"g":100,"b":100,"a":1}, "angleDeg": 360, "rotationDeg": -90, "stroke": {"r":255,"g":255,"b":255,"a":1}, "strokeWidth": 5 }}}'});
+            connectionDataReceived({"data": '{"shape":{ "type": "arc", "data": {    "id": "arc_nr_1",    "x": 100,    "y": 200,    "radius":70,  "fill": {"r":255,"g":100,"b":100,"a":1}, "angleDeg": 80, "rotationDeg": -90, "stroke": {"r":255,"g":255,"b":255,"a":1}, "strokeWidth": 5 }}}'});
             stage.batchDraw();
             stage.draw();
         });
@@ -172,7 +172,7 @@ describe("Draw elements", function() {
                 stroke: 'rgba(255,255,255,1)',
                 strokeWidth: 5,
                 fill: 'rgba(255,100,100,1)',
-                angleDeg: 360,
+                angleDeg: 80,
                 rotationDeg: 90,
                 x: 100,
                 y: 200
