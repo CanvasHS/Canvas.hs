@@ -478,8 +478,6 @@ function enableEventHandlers(shape, message) {
         if(message.eventData.listen.indexOf("scroll") != -1) {
             // Start listening for scroll events using mousewheel.js
             shape["id"] = message.eventData.eventId;
-            console.log("test");
-            console.log(shape);
             scrollShapes.push(shape);
         }
     }
@@ -508,9 +506,9 @@ function scrollEventHandler(event) {
         }
     }
     if(shape != null) {
-        event.preventDefault();
         sendScrollEvent(shape.id, event.deltaX, event.deltaY);
     }
+    event.preventDefault();
 }
 /**
  * Starts the mouse drag event handler.
