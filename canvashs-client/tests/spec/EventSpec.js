@@ -60,8 +60,12 @@ describe("Draw elements to test event handling", function() {
   beforeEach(function(){
     // Make jasmine spies
     spyOn(connection, 'send');
-    spyOn(window, 'realX').andReturn(100);
-    spyOn(window, 'realY').andReturn(200);
+    spyOn(window, 'realX').andCallFake(function(x) {
+      return x + 100;
+    });
+    spyOn(window, 'realY').andCallFake(function(y) {
+      return y + 50;
+    });
 
     // Setup canvas of Canvas.Hs
     canvas_wrapper = document.createElement("div");
@@ -84,7 +88,7 @@ describe("Draw elements to test event handling", function() {
       event.pageX = 20;
       event.pageY = 200;
       stage.find('Circle')[0].fire('mousedown', event);
-      expect(connection.send).toHaveBeenCalledWith('{"event":"mousedown","data":{"id":"circle_nr_2","x":'+realX(20)+',"y":'+realY(200)+'}}');
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mousedown","data":{"id":"circle_nr_2","x":120,"y":250}}');
     });
     it("testing message after mouseclick event", function() {
       // Draw in the Canvas.hs canvas
@@ -99,7 +103,7 @@ describe("Draw elements to test event handling", function() {
       event.pageX = 20;
       event.pageY = 200;
       stage.find('Circle')[0].fire('click', event);
-      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseclick","data":{"id":"circle_nr_2","x":'+realX(20)+',"y":'+realY(200)+'}}');
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseclick","data":{"id":"circle_nr_2","x":120,"y":250}}');
     });
     it("testing message after mouseup event", function() {
       // Draw in the Canvas.hs canvas
@@ -114,7 +118,7 @@ describe("Draw elements to test event handling", function() {
       event.pageX = 20;
       event.pageY = 200;
       stage.find('Circle')[0].fire('mouseup', event);
-      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseup","data":{"id":"circle_nr_2","x":'+realX(20)+',"y":'+realY(200)+'}}');
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseup","data":{"id":"circle_nr_2","x":120,"y":250}}');
     });
     it("testing message after mousedoubleclick event", function() {
       // Draw in the Canvas.hs canvas
@@ -129,7 +133,7 @@ describe("Draw elements to test event handling", function() {
       event.pageX = 20;
       event.pageY = 200;
       stage.find('Circle')[0].fire('dblclick', event);
-      expect(connection.send).toHaveBeenCalledWith('{"event":"mousedoubleclick","data":{"id":"circle_nr_2","x":'+realX(20)+',"y":'+realY(200)+'}}');
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mousedoubleclick","data":{"id":"circle_nr_2","x":120,"y":250}}');
     });
     it("testing message after mouseover event", function() {
       // Draw in the Canvas.hs canvas
@@ -144,7 +148,7 @@ describe("Draw elements to test event handling", function() {
       event.pageX = 20;
       event.pageY = 200;
       stage.find('Circle')[0].fire('mouseover', event);
-      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseover","data":{"id":"circle_nr_2","x":'+realX(20)+',"y":'+realY(200)+'}}');
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseover","data":{"id":"circle_nr_2","x":120,"y":250}}');
     });
     it("testing message after mouseout event", function() {
       // Draw in the Canvas.hs canvas
@@ -160,7 +164,7 @@ describe("Draw elements to test event handling", function() {
       event.pageY = 200;
       event.targetNode = stage.find('Circle')[0];
       stage.find('Circle')[0].fire('mouseout', event);
-      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseout","data":{"id":"circle_nr_2","x":'+realX(20)+',"y":'+realY(200)+'}}');
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mouseout","data":{"id":"circle_nr_2","x":120,"y":250}}');
     });
     it("testing message after mousedrag event", function() {
       spyOn(window, 'mouseDragStartEventHandler').andCallThrough();
@@ -188,7 +192,7 @@ describe("Draw elements to test event handling", function() {
       expect(window.mouseDragEventHandler.callCount).toBe(0);
       $(canvas).trigger(event);
       expect(window.mouseDragEventHandler).toHaveBeenCalled();
-      expect(connection.send).toHaveBeenCalledWith('{"event":"mousedrag","data":{"id1":"circle_nr_2","x1":100,"y1":200,"id2":"circle_nr_2","x2":100,"y2":200}}');
+      expect(connection.send).toHaveBeenCalledWith('{"event":"mousedrag","data":{"id1":"circle_nr_2","x1":120,"y1":70,"id2":"circle_nr_2","x2":200,"y2":250}}');
 
       expect(window.mouseDragEndEventHandler.callCount).toBe(0);
       $(canvas).trigger('mouseup');
