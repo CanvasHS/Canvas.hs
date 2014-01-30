@@ -48,7 +48,6 @@ data JSONEventData = JSONEventData {
         jeventId1 :: Maybe BU.ByteString, -- Only for mousedrag
         x2 :: Maybe Int, -- Only for mousedrag
         y2 :: Maybe Int, -- Only for mousedrag
-        jeventId2 :: Maybe BU.ByteString, -- Only for mousedrag
         key :: Maybe BU.ByteString,
         control :: Maybe Bool,
         alt :: Maybe Bool,

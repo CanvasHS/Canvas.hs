@@ -27,7 +27,8 @@ module CanvasHs
 (
     installEventHandler,
     shape,
-    actions
+    actions,
+    nothing
 )  where
 
 import CanvasHs.Data
@@ -83,6 +84,11 @@ shape s = Out (Just s, [])
 -- | convenience function to create an 'Output' of just a list of 'Action's
 actions :: [Action] -> Output
 actions a = Out (Nothing, a)
+
+-- | convenience function to create no 'Output' and no 'Actions', used when no 
+-- changes are needed on the canvas. Does not clear the canvas.
+nothing :: Output
+nothing = Out (Nothing, [])
 
 -- | handles input from the canvas
 handleWSInput :: IORef (State a) -> BU.ByteString -> IO (Maybe BU.ByteString)
