@@ -80,6 +80,20 @@ describe("Draw elements", function() {
         compare_stage.add(layer);
         canvas_compare = $(canvas_compare_wrapper).find('canvas')[0]; // Get canvas element
     });
+    it("draws nothing", function() {
+        runs(function() {
+            // Draw in the Canvas.hs canvas
+            spyOn(window, 'printDebugMessage').andCallThrough();
+            connectionDataReceived({"data": '{}'});
+            stage.batchDraw();
+            stage.draw();
+        });
+        runs(function() {
+            // See if function was not called
+            expect(window.printDebugMessage).toHaveBeenCalled();
+            expect(window.printDebugMessage).toHaveBeenCalledWith("No shape data recieved",1);
+        });
+    });
     it("draws a line", function() {
         runs(function() {
             // Draw in the Canvas.hs canvas
