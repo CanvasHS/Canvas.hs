@@ -149,9 +149,9 @@ function setWindowDisplayType(displayType, attempt)
             $("body").addClass('fullwindow');
             $("body").removeClass('fullscreen');
 
-            closeControlWindow();
+            closeControlWindow(); // Maybe we need to check if we really want to do this?
 
-            setFluidProportions($("#canvas,#canvas div"));
+            setFluidProportions($(canvas).add(canvas).parent().parent());
             $(window).resize(resizeCanvas);
             resizeCanvas(); // Resizes the canvas
         break;
@@ -162,9 +162,9 @@ function setWindowDisplayType(displayType, attempt)
             $("body").addClass('fullscreen');
             $("body").removeClass('fullwindow');
             
-            closeControlWindow();
+            closeControlWindow(); // Maybe we need to check if we really want to do this?
 
-            setFluidProportions($("#canvas,#canvas div"));
+            setFluidProportions($(canvas).add(canvas).parent().parent());
             $(window).resize(resizeCanvas);
             resizeCanvas(); // Resizes the canvas
             // If this did not result in a full screen window then request it from the user.
@@ -942,10 +942,7 @@ function initCanvas(container, width, height) {
         canvas = container.find("canvas");
         
         // Start listening for scroll events using mousewheel.js
-        canvas.mousewheel(function(event) {
-            sendScrollEvent(event.deltaX,event.deltaY);
-            return false; // Prevent browser default behavior
-        });
+        canvas.mousewheel(scrollEventHandler);
 
     }
 }
@@ -968,10 +965,8 @@ $(document).ready(function () {
     // Init canvas
     initCanvas($('#canvas'),canvasWindowWidth,canvasWindowHeight);
     
-    // Start listening for scroll events using mousewheel.js
-    canvas.mousewheel(scrollEventHandler);
 
-    // Turn off animation
+    // Turn on animation
     animated = true;
             
  
