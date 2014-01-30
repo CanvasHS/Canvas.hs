@@ -192,7 +192,7 @@ describe("Draw elements to test event handling", function() {
     expect(window.mouseDragEventHandler.callCount).toBe(0);
     $(canvas).trigger(event);
     expect(window.mouseDragEventHandler).toHaveBeenCalled();
-    expect(connection.send).toHaveBeenCalledWith('{"event":"mousedrag","data":{"id1":"circle_nr_2","x1":120,"y1":70,"id2":"circle_nr_2","x2":200,"y2":250}}');
+    expect(connection.send).toHaveBeenCalledWith('{"event":"mousedrag","data":{"id":"circle_nr_2","x1":120,"y1":70,"x2":200,"y2":250}}');
 
     expect(window.mouseDragEndEventHandler.callCount).toBe(0);
     $(canvas).trigger('mouseup');
