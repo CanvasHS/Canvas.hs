@@ -389,9 +389,15 @@ function parseActionData(data) {
 
 
                 if(hasProperty(actionProperties,"filecontents") && actionProperties.filecontents != undefined) {
-
-                    document.location = 'data:Application/octet-stream,' +
-                         encodeURIComponent(atob(actionProperties.filecontents));
+                  var blob = new Blob([atob(actionProperties.filecontents)], {type: 'text/other'});
+                  var url  = window.URL || window.webkitURL;
+                  var link = document.createElementNS("http://www.w3.org/1999/xhtml", "a");
+                  link.href = url.createObjectURL(blob);
+                  link.download = actionProperties.filename;
+                    
+                  var event = document.createEvent("MouseEvents");
+                  event.initEvent("click", true, false);
+                  link.dispatchEvent(event); 
                 }
                 else {
                     printDebugMessage("Download action recieved without file data",2);
