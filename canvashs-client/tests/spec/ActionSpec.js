@@ -120,6 +120,7 @@ describe("Execute actions", function() {
     var canvas_compare;
     var compare_stage;
     beforeEach(function() {
+        animated = false;
         // Required to run imageDiff
         this.addMatchers(imagediff.jasmine);
         // Setup canvas of Canvas.Hs
@@ -140,6 +141,8 @@ describe("Execute actions", function() {
         var layer = new Kinetic.Layer();
         compare_stage.add(layer);
         canvas_compare = $(canvas_compare_wrapper).find('canvas')[0]; // Get canvas element
+        // Use mock clock
+        jasmine.Clock.useMock();;
     });
     it("parse no actions", function() {
         runs(function() {
@@ -153,6 +156,75 @@ describe("Execute actions", function() {
             // See if function was called
             expect(window.printDebugMessage).toHaveBeenCalled();
             expect(window.printDebugMessage).toHaveBeenCalledWith("No actions received",0);
+        });
+    });
+    it("parse fixedsize action", function() {
+        runs(function() {
+            // Create spy on function
+            spyOn(window, 'setFixedProportions').andCallThrough();
+            connectionDataReceived({"data": '{"actions": [' +
+                '{' +
+                    '"action":"windowdisplaytype",' +
+                    '"data":{' +
+                        '"type": 0,' +
+                        '"width": 920,' +
+                        '"height": 1337' +
+                    '}' +
+                '}' +
+            ']}'});
+            
+        });
+        runs(function() {
+            // See if function for fluid properties was called
+            expect(window.setFixedProportions).toHaveBeenCalled();
+            expect(window.setFixedProportions).toHaveBeenCalledWith(jasmine.any(Object), 920,1337);
+
+        });
+    });
+    it("parse fluidsize action", function() {
+        runs(function() {
+            // Create spy on function
+            spyOn(window, 'setFluidProportions').andCallThrough();
+            connectionDataReceived({"data": '{"actions": [' +
+                '{' +
+                    '"action":"windowdisplaytype",' +
+                    '"data":{' +
+                        '"type": 1' +
+                    '}' +
+                '}' +
+            ']}'});
+            
+        });
+        runs(function() {
+            // See if function for fluid properties was called
+            expect(window.setFluidProportions).toHaveBeenCalled();
+
+        });
+    });
+    it("parse fullscreen action", function() {
+        runs(function() {
+            // Create spy on function
+            spyOn(window, 'requestFullscreen').andCallThrough();
+            spyOn(window, 'setFluidProportions').andCallThrough();
+            spyOn(window, 'resizeCanvas').andCallThrough();
+
+            connectionDataReceived({"data": '{"actions": [' +
+                '{' +
+                    '"action":"windowdisplaytype",' +
+                    '"data":{' +
+                        '"type": 2' +
+                    '}' +
+                '}' +
+            ']}'});
+            jasmine.Clock.tick(1000);
+        });
+        runs(function() {
+            // See if function for fluid properties was called
+            expect(window.setFluidProportions).toHaveBeenCalled();
+            expect(window.resizeCanvas).toHaveBeenCalled();
+            // See if function for fullscreen was called
+            expect(window.requestFullscreen).toHaveBeenCalled();
+
         });
     });
     afterEach(function() {

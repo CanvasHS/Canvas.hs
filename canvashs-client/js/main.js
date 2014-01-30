@@ -156,8 +156,8 @@ function setWindowDisplayType(displayType, attempt)
             resizeCanvas(); // Resizes the canvas
         break;
         case 2: // FullScreen
-
-            window.fullScreenApi.requestFullScreen(document.getElementById('wrapper'));
+            console.log(canvas);
+            window.fullScreenApi.requestFullScreen(canvas.parent().parent().get(0));
 
             $("body").addClass('fullscreen');
             $("body").removeClass('fullwindow');
@@ -172,10 +172,10 @@ function setWindowDisplayType(displayType, attempt)
                 if(attempt > 2) {
                     // Show a message if it was not possible to switch to full screen
                     openControlWindow("Failed to switch to fullscreen"); 
-                    setTimeout(closeControlWindow, 2400);   
+                    setTimeout(closeControlWindow, (animated ? 2400 : 0));   
                 }
                 else {
-                    setTimeout(requestFullscreen.bind(undefined, attempt+1), 100*attempt);
+                    setTimeout(requestFullscreen.bind(undefined, attempt+1), (animated ? 100*attempt : 0));
                 }
             }
         break;
