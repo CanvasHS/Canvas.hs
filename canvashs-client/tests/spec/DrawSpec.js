@@ -89,7 +89,7 @@ describe("Draw elements", function() {
             stage.draw();
         });
         runs(function() {
-            // See if function was not called
+            // See if function was called
             expect(window.printDebugMessage).toHaveBeenCalled();
             expect(window.printDebugMessage).toHaveBeenCalledWith("No shape data recieved",1);
         });
