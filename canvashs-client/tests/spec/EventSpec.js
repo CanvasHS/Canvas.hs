@@ -80,7 +80,7 @@ describe("Draw elements to test event handling", function() {
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
       expect(connection.send.callCount).toBe(0);
-      var event = new Event("mousedown");
+      var event = jQuery.Event("mousedown");
       event.pageX = 20;
       event.pageY = 200;
       stage.find('Circle')[0].fire('mousedown', event);
@@ -95,7 +95,7 @@ describe("Draw elements to test event handling", function() {
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
       expect(connection.send.callCount).toBe(0);
-      var event = new Event("click");
+      var event = jQuery.Event("click");
       event.pageX = 20;
       event.pageY = 200;
       stage.find('Circle')[0].fire('click', event);
@@ -110,7 +110,7 @@ describe("Draw elements to test event handling", function() {
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
       expect(connection.send.callCount).toBe(0);
-      var event = new Event("mouseup");
+      var event = jQuery.Event("mouseup");
       event.pageX = 20;
       event.pageY = 200;
       stage.find('Circle')[0].fire('mouseup', event);
@@ -125,7 +125,7 @@ describe("Draw elements to test event handling", function() {
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
       expect(connection.send.callCount).toBe(0);
-      var event = new Event("dblclick");
+      var event = jQuery.Event("dblclick");
       event.pageX = 20;
       event.pageY = 200;
       stage.find('Circle')[0].fire('dblclick', event);
@@ -140,7 +140,7 @@ describe("Draw elements to test event handling", function() {
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
       expect(connection.send.callCount).toBe(0);
-      var event = new Event("mouseover");
+      var event = jQuery.Event("mouseover");
       event.pageX = 20;
       event.pageY = 200;
       stage.find('Circle')[0].fire('mouseover', event);
@@ -155,7 +155,7 @@ describe("Draw elements to test event handling", function() {
       // Test if mouseEvent method is called after 
       // mouse event on circle but not before.
       expect(connection.send.callCount).toBe(0);
-      var event = new Event("mouseout");
+      var event = jQuery.Event("mouseout");
       event.pageX = 20;
       event.pageY = 200;
       event.targetNode = stage.find('Circle')[0];
@@ -193,6 +193,56 @@ describe("Draw elements to test event handling", function() {
       expect(window.mouseDragEndEventHandler.callCount).toBe(0);
       $(canvas).trigger('mouseup');
       expect(window.mouseDragEndEventHandler).toHaveBeenCalled();
+    });
+    it("testing drag end after change of shape", function() {
+      spyOn(window, 'mouseDragStartEventHandler').andCallThrough();
+      spyOn(window, 'mouseDragEventHandler').andCallThrough();
+      spyOn(window, 'mouseDragEndEventHandler').andCallThrough();
+
+      // Draw in the Canvas.hs canvas
+      connectionDataReceived({"data":'{"shape":{"type": "circle", "data": {"x": 20, "y": 20, "radius": 5, "stroke": {"r": 255,"g": 255,"b": 255,"a": 1 }, "strokeWidth": 2, "fill": {"r":255,"g":0,"b":0,"a":1}}, "eventData": {"eventId": "circle_nr_2", "listen" : ["mousedrag"]}}}'});
+      stage.batchDraw();
+      stage.draw();
+
+      var mousedownEvent = jQuery.Event( "mousedown" );
+      mousedownEvent.pageX = 20;
+      mousedownEvent.pageY = 20;
+      expect(window.mouseDragStartEventHandler.callCount).toBe(0);
+      expect(window.mouseDragEndEventHandler.callCount).toBe(0);
+      expect(connection.send.callCount).toBe(0);
+      stage.find('Circle')[0].fire('mousedown', mousedownEvent);
+      expect(window.mouseDragStartEventHandler).toHaveBeenCalled();
+      expect(window.mouseDragEndEventHandler.callCount).toBe(0);
+
+      connectionDataReceived({"data":'{"shape":{"type": "circle", "data": {"x": 20, "y": 20, "radius": 5, "stroke": {"r": 255,"g": 255,"b": 255,"a": 1 }, "strokeWidth": 2, "fill": {"r":255,"g":0,"b":0,"a":1}}}}'});
+      stage.batchDraw();
+      stage.draw();
+      expect(window.mouseDragEndEventHandler).toHaveBeenCalled();
+    });
+    it("testing no drag end after change of shape type", function() {
+      spyOn(window, 'mouseDragStartEventHandler').andCallThrough();
+      spyOn(window, 'mouseDragEventHandler').andCallThrough();
+      spyOn(window, 'mouseDragEndEventHandler').andCallThrough();
+
+      // Draw in the Canvas.hs canvas
+      connectionDataReceived({"data":'{"shape":{"type": "circle", "data": {"x": 20, "y": 20, "radius": 5, "stroke": {"r": 255,"g": 255,"b": 255,"a": 1 }, "strokeWidth": 2, "fill": {"r":255,"g":0,"b":0,"a":1}}, "eventData": {"eventId": "event_nr_1", "listen" : ["mousedrag"]}}}'});
+      stage.batchDraw();
+      stage.draw();
+
+      var mousedownEvent = jQuery.Event( "mousedown" );
+      mousedownEvent.pageX = 20;
+      mousedownEvent.pageY = 20;
+      expect(window.mouseDragStartEventHandler.callCount).toBe(0);
+      expect(window.mouseDragEndEventHandler.callCount).toBe(0);
+      expect(connection.send.callCount).toBe(0);
+      stage.find('Circle')[0].fire('mousedown', mousedownEvent);
+      expect(window.mouseDragStartEventHandler).toHaveBeenCalled();
+      expect(window.mouseDragEndEventHandler.callCount).toBe(0);
+      // Change 
+      connectionDataReceived({"data":'{"shape":{"type": "line", "data": {"x": 20, "y": 20, "points": [10,0,10,20], "stroke": {"r":255,"g":255,"b":255,"a":1},"strokeWidth": 2 }, "eventData": {"eventId": "event_nr_1", "listen" : ["mousedrag"]}}}'});
+      stage.batchDraw();
+      stage.draw();
+      expect(window.mouseDragEndEventHandler).not.toHaveBeenCalled();
     });
   afterEach(function(){
     // Remove the canvas elements used for testing and reset variables
