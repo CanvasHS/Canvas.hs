@@ -41,10 +41,11 @@ function connectionDataReceived(event) {
 
     // handle the shape data
     if(hasProperty(dataObject,"shape") && dataObject.shape != undefined) {
-        var shape = parseShapeData(dataObject.shape);
-        
         // Reset tracking of scrollable shapes
         scrollShapes = new Array();
+
+        var shape = parseShapeData(dataObject.shape);
+        
 
         // Clear screen
         layerList[topLayerIdx].destroyChildren();
@@ -477,6 +478,8 @@ function enableEventHandlers(shape, message) {
         if(message.eventData.listen.indexOf("scroll") != -1) {
             // Start listening for scroll events using mousewheel.js
             shape["id"] = message.eventData.eventId;
+            console.log("test");
+            console.log(shape);
             scrollShapes.push(shape);
         }
     }
@@ -658,7 +661,7 @@ function realY(y) {
  * @param {Number} deltaY How far is scrolled in vertical direction.
  * @returns {undefined}
  */
-function sendScrollEvent(deltaX,deltaY) {
+function sendScrollEvent(id,deltaX,deltaY) {
 
     printDebugMessage("ScrollEvent (id:"+id+" deltaX:"+deltaX+" deltaY:"+deltaY+")",0);
 
