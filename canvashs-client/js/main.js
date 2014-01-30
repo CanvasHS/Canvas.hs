@@ -662,6 +662,11 @@ function shapeFromData(message) {
     if(data["stroke"]){
         data["stroke"] = rgbaDictToColor(data["stroke"]);
     }
+
+    if (!data["fill"] && !data["stroke"]) {
+        data["stroke"] = "rgba(0,0,0,1.0)";
+    }
+
     // Debug message
     if(!data["id"] && debugOn) {
         data["id"] = "sid" + generadedShapeIdIdx;
