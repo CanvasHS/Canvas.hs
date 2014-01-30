@@ -26,6 +26,7 @@ var enableDragHandler = true;
 var prevMousePosX = 0;
 var prevMousePosY = 0;
 var mouseMoveRateLimit = 90; // The mousemove interval limit
+var animated = false;
 
 /**
  * Handles data received from the websocket connection.
@@ -74,7 +75,7 @@ function connectionDataReceived(event) {
         }
     }
     else {
-        printDebugMessage("No actions recieved",0);
+        printDebugMessage("No actions received",0);
     }
 }
 
@@ -137,7 +138,7 @@ function setWindowDisplayType(displayType, attempt)
             // Animate the kinetic container
             $("#canvas div").animate({
                 width: canvasWindowWidth+'px',
-                height: canvasWindowHeight+'px'},300);
+                height: canvasWindowHeight+'px'},(animated ? 300 : 0));
             setFixedProportions($("#canvas"), canvasWindowWidth, canvasWindowHeight);
             resizeCanvas(); // Resizes the canvas
         break;
@@ -148,22 +149,22 @@ function setWindowDisplayType(displayType, attempt)
             $("body").addClass('fullwindow');
             $("body").removeClass('fullscreen');
 
-            closeControlWindow();
+            closeControlWindow(); // Maybe we need to check if we really want to do this?
 
-            setFluidProportions($("#canvas,#canvas div"));
+            setFluidProportions($(canvas).add(canvas).parent().parent());
             $(window).resize(resizeCanvas);
             resizeCanvas(); // Resizes the canvas
         break;
         case 2: // FullScreen
-
-            window.fullScreenApi.requestFullScreen(document.getElementById('wrapper'));
+            console.log(canvas);
+            window.fullScreenApi.requestFullScreen(canvas.parent().parent().get(0));
 
             $("body").addClass('fullscreen');
             $("body").removeClass('fullwindow');
             
-            closeControlWindow();
+            closeControlWindow(); // Maybe we need to check if we really want to do this?
 
-            setFluidProportions($("#canvas,#canvas div"));
+            setFluidProportions($(canvas).add(canvas).parent().parent());
             $(window).resize(resizeCanvas);
             resizeCanvas(); // Resizes the canvas
             // If this did not result in a full screen window then request it from the user.
@@ -171,10 +172,10 @@ function setWindowDisplayType(displayType, attempt)
                 if(attempt > 2) {
                     // Show a message if it was not possible to switch to full screen
                     openControlWindow("Failed to switch to fullscreen"); 
-                    setTimeout(closeControlWindow, 2400);   
+                    setTimeout(closeControlWindow, (animated ? 2400 : 0));   
                 }
                 else {
-                    setTimeout(requestFullscreen.bind(undefined, attempt+1), 100*attempt);
+                    setTimeout(requestFullscreen.bind(undefined, attempt+1), (animated ? 100*attempt : 0));
                 }
             }
         break;
@@ -199,7 +200,7 @@ function requestFullscreen(attempt) {
 }
 
 /**
- * Opens a prompt to ask if a file should be uploaded. When clicked on "Yes" a file selecion browser will be opened.
+ * Opens a prompt to ask if a file should be uploaded. When clicked on "Yes" a file selection browser will be opened.
  * @returns {undefined}
  */
 function requestUpload() {
@@ -213,7 +214,7 @@ function requestUpload() {
 
 /**
  * Opens a file browser in which you can select a file. This function should be called directly through user input
- * and not through a websocket for example. Browsers have built in protection to prevent this, the promt will not show.
+ * and not through a websocket for example. Browsers have built in protection to prevent this, the prompt will not show.
  * @returns {undefined}
  */
 function promptFileBrowser() {
@@ -225,7 +226,7 @@ function promptFileBrowser() {
             FR.onload = function(e) {
                 printDebugMessage("Uploading file: "+e.target.result,0);
 
-                //e.target.result contains the base64 filecontents, but with a mimetype prepended (which we don't want)
+                //e.target.result contains the base64 file contents, but with a mimetype prepended (which we don't want)
                 parts = e.target.result.split("base64,");
                 mimetype = parts[0]; //not used
                 contents = parts[1];
@@ -258,7 +259,7 @@ function setFluidProportions(container) {
         height: '100%',
         marginTop: "0px",
         marginLeft: "0px"
-    },{duration: 300,step:resizeCanvasWithoutEvent, done:resizeCanvas});
+    },{duration: (animated ? 300 : 0),step:resizeCanvasWithoutEvent, done:resizeCanvas});
 
 }
 
@@ -278,7 +279,7 @@ function setFixedProportions(container,width,height) {
         height: height+'px',
         marginTop: "-"+height/2+"px",
         marginLeft: "-"+width/2+"px"
-    },{duration: 300, step:resizeCanvasWithoutEvent, done:resizeCanvas});
+    },{duration: (animated ? 300 : 0),step:resizeCanvas});
 }
 
 /**
@@ -340,7 +341,7 @@ function parseActionData(data) {
         var actionProperties = data.data;
 
         switch (data.action) {
-            case "windowdisplaytype": // To chacnge the display type
+            case "windowdisplaytype": // To change the display type
                 if(hasProperty(actionProperties,"type") && actionProperties.type != undefined) {
                     
                     // First set the global width and height var's if action contains them
@@ -353,7 +354,7 @@ function parseActionData(data) {
                     setWindowDisplayType(actionProperties.type);
                 }
                 else {
-                    printDebugMessage("Window Display Type action recieved without type",2);
+                    printDebugMessage("Window Display Type action received without type",2);
                 }
 
             break;
@@ -366,7 +367,7 @@ function parseActionData(data) {
                         debugOff();
                 }
                 else {
-                    printDebugMessage("Debugger action recieved without enabled",2);
+                    printDebugMessage("Debugger action received without enabled",2);
                 }
             break;
             case "requestupload":
@@ -381,7 +382,7 @@ function parseActionData(data) {
                     requestUpload();
                 }
                 else {
-                    printDebugMessage("Request upload action recieved without multiple attribute",2);
+                    printDebugMessage("Request upload action received without multiple attribute",2);
                 }
             
             break;
@@ -394,7 +395,7 @@ function parseActionData(data) {
                          encodeURIComponent(atob(actionProperties.filecontents));
                 }
                 else {
-                    printDebugMessage("Download action recieved without file data",2);
+                    printDebugMessage("Download action received without file data",2);
                 }
                 
 
@@ -420,7 +421,7 @@ function parseActionData(data) {
                     }
                 }
                 else {
-                    printDebugMessage("Prompt action recieved without file data",2);
+                    printDebugMessage("Prompt action received without file data",2);
                 }
                 
 
@@ -429,7 +430,7 @@ function parseActionData(data) {
 
             break;
             default:
-                printDebugMessage("Unkown action type: "+data.action,1);
+                printDebugMessage("Unknown action type: "+data.action,1);
         }
     }
     else {
@@ -460,9 +461,6 @@ function enableEventHandlers(shape, message) {
         if(message.eventData.listen.indexOf("mouseover") != -1) {
             shape.on('mouseover', mouseOverEventHandler.bind(undefined, message.eventData.eventId));
         }
-        if(message.eventData.listen.indexOf("mousemove") != -1) {
-            shape.on('mousemove', mouseMoveEventHandler.bind(undefined, message.eventData.eventId));
-        }
         if(message.eventData.listen.indexOf("mouseout") != -1) {
             shape.on('mouseout', mouseOutEventHandler.bind(undefined, message.eventData.eventId));
         }
@@ -483,12 +481,11 @@ function mouseDownEventHandler(id, event) { mouseEvent("mousedown", id, event); 
 function mouseUpEventHandler(id, event) { mouseEvent("mouseup", id, event); }
 function mouseOverEventHandler(id, event) { mouseEvent("mouseover", id, event); }
 function mouseOutEventHandler(id, event) { 
-    // Needed, otherwhise redraw fires mouseOut event
+    // Needed, otherwise redraw fires mouseOut event
     if(event.targetNode.getParent() != undefined) {
         mouseEvent("mouseout", id, event); 
     } 
 }
-function mouseMoveEventHandler(id, event) { mouseEvent("mousemove", id, event); }
 
 
 function scrollEventHandler(event) {
@@ -548,8 +545,11 @@ function mouseDragEndEventHandler(id, event) {
         clearInterval(dragEventRateLimiter);
         dragEventRateLimiter = undefined;
     }
-    // Cancel event bubbling
-    event.cancelBubble = true;
+    // Event is undefined if it is called directly
+    if(event != undefined) {
+        // Cancel event bubbling
+        event.cancelBubble = true;
+    }
 }
 
 /**
@@ -640,12 +640,12 @@ function sendKeyEvent(eventName, event) {
 }
 
 function realX(x) {
-    var canvasPos = $("#canvas").position();
+    var canvasPos = $(canvas).position();
     return x-canvasPos.left-parseInt($("#canvas").css("margin-left"));
 }
 
 function realY(y) {
-    var canvasPos = $("#canvas").position();
+    var canvasPos = $(canvas).position();
     return y-canvasPos.top-parseInt($("#canvas").css("margin-top"));
 }
 
@@ -716,7 +716,7 @@ function shapeFromData(message) {
         generadedShapeIdIdx++;
     }
 
-    // Hackfix so that kinetic rotates counterlockwise
+    // Hackfix so that kinetic rotates counterclockwise
     if(data["rotationDeg"]){
         data["rotationDeg"] *= -1;
     }
@@ -760,7 +760,7 @@ function shapeFromData(message) {
             data.fontStyle = fontStyle;
             shape = new Kinetic.Text(data);
 
-            // As haskell has no idea about textsizes this code wil fix align
+            // As Haskell has no idea about text sizes this code will fix align
             // it will make sure that the offset is set at the middle/end of the
             // text.
             // It does keep align set, that way kinetic knows what to do with
@@ -865,13 +865,13 @@ var hideDebugConsole = function(){
             {
                 $(this).animate({
                     width: 350
-                },300);
+                },(animated ? 300 : 0));
             }
             else
             {
                 $(this).animate({
                     width: 20
-                },300);
+                },(animated ? 300 : 0));
             }
         }
     };
@@ -944,7 +944,7 @@ function debugOff() {
  */
 function initCanvas(container, width, height) {
     // Only init canvas when there is a container
-    // Container is provided for testing purposes and extesibility
+    // Container is provided for testing purposes and extensibility
     if(container.exists()) {
         setFixedProportions(container,width,height);
 
@@ -956,6 +956,12 @@ function initCanvas(container, width, height) {
 
         // Create new layer to draw on
         newDefaultLayer();
+
+        // Assign the canvas global variable for mousedrag
+        canvas = container.find("canvas");
+        
+        // Start listening for scroll events using mousewheel.js
+        canvas.mousewheel(scrollEventHandler);
 
     }
 }
