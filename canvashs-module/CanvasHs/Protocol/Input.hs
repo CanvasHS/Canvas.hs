@@ -45,7 +45,6 @@ data JSONEventData = JSONEventData {
         y :: Maybe Int,
         x1 :: Maybe Int, -- Only for mousedrag
         y1 :: Maybe Int, -- Only for mousedrag
-        jeventId1 :: Maybe BU.ByteString, -- Only for mousedrag
         x2 :: Maybe Int, -- Only for mousedrag
         y2 :: Maybe Int, -- Only for mousedrag
         key :: Maybe BU.ByteString,
@@ -69,7 +68,6 @@ instance FromJSON JSONEventData where
                             v .:? "y"            <*>
                             v .:? "x1"           <*> -- Only for mousedrag
                             v .:? "y1"           <*> -- Only for mousedrag
-                            v .:? "id1"          <*> -- Only for mousedrag
                             v .:? "x2"           <*> -- Only for mousedrag
                             v .:? "y2"           <*> -- Only for mousedrag
                             v .:? "key"          <*>
@@ -114,7 +112,7 @@ makeEvent "mousedoubleclick"
          = MouseDoubleClick (x, y) (BU.toString eid)
 
 makeEvent "mousedrag"
-    (JSONEventData{jeventId1 = Just eid1, x1 = Just x1, y1 = Just y1, x2 = Just x2, y2 = Just y2})
+    (JSONEventData{jeventId = Just eid1, x1 = Just x1, y1 = Just y1, x2 = Just x2, y2 = Just y2})
         = MouseDrag (x1, y1) (BU.toString eid1) (x2, y2)
 
 makeEvent "mouseover"
@@ -155,7 +153,7 @@ makeEvent "prompt"
     (JSONEventData{value = Just val})
         = PromptResponse (BUL.toString val)
 
-makeEvent _ _ = error "JSON did not match any event"
+makeEvent _ a = error ("JSON did not match any event" ++ (show a))
 
 -- | a helper function to make a modifierlist from the incoming JSON
 makeModifiers :: Bool -> Bool -> Bool -> [Modifier]

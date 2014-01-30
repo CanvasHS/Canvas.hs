@@ -573,7 +573,7 @@ function mouseDragEventHandler(id, event) {
         connection.send(JSON.stringify({
             "event":"mousedrag",
             "data":{
-                "id1": id,
+                "id": id,
                 "x1": x1, 
                 "y1": y1,
                 "x2": x2, 
