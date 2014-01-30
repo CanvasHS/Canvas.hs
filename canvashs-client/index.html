@@ -17,11 +17,57 @@
         <script type="text/javascript" src="js/jquery.js"></script>
         <script type="text/javascript" src="js/kinetic.js"></script>
         <script type="text/javascript" src="js/mousewheel.js"></script>
+        <script type="text/javascript" src="js/fullscreen.js"></script>
 
         <script type="text/javascript" src="js/utils.js"></script>
 
         <script type="text/javascript" src="js/customshapes.js"></script>
         <script type="text/javascript" src="js/main.js"></script>
+        <script type="text/javascript">
+        /**
+         * On document ready
+         */
+        $(document).ready(function () {
+
+            // Init canvas
+            initCanvas($('#canvas'),canvasWindowWidth,canvasWindowHeight);
+            canvas = $("#canvas canvas");
+
+            animated = true;
+            
+            // Start listening for scroll events using mousewheel.js
+            canvas.mousewheel(scrollEventHandler);
+                    
+         
+            if(debugOn) {
+                initDebug();
+            }
+            else {
+                debugOff();
+            }
+
+            // When the connection is open, send some data to the server
+            connection.onopen = function () {
+                printDebugMessage("Connection opened",0);
+            };
+            // Log errors
+            connection.onerror = connectionError;
+            // Indicate disconnected connection
+            connection.onclose = connectionClosed;
+            // Callback for recieving data
+            connection.onmessage = connectionDataReceived;
+
+            // Begin to listen for keys
+            window.addEventListener('keydown', sendKeyEvent.bind(this,'keydown'));
+            window.addEventListener('keyup', sendKeyEvent.bind(this,'keyup'));
+
+            $( window ).resize(function() {
+                sendWindowResizeEvent($(window).width(),$(window).height());
+            });
+
+        });
+
+        </script>
     </head>
     <body>
         <!--[if lt IE 7]>
