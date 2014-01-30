@@ -388,7 +388,6 @@ function parseActionData(data) {
             
             break;
             case "download":
-            
                 if(hasProperty(actionProperties,"filecontents") && actionProperties.filecontents != undefined 
                     && hasProperty(actionProperties, "filename") && actionProperties.filename != undefined) {
                     var blob = new Blob([atob(actionProperties.filecontents)], {type: 'text/other'});
@@ -403,6 +402,8 @@ function parseActionData(data) {
                 } else {
                     printDebugMessage("Download action recieved without file data/file name",2);
 
+                }
+                
 
             break;
             case "prompt":
