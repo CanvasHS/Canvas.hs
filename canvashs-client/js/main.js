@@ -518,7 +518,6 @@ function mouseDragStartEventHandler(id, event) {
  * @returns {undefined}
  */
 function mouseDragEndEventHandler(id, event) {
-    console.log("end");
     canvas.off('mouseout', mouseDragEndHandler);
     canvas.off('mouseup', mouseDragEndHandler);
     canvas.off('mousemove', mouseDragHandler);
@@ -529,8 +528,11 @@ function mouseDragEndEventHandler(id, event) {
         clearInterval(dragEventRateLimiter);
         dragEventRateLimiter = undefined;
     }
-    // Cancel event bubbling
-    event.cancelBubble = true;
+    // Event is undefined if it is called directly
+    if(event != undefined) {
+        // Cancel event bubbling
+        event.cancelBubble = true;
+    }
 }
 
 /**
@@ -540,7 +542,6 @@ function mouseDragEndEventHandler(id, event) {
  * @returns {undefined}
  */
 function mouseDragEventHandler(id, event) {
-    console.log("test");
     if (enableDragHandler) {
         // Compensate for the position of the canvas
         var x1 = prevMousePosX; // Fix me
