@@ -191,7 +191,7 @@ type RegularOutput = (Maybe Shape, [Action])
 data Output = Block BlockingAction | Out RegularOutput
     
 -- | Modifier keys that could be held when pressing another key, for use in conjuncting with the 
---   'KeyUp', 'KeyDown' and 'KeyClick' 'Event's. 
+--   'KeyUp', 'KeyDown' and 'KeyPress' 'Event's. 
 data Modifier 
     = Shift | Ctrl | Alt
     deriving(Eq, Show)
@@ -218,8 +218,8 @@ data Event
     | KeyDown String [Modifier]
     -- | A keyup event, consist of a key that was pressed and a list of modifiers that were active
     | KeyUp String [Modifier]
-    -- | A keyclick event, consist of a key that was pressed and a list of modifiers that were active
-    | KeyClick String [Modifier]
+    -- | A keypress event, consist of a key that was pressed and a list of modifiers that were active
+    | KeyPress String [Modifier]
     -- | A scroll event consisting of an ID string of the interested object, 
     --   a xdiff and an ydiff (how much was scrolled in the x and y direction)
     | Scroll String Int Int
