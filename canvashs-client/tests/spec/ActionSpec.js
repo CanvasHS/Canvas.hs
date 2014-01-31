@@ -1,7 +1,7 @@
 describe("Tests function", function() {
 
 });
-describe("Test action functions", function() {
+describe("Execute action functions", function() {
     var flag;
     var canvas;
     beforeEach(function() {
@@ -113,7 +113,7 @@ describe("Test action functions", function() {
         var open = false;
     });
 });
-describe("Execute actions", function() {
+describe("Parse and run actions", function() {
     var flag;
     var canvas;
     var canvas_compare;

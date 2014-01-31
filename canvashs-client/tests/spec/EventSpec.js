@@ -53,6 +53,33 @@ describe("Click events", function() {
     expect(circle.eventListeners.mousedown[0].handler).toBeDefined();
   });
 });
+describe("Scroll events", function() {
+    it("trigger scroll event without listener", function() {
+        // TODO trigger a scroll event and see if nothing is send
+    });
+    it("trigger scroll event on shape", function() {
+        // TODO trigger a scroll event on a shape and see if an event is send
+    });
+    it("trigger scroll event on another shape which is not listening", function() {
+        // TODO trigger a scroll event on a shape which is not listening to scroll events and see if nothing is send
+        // Make sure there is a shape that is listening to scroll events
+    });
+    it("trigger scroll event container", function() {
+        // TODO let a container listen to a scroll event and do a scroll event on a child
+    });
+});
+
+describe("Key events", function() {
+    it("trigger keypress event", function() {
+        // TODO trigger a keypress event and see if the key event is send over the websocket
+    });
+    it("trigger keydown event", function() {
+        // TODO trigger a keydown event and see if the key event is send over the websocket
+    });
+    it("trigger keyup event", function() {
+        // TODO trigger a keyup event and see if the key event is send over the websocket
+    });
+});
 
 describe("Draw elements to test event handling", function() {
   var flag;
@@ -75,7 +102,7 @@ describe("Draw elements to test event handling", function() {
     canvas = $(canvas_wrapper).find('canvas')[0]; // Get canvas element
     var layer = new Kinetic.Layer();
   });
-  it("testing message after mousedown event", function() {
+  it("message after mousedown event", function() {
     // Draw in the Canvas.hs canvas
     connectionDataReceived({"data":'{"shape":{"type": "circle", "data": {"x": 20, "y": 20, "radius": 5, "stroke": {"r": 255,"g": 255,"b": 255,"a": 1 }, "strokeWidth": 2, "fill": {"r":255,"g":0,"b":0,"a":1}}, "eventData": {"eventId": "circle_nr_2", "listen" : ["mousedown"]}}}'});
     stage.batchDraw();
@@ -90,7 +117,7 @@ describe("Draw elements to test event handling", function() {
     stage.find('Circle')[0].fire('mousedown', event);
     expect(connection.send).toHaveBeenCalledWith('{"event":"mousedown","data":{"id":"circle_nr_2","x":120,"y":250}}');
   });
-  it("testing message after mouseclick event", function() {
+  it("message after mouseclick event", function() {
     // Draw in the Canvas.hs canvas
     connectionDataReceived({"data":'{"shape":{"type": "circle", "data": {"x": 20, "y": 20, "radius": 5, "stroke": {"r": 255,"g": 255,"b": 255,"a": 1 }, "strokeWidth": 2, "fill": {"r":255,"g":0,"b":0,"a":1}}, "eventData": {"eventId": "circle_nr_2", "listen" : ["mouseclick"]}}}'});
     stage.batchDraw();
@@ -105,7 +132,7 @@ describe("Draw elements to test event handling", function() {
     stage.find('Circle')[0].fire('click', event);
     expect(connection.send).toHaveBeenCalledWith('{"event":"mouseclick","data":{"id":"circle_nr_2","x":120,"y":250}}');
   });
-  it("testing message after mouseup event", function() {
+  it("message after mouseup event", function() {
     // Draw in the Canvas.hs canvas
     connectionDataReceived({"data":'{"shape":{"type": "circle", "data": {"x": 20, "y": 20, "radius": 5, "stroke": {"r": 255,"g": 255,"b": 255,"a": 1 }, "strokeWidth": 2, "fill": {"r":255,"g":0,"b":0,"a":1}}, "eventData": {"eventId": "circle_nr_2", "listen" : ["mouseup"]}}}'});
     stage.batchDraw();
@@ -120,7 +147,7 @@ describe("Draw elements to test event handling", function() {
     stage.find('Circle')[0].fire('mouseup', event);
     expect(connection.send).toHaveBeenCalledWith('{"event":"mouseup","data":{"id":"circle_nr_2","x":120,"y":250}}');
   });
-  it("testing message after mousedoubleclick event", function() {
+  it("message after mousedoubleclick event", function() {
     // Draw in the Canvas.hs canvas
     connectionDataReceived({"data":'{"shape":{"type": "circle", "data": {"x": 20, "y": 20, "radius": 5, "stroke": {"r": 255,"g": 255,"b": 255,"a": 1 }, "strokeWidth": 2, "fill": {"r":255,"g":0,"b":0,"a":1}}, "eventData": {"eventId": "circle_nr_2", "listen" : ["mousedoubleclick"]}}}'});
     stage.batchDraw();
@@ -135,7 +162,7 @@ describe("Draw elements to test event handling", function() {
     stage.find('Circle')[0].fire('dblclick', event);
     expect(connection.send).toHaveBeenCalledWith('{"event":"mousedoubleclick","data":{"id":"circle_nr_2","x":120,"y":250}}');
   });
-  it("testing message after mouseover event", function() {
+  it("message after mouseover event", function() {
     // Draw in the Canvas.hs canvas
     connectionDataReceived({"data":'{"shape":{"type": "circle", "data": {"x": 20, "y": 20, "radius": 5, "stroke": {"r": 255,"g": 255,"b": 255,"a": 1 }, "strokeWidth": 2, "fill": {"r":255,"g":0,"b":0,"a":1}}, "eventData": {"eventId": "circle_nr_2", "listen" : ["mouseover"]}}}'});
     stage.batchDraw();
@@ -150,7 +177,7 @@ describe("Draw elements to test event handling", function() {
     stage.find('Circle')[0].fire('mouseover', event);
     expect(connection.send).toHaveBeenCalledWith('{"event":"mouseover","data":{"id":"circle_nr_2","x":120,"y":250}}');
   });
-  it("testing message after mouseout event", function() {
+  it("message after mouseout event", function() {
     // Draw in the Canvas.hs canvas
     connectionDataReceived({"data":'{"shape":{"type": "circle", "data": {"x": 20, "y": 20, "radius": 5, "stroke": {"r": 255,"g": 255,"b": 255,"a": 1 }, "strokeWidth": 2, "fill": {"r":255,"g":0,"b":0,"a":1}}, "eventData": {"eventId": "circle_nr_2", "listen" : ["mouseout"]}}}'});
     stage.batchDraw();
@@ -166,7 +193,7 @@ describe("Draw elements to test event handling", function() {
     stage.find('Circle')[0].fire('mouseout', event);
     expect(connection.send).toHaveBeenCalledWith('{"event":"mouseout","data":{"id":"circle_nr_2","x":120,"y":250}}');
   });
-  it("testing message after mousedrag event", function() {
+  it("message after mousedrag event", function() {
     spyOn(window, 'mouseDragStartEventHandler').andCallThrough();
     spyOn(window, 'mouseDragEventHandler').andCallThrough();
     spyOn(window, 'mouseDragEndEventHandler').andCallThrough();
@@ -198,7 +225,7 @@ describe("Draw elements to test event handling", function() {
     $(canvas).trigger('mouseup');
     expect(window.mouseDragEndEventHandler).toHaveBeenCalled();
   });
-  it("testing drag end after change of shape", function() {
+  it("drag end after change of shape", function() {
     spyOn(window, 'mouseDragStartEventHandler').andCallThrough();
     spyOn(window, 'mouseDragEventHandler').andCallThrough();
     spyOn(window, 'mouseDragEndEventHandler').andCallThrough();
@@ -223,7 +250,7 @@ describe("Draw elements to test event handling", function() {
     stage.draw();
     expect(window.mouseDragEndEventHandler).toHaveBeenCalled();
   });
-  it("testing no drag end after change of shape type", function() {
+  it("no drag end after change of shape type", function() {
     spyOn(window, 'mouseDragStartEventHandler').andCallThrough();
     spyOn(window, 'mouseDragEventHandler').andCallThrough();
     spyOn(window, 'mouseDragEndEventHandler').andCallThrough();
@@ -274,10 +301,10 @@ describe("Test realX and realY functions", function() {
     canvas = $(canvas_wrapper).find('canvas')[0]; // Get canvas element
     var layer = new Kinetic.Layer();
   });
-  it("testing realX function", function() {
+  it("realX function", function() {
     expect(realX(200)-realX(100)).toBe(100);
   });
-  it("testing realY function", function() {
+  it("realY function", function() {
     expect(realY(200)-realY(100)).toBe(100);
   });
   afterEach(function(){
