@@ -143,19 +143,25 @@ shapeEncode (D.Arc p r a)         = JSONShape { shapetype = "arc"
                                             ,shapechildren = Nothing
                                             }
 
-shapeEncode (D.Fill (r,g,b,a) s)    = updateSD $ recurFill $ shapeEncode s
+shapeEncode (D.Fill color s)    = updateSD $ recurFill $ shapeEncode s
                                 where
                                     recurFill :: JSONShape -> JSONShape
                                     recurFill js = js{shapechildren = (map updateSD) <$> shapechildren js}
+                                    oldColor :: JSONShape -> Maybe JSONRGBAColor
+                                    oldColor shape = fill $ shapedata $ shape
                                     updateSD :: JSONShape -> JSONShape --could be in lambda but that decreases readability
-                                    updateSD js = recurFill $ js{shapedata = (shapedata js){fill = Just JSONRGBAColor{colr=r, colg=g, colb=b, cola=a}}}  
+                                    updateSD js = recurFill $ js{shapedata = (shapedata js){fill = Just $ update (toJSONColor color) (oldColor js)}}
 
-shapeEncode (D.Stroke (r,g,b,a) w s)= updateSD $ recurStroke $ shapeEncode s
+shapeEncode (D.Stroke str w s) = updateSD $ recurStroke $ shapeEncode s
                                 where
                                     recurStroke :: JSONShape -> JSONShape
                                     recurStroke js = js{shapechildren = (map updateSD) <$> shapechildren js}
+                                    oldStroke :: JSONShape -> Maybe JSONRGBAColor
+                                    oldStroke shape = stroke $ shapedata $ shape
+                                    oldStrokeWidth :: JSONShape -> Maybe Int
+                                    oldStrokeWidth shape = strokeWidth $ shapedata $ shape
                                     updateSD :: JSONShape -> JSONShape --could be in lambda but that decreases readability
-                                    updateSD js = recurStroke $ js{shapedata = (shapedata js){stroke = Just JSONRGBAColor{colr=r, colg=g, colb=b, cola=a}, strokeWidth = Just w}}                                    
+                                    updateSD js = recurStroke $ js{shapedata = (shapedata js){stroke = Just $ update (toJSONColor str) (oldStroke js), strokeWidth = Just $ update w (oldStrokeWidth js)}}                                    
 
 shapeEncode (D.Rotate deg s)        = js {shapedata = sd {rotationDeg = Just deg}}
                                 where 
@@ -192,7 +198,7 @@ shapeEncodePoint (x',y')
     = JSONShapeData { 
         stroke         = Nothing,
         strokeWidth    = Nothing, 
-        fill           = Just JSONRGBAColor{colr=0, colg=0, colb=0, cola = 1.0}, 
+        fill           = Nothing, 
         scaleX         = Nothing, 
         scaleY         = Nothing, 
         rotationDeg    = Nothing, 
@@ -218,7 +224,7 @@ shapeEncodePoints pts
     = JSONShapeData { 
         stroke         = Nothing,
         strokeWidth    = Nothing, 
-        fill           = Just JSONRGBAColor{colr=0, colg=0, colb=0, cola = 1.0}, 
+        fill           = Nothing, 
         scaleX         = Nothing, 
         scaleY         = Nothing, 
         rotationDeg    = Nothing, 
@@ -274,3 +280,13 @@ shapeEncodeEventData (Just j) e = j {eventId = Just $ BU.fromString $ D.eventId 
                                                     ++ (if D.mouseOver e then ["mouseover"] else [])
                                                     ++ (if D.mouseOut e then ["mouseout"] else [])
                                                     ++ (if D.scroll e then ["scroll"] else [])
+
+
+-- | updates takes a new value and possible an older value, if the new value is specified, it takes that one
+-- Used to give nodes deeper in the tree preference over nodes up in the tree
+update :: a -> Maybe a -> a
+update a Nothing = a
+update a (Just b) = b
+
+toJSONColor :: D.Color -> JSONRGBAColor
+toJSONColor (r,g,b,a) = JSONRGBAColor{colr=r, colg=g, colb=b, cola=a}
