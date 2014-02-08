@@ -167,10 +167,14 @@ shapeEncode (D.Rotate deg s)        = js {shapedata = sd {rotationDeg = Just deg
                                 where 
                                     js = shapeEncode s
                                     sd = shapedata js
-shapeEncode (D.Translate dx dy s)   = js {shapedata = sd {x = (+dx) <$> (x sd), y = (+dy) <$> (y sd)}}
+shapeEncode (D.Translate dx dy s)   = js {shapedata = sd {x = (+dx) <$> (x sd), y = (+dy) <$> (y sd), points = (encPoints dx dy) <$> (points sd) }}
                                 where
                                     js = shapeEncode s
                                     sd = shapedata js
+                                    encPoints :: Int -> Int -> [Int] -> [Int]
+                                    encPoints _ _ [] = []
+                                    encPoints dx dy (x:y:ps) = (x+dx):(y+dy):(encPoints dx dy ps)
+
 
 shapeEncode (D.Scale dx dy s)       = js {shapedata = sd {scaleX = Just dx, scaleY = Just dy}}
                                 where 

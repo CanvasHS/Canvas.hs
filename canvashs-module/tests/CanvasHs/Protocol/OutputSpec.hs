@@ -85,6 +85,8 @@ spec = do
                 shapeDec (Translate 10 20 (Container 1 2 [(Circle (3,4) 5)])) `shouldBe` shapeTextDec "{\"type\": \"container\", \"data\": {\"x\": 10, \"y\": 20, \"width\": 1, \"height\": 2}, \"children\": [{\"type\": \"circle\", \"data\": {\"x\": 3, \"y\": 4, \"radius\": 5}}]}"
             it "can translate a neagtive amount" $ do
                 shapeDec (Translate (-5) (-10) (Rect (20,30) 3 4)) `shouldBe` shapeTextDec "{\"type\": \"rect\", \"data\": {\"x\": 15, \"y\": 20, \"width\": 3, \"height\": 4}}"
+            it "can translate lines" $ do
+                shapeDec (Translate 10 20 (Line [(1,2),(3,4)])) `shouldBe` shapeTextDec "{\"type\": \"line\", \"data\": {\"points\": [11,22,13,24]}}"
         describe "Scale" $ do
             it "can scale basic shapes" $ do
                 shapeDec (Scale 2.0 0.5 (Circle (1,2) 3)) `shouldBe` shapeTextDec "{\"type\": \"circle\", \"data\": {\"x\": 1, \"y\": 2, \"radius\": 3, \"scaleX\": 2.0, \"scaleY\": 0.5}}"
