@@ -39,7 +39,7 @@ handl st@State{xDiff=xDiff, yDiff=yDiff, zoom=zoom} (MouseClick (x,y) ev) = trac
         newState = st{xDiff=xNew, yDiff=yNew, zoom=newZoom, searchHasFocus=False}
 
 
-handl st@State{xDiff=xDiff, yDiff=yDiff} (MouseDrag (x1, y1) "rootcontainer" (x2, y2) _) = (newState, shape $ drawAll newState)
+handl st@State{xDiff=xDiff, yDiff=yDiff} (MouseDrag (x1, y1) "rootcontainer" (x2, y2)) = (newState, shape $ drawAll newState)
     where
         (xNew, yNew) = (xDiff + x2 - x1, yDiff + y2 - y1)
         newState = st{xDiff=xNew, yDiff=yNew}

@@ -111,10 +111,10 @@ drawCanvas st   = Container 900 600 [drawButtons
 drawState :: St -> Shape
 drawState st = Fill darkred $ Container 200 100 
                                 [Text (0,0)     ("Timer: " ++ show t) defaults{font="Helvetica", alignment=AlignLeft, bold=True}
-                                ,Text (0,20)    ("Debug: " ++ show d) defaults{font="Helvetica", alignment=AlignLeft, underline=True}
+                                ,Text (0,20)    ("Debug: " ++ show d) defaults{font="Helvetica", alignment=AlignLeft}
                                 ,Text (0,40)    ("Drag'n'Drop: " ++ show dnd) defaults{font="Helvetica", alignment=AlignLeft, italic=True}
                                 ,Text (0,60)    ("Favourite colour: " ++ clr) defaults{font="Helvetica", alignment=AlignLeft, bold=True}
-                                ,Text (0,80)    ("window size (w,h): ("++show w++","++show h++")") defaults{font="Helvetica", alignment=AlignLeft, underline=True}
+                                ,Text (0,80)    ("window size (w,h): ("++show w++","++show h++")") defaults{font="Helvetica", alignment=AlignLeft}
                                 ]
                 where
                 St{timer=t, debug=d, dragndrop=dnd, colour=clr, windowHeight=h, windowWidth=w} = st
