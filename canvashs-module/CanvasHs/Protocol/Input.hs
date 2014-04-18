@@ -127,10 +127,6 @@ makeEvent "keydown"
     (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh})
         = KeyDown (BU.toString k) (makeModifiers c a sh)
 
-makeEvent "keypress"
-    (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh})
-        = KeyPress (BU.toString k) (makeModifiers c a sh)
-
 makeEvent "keyup"
     (JSONEventData{key = Just k, control = Just c, alt = Just a, shift = Just sh})
         = KeyUp (BU.toString k) (makeModifiers c a sh)

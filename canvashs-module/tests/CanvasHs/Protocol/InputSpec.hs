@@ -76,12 +76,6 @@ spec = do
             it "can decode *arbitrary* keydown event" $ do
                 JSONChar key <- arbitrary
                 property $ \control alt shift -> (decode $ buildKeyPF "keydown" key control alt shift) == (KeyDown (key:[]) $ makeModifiers control alt shift)
-        describe "keypress event" $ do
-            it "can decode a keypress event" $ do
-                (decode $ buildKeyPF "keypress" 'c' True True True) `shouldBe` (KeyPress "c" [Ctrl, Alt, Shift])
-            it "can decode *arbitrary* keypress event" $ do
-                JSONChar key <- arbitrary
-                property $ \control alt shift -> (decode $ buildKeyPF "keypress" key control alt shift) == (KeyPress (key:[]) $ makeModifiers control alt shift)
         describe "keyup event" $ do
             it "can decode a keyup event" $ do
                 (decode $ buildKeyPF "keyup" 'c' True True True) `shouldBe` (KeyUp "c" [Ctrl, Alt, Shift])
