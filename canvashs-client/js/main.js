@@ -30,7 +30,7 @@ var animated = false;
 
 /**
  * Handles data received from the websocket connection.
- * @param {type} event The event received from the server side.
+ * @param {String} event The event received from the server side.
  * @returns {undefined}
  */
 function connectionDataReceived(event) {
@@ -82,13 +82,18 @@ function connectionDataReceived(event) {
 
 /**
  * Prints a message to the console when a connection error occurs.
- * @param {type} error The error message.
+ * @param {String} error The error message.
  * @returns {undefined}
  */
 function connectionError(error) {
     printDebugMessage("WebSocket Error " + error,2);
 }
 
+/**
+ * Display a connection lost window.
+ * @param {String} error An error message for the console.
+ * @returns {undefined}
+ */
 function connectionClosed(error) {
     printDebugMessage("Connection closed " + error,0);
 
@@ -96,8 +101,8 @@ function connectionClosed(error) {
 }
 /**
  * Opens a control element with a title and a message
- * @param {type} title The title of the message (required)
- * @param {type} message The contents of the message (optional)
+ * @param {String} title The title of the message (required)
+ * @param {String} message The contents of the message (optional)
  * @returns {undefined}
  */
 function openControlWindow(title, message) {
@@ -120,8 +125,8 @@ function closeControlWindow() {
 /**
  * Type is an enumeration where 0 is FizedSize 1 is FullWindow and 2 is FullScreen.
  * Width and height are required with FixedSize and are ignored with the other types.
- * @param {type} displayType
- * @param {type} attempt
+ * @param {String} displayType
+ * @param {Number} attempt
  * @returns {undefined}
  */
 function setWindowDisplayType(displayType, attempt)
@@ -187,7 +192,7 @@ function setWindowDisplayType(displayType, attempt)
 
 /**
  * Asks the user to go fullscreen.
- * @param {type} attempt
+ * @param {Number} attempt
  * @returns {undefined}
  */
 function requestFullscreen(attempt) {
@@ -248,7 +253,7 @@ function promptFileBrowser() {
 
 /**
  * Sets fluid proportions for the container.
- * @param {type} container
+ * @param {Element} container
  * @returns {undefined}
  */
 function setFluidProportions(container) {
@@ -266,9 +271,9 @@ function setFluidProportions(container) {
 
 /**
  * Sets fixed proportions for the container.
- * @param {type} container
- * @param {type} width The new fixed width of the container.
- * @param {type} height The new fixed height of the container.
+ * @param {Element} container
+ * @param {Number} width The new fixed width of the container.
+ * @param {Number} height The new fixed height of the container.
  * @returns {undefined}
  */
 function setFixedProportions(container,width,height) {
@@ -285,7 +290,7 @@ function setFixedProportions(container,width,height) {
 
 /**
  * Resizes the canvas.
- * @param {type} event
+ * @param {Event} event
  * @returns {undefined}
  */
 function resizeCanvas(event) {  
@@ -318,7 +323,7 @@ function resizeCanvasWithoutEvent(event) {
 
 /**
  * Parses shape data and returns an object kinetic accepts. Also coupling to event handlers is done.
- * @param {type} shape data
+ * @param {JSON} shape data
  * @returns {Kinetic.Group|shapeFromData.shape|Kinetic.Circle|Kinetic.Line|Kinetic.Polygon|Kinetic.Text|Kinetic.Rect}
  */
 function parseShapeData(data) {
@@ -331,7 +336,7 @@ function parseShapeData(data) {
 
 /**
  * Parses action data and execute the actions.
- * @param {type} data
+ * @param {JSON} data
  * @returns {undefined}
  */
 function parseActionData(data) {
@@ -446,8 +451,8 @@ function parseActionData(data) {
 
 /**
  * Adds event handlers for events the server is interested in.
- * @param {type} shape The shape on which the event handler is set.
- * @param {type} message The message from the server.
+ * @param {JSON} shape The shape on which the event handler is set.
+ * @param {String} message The message from the server.
  * @returns {undefined}
  */
 function enableEventHandlers(shape, message) {   
@@ -510,8 +515,8 @@ function scrollEventHandler(event) {
 }
 /**
  * Starts the mouse drag event handler.
- * @param {type} id The id of the shape the event handler will listen on.
- * @param {type} event
+ * @param {Number} id The id of the shape the event handler will listen on.
+ * @param {Event} event
  * @returns {undefined}
  */
 function mouseDragStartEventHandler(id, event) {
@@ -536,8 +541,8 @@ function mouseDragStartEventHandler(id, event) {
 
 /**
  * Handles mouse drag events.
- * @param {type} id The id of the shape the event handler listens on.
- * @param {type} event
+ * @param {Number} id The id of the shape the event handler listens on.
+ * @param {Event} event
  * @returns {undefined}
  */
 function mouseDragEndEventHandler(id, event) {
@@ -560,8 +565,8 @@ function mouseDragEndEventHandler(id, event) {
 
 /**
  * Sends information belonging to a mouse drag event.
- * @param {type} id The id of the shape the drag occurs on.
- * @param {type} event
+ * @param {Number} id The id of the shape the drag occurs on.
+ * @param {Event} event
  * @returns {undefined}
  */
 function mouseDragEventHandler(id, event) {
@@ -595,9 +600,9 @@ function mouseDragEventHandler(id, event) {
 
 /**
  * Sends information about mouse events.
- * @param {type} eventName The name of the event as send to the server.
- * @param {type} id The id of the shape as send to the server.
- * @param {type} event
+ * @param {String} eventName The name of the event as send to the server.
+ * @param {Number} id The id of the shape as send to the server.
+ * @param {Event} event
  * @returns {undefined}
  */
 function mouseEvent(eventName, id, event) {
@@ -619,16 +624,17 @@ function mouseEvent(eventName, id, event) {
 /**
  * Sends information about key events to the server.
  * @param {String} eventName The name of the key event as send to the server.
- * @param {type} event
+ * @param {Event} event
  * @returns {undefined}
  */
 function sendKeyEvent(eventName, event) {
     
+    console.log(eventName);
+    console.log(event);
     var key = normalizeKeyCode(event);
     var ctrl = event.ctrlKey || event.metaKey;
     var alt = event.altKey;
     var shift = event.shiftKey;
-
     printDebugMessage("KeyEvent "+key+" "+eventName+" (ctrl:"+ctrl+" alt:"+alt+" shift:"+shift+")",0);
 
     event.preventDefault(); // Prevent browser default behavior to block ctrl-c for example
@@ -697,7 +703,7 @@ function sendWindowResizeEvent(width,height) {
 
 /**
  * Draws shapes from a JSON message.
- * @param {type} message The message out of which a shape is constructed.
+ * @param {JSON} message The message out of which a shape is constructed.
  * @returns {Kinetic.Group|shapeFromData.shape|Kinetic.Circle|Kinetic.Line|Kinetic.Polygon|Kinetic.Text|Kinetic.Rect}
  */
 function shapeFromData(message) {
@@ -816,7 +822,7 @@ function shapeFromData(message) {
 
 /**
  * Converts rgba values to colors.
- * @param {type} dict
+ * @param {Object} dict
  * @returns {String}
  */
 function rgbaDictToColor(dict){
@@ -839,7 +845,7 @@ function rgbaDictToColor(dict){
 
 /**
  * Prints debug messages to the console if debug is enabled.
- * @param {type} message The message that is printed to the console.
+ * @param {String} message The message that is printed to the console.
  * @param {Number} type The severity of the debug message.
  * @returns {undefined}
  */
@@ -945,7 +951,7 @@ function debugOff() {
 
 /**
  * Initializes the canvas.
- * @param {type} container
+ * @param {Element} container
  * @param {Number} width The width of the canvas.
  * @param {Number} height The height of the canvas.
  * @returns {undefined}
