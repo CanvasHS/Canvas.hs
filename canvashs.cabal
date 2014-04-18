@@ -13,7 +13,7 @@ flag hpc
   default: False
 Library
   build-depends: 	base >= 4,
-                  QuickCheck >= 2.4,
+                  QuickCheck >= 2.4 && <= 2.6,
                   websockets == 0.8.0.0,
                   warp,
                   blaze-html,
